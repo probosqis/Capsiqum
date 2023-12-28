@@ -1,0 +1,73 @@
+/*
+ * Copyright 2023 wcaokaze
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+pluginManagement {
+   repositories {
+      gradlePluginPortal()
+      google()
+      mavenCentral()
+      maven { url 'https://maven.pkg.jetbrains.space/public/p/compose/dev' }
+   }
+}
+
+dependencyResolutionManagement {
+   repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+   repositories {
+      google()
+      mavenCentral()
+      maven { url 'https://maven.pkg.jetbrains.space/public/p/compose/dev' }
+   }
+
+   versionCatalogs {
+      libs {
+         version('kotlin', '1.9.21')
+         version('android-plugin', '8.2.0')
+         version('compose-jb', '1.5.11')
+         version('compose-androidx', '1.5.4')
+         version('compose-compiler', '1.5.7')
+         version('roborazzi', '1.7.0-rc-1')
+
+         plugin('kotlin-multiplatform', 'org.jetbrains.kotlin.multiplatform').versionRef('kotlin')
+         plugin('kotlinx-serialization', 'org.jetbrains.kotlin.plugin.serialization').versionRef('kotlin')
+         plugin('android-library', 'com.android.library').versionRef('android-plugin')
+         plugin('compose-jb', 'org.jetbrains.compose').versionRef('compose-jb')
+         plugin('roborazzi', 'io.github.takahirom.roborazzi').versionRef('roborazzi')
+
+         library('kotlinx-collections-immutable', 'org.jetbrains.kotlinx', 'kotlinx-collections-immutable').version('0.3.7')
+         library('kotlinx-datetime', 'org.jetbrains.kotlinx', 'kotlinx-datetime').version('0.5.0')
+         library('androidx-annotation', 'androidx.annotation', 'annotation').version('1.7.1')
+
+         library('android-desugaring-jdk', 'com.android.tools', 'desugar_jdk_libs').version('1.2.2')
+
+         library('kotlinx-serialization', 'org.jetbrains.kotlinx', 'kotlinx-serialization-json').version('1.6.2')
+
+         library('kotlin-test-junit', 'org.jetbrains.kotlin', 'kotlin-test-junit').versionRef('kotlin')
+         library('mockk', 'io.mockk', 'mockk').version('1.13.8')
+         library('robolectric', 'org.robolectric:robolectric:4.11.1')
+         library('roborazzi-core', 'io.github.takahirom.roborazzi', 'roborazzi').versionRef('roborazzi')
+         library('roborazzi-compose', 'io.github.takahirom.roborazzi', 'roborazzi-compose').versionRef('roborazzi')
+         library('androidx-test-ext', 'androidx.test.ext:junit:1.1.5')
+         library('compose-ui-test-manifest', 'androidx.compose.ui', 'ui-test-manifest').versionRef('compose-androidx')
+      }
+   }
+}
+
+rootProject.name = "Capsiqum"
+
+include 'panoptiqon'
+project(':panoptiqon').projectDir = file('modules/panoptiqon/panoptiqon')
+include 'panoptiqon-compose'
+project(':panoptiqon-compose').projectDir = file('modules/panoptiqon/panoptiqon-compose')
