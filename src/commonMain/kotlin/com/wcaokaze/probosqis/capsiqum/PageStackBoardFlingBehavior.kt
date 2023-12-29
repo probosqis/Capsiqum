@@ -78,7 +78,17 @@ internal object PageStackBoardFlingBehavior {
          val estimatedScrollOffset = estimateFlingingScrollOffset(
             currentScrollOffset, initialVelocity)
 
-         val currentIdx = state.firstVisiblePageStackIndex
+         val currentIdx = run {
+            val i = state.layout
+               .indexOfFirst { it.position.x > currentScrollOffset } - 1
+            // .indexOfFirst { it.position.x + it.width > currentScrollOffset }
+            // PageStackは隙間なく並んでいるとは限らない。右端の座標基準で計算すると
+            // ちょうどPageStack同士の隙間の位置にスクロールされているとき
+            // 右のPageStackがcurrentIdxになってしまう。
+
+            if (i >= 0) { i } else { state.firstVisiblePageStackIndex }
+         }
+
          val estimatedIdx = state.layout
             .indexOfFirst { it.position.x + it.width > estimatedScrollOffset }
 
