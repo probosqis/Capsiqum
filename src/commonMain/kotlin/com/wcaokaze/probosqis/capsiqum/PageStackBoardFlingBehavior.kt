@@ -137,8 +137,11 @@ internal object PageStackBoardFlingBehavior {
          }
       }
 
+      /** s */
       private fun estimateFlingingDuration(
+         /** px/s */
          velocity: Float,
+         /** px/s² */
          acceleration: Float
       ): Float {
          if (velocity == 0.0f) { return Float.POSITIVE_INFINITY }
@@ -146,9 +149,12 @@ internal object PageStackBoardFlingBehavior {
       }
 
       private fun estimateFlingingScrollOffset(
+         /** px */
          currentScrollOffset: Float,
+         /** px/s */
          velocity: Float,
-         acceleration: Float = sign(velocity) * -0.001f
+         /** px/s² */
+         acceleration: Float = sign(velocity) * -1000.0f
       ): Float {
          if (velocity == 0.0f) { return currentScrollOffset }
 
