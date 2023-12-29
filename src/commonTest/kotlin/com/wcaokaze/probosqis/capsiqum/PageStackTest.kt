@@ -27,11 +27,11 @@ import kotlin.test.fail
 
 class PageStackTest {
    @Serializable
-   @SerialName("com.wcaokaze.probosqis.page.IntPage")
+   @SerialName("com.wcaokaze.probosqis.capsiqum.IntPage")
    class IntPage(val i: Int) : Page()
 
    @Serializable
-   @SerialName("com.wcaokaze.probosqis.page.StringPage")
+   @SerialName("com.wcaokaze.probosqis.capsiqum.StringPage")
    class StringPage(val s: String) : Page()
 
    @Test
