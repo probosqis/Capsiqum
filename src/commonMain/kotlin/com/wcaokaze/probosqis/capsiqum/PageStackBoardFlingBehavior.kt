@@ -87,11 +87,8 @@ internal object PageStackBoardFlingBehavior {
                (currentIdx + 1)
                   .coerceAtMost(state.pageStackBoard.pageStackCount - 1)
             }
-            estimatedIdx < currentIdx -> {
-               currentIdx
-            }
 
-            currentIdx >= state.pageStackBoard.pageStackCount - 1 -> {
+            estimatedIdx < currentIdx -> {
                currentIdx
             }
 
