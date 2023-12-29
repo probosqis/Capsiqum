@@ -78,7 +78,17 @@ internal object PageStackBoardFlingBehavior {
          val estimatedScrollOffset = estimateFlingingScrollOffset(
             currentScrollOffset, initialVelocity)
 
-         val currentIdx = state.firstVisiblePageStackIndex
+         val currentIdx = run {
+            val i = state.layout
+               .indexOfFirst { it.position.x > currentScrollOffset } - 1
+            // .indexOfFirst { it.position.x + it.width > currentScrollOffset }
+            // PageStackは隙間なく並んでいるとは限らない。右端の座標基準で計算すると
+            // ちょうどPageStack同士の隙間の位置にスクロールされているとき
+            // 右のPageStackがcurrentIdxになってしまう。
+
+            if (i >= 0) { i } else { state.firstVisiblePageStackIndex }
+         }
+
          val estimatedIdx = state.layout
             .indexOfFirst { it.position.x + it.width > estimatedScrollOffset }
 
@@ -87,11 +97,8 @@ internal object PageStackBoardFlingBehavior {
                (currentIdx + 1)
                   .coerceAtMost(state.pageStackBoard.pageStackCount - 1)
             }
-            estimatedIdx < currentIdx -> {
-               currentIdx
-            }
 
-            currentIdx >= state.pageStackBoard.pageStackCount - 1 -> {
+            estimatedIdx < currentIdx -> {
                currentIdx
             }
 
@@ -137,8 +144,11 @@ internal object PageStackBoardFlingBehavior {
          }
       }
 
+      /** s */
       private fun estimateFlingingDuration(
+         /** px/s */
          velocity: Float,
+         /** px/s² */
          acceleration: Float
       ): Float {
          if (velocity == 0.0f) { return Float.POSITIVE_INFINITY }
@@ -146,9 +156,12 @@ internal object PageStackBoardFlingBehavior {
       }
 
       private fun estimateFlingingScrollOffset(
+         /** px */
          currentScrollOffset: Float,
+         /** px/s */
          velocity: Float,
-         acceleration: Float = sign(velocity) * -0.001f
+         /** px/s² */
+         acceleration: Float = sign(velocity) * -1000.0f
       ): Float {
          if (velocity == 0.0f) { return currentScrollOffset }
 
