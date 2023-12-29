@@ -34,7 +34,6 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ScaleFactor
 import androidx.compose.ui.layout.positionInRoot
-import com.wcaokaze.probosqis.ext.compose.anim.VectorConverter
 import com.wcaokaze.probosqis.capsiqum.PageStackBoard
 
 enum class SharedElementAnimatorElement {
