@@ -102,6 +102,10 @@ internal object PageStackBoardFlingBehavior {
                currentIdx
             }
 
+            currentIdx >= state.pageStackBoard.pageStackCount - 1 -> {
+               currentIdx
+            }
+
             else -> {
                val leftStackScrollOffset  = state.getScrollOffset(currentIdx,     PositionInBoard.FirstVisible)
                val rightStackScrollOffset = state.getScrollOffset(currentIdx + 1, PositionInBoard.FirstVisible)
