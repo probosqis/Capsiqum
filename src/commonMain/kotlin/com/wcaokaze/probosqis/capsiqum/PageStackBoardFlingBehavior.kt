@@ -102,6 +102,10 @@ internal object PageStackBoardFlingBehavior {
                currentIdx
             }
 
+            currentIdx >= state.pageStackBoard.pageStackCount - 1 -> {
+               currentIdx
+            }
+
             else -> {
                val leftStackScrollOffset  = state.getScrollOffset(currentIdx,     PositionInBoard.FirstVisible)
                val rightStackScrollOffset = state.getScrollOffset(currentIdx + 1, PositionInBoard.FirstVisible)
@@ -127,12 +131,15 @@ internal object PageStackBoardFlingBehavior {
                (targetScrollOffset - currentScrollOffset) / -2.0f
 
          val duration = estimateFlingingDuration(initialVelocity, acceleration)
-         return if (duration <= 0.25f) {
+         return if (duration in 0.0f..0.25f) {
             FlingSpec(targetScrollOffset.toFloat(), duration, initialVelocity,
                acceleration)
          } else {
             // ほとんど速さが0に近いような状態で指を離された場合は
-            // ある程度の初速をもたせる
+            // ある程度の初速をもたせる。
+            // initialVelocityがtargetScrollOffsetと逆向きのとき
+            // durationが負になる。この場合も同様にtargetScrollOffset向きの初速に
+            // 修正する。
             val fixedVelocity = (targetScrollOffset - currentScrollOffset) / 0.25f
             val fixedAcceleration = fixedVelocity * fixedVelocity /
                   (targetScrollOffset - currentScrollOffset) / -2.0f

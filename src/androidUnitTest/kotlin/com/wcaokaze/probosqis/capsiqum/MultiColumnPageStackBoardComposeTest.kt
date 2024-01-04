@@ -570,7 +570,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
 
    private fun SemanticsNodeInteraction.swipeLeft(
       offset: Dp,
-      duration: Long = 200L,
+      duration: Long = 100L,
       interpolator: (Float) -> Float = { it }
    ) {
       performTouchInput {
@@ -588,7 +588,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
 
    private fun SemanticsNodeInteraction.swipeRight(
       offset: Dp,
-      duration: Long = 200L,
+      duration: Long = 100L,
       interpolator: (Float) -> Float = { it }
    ) {
       performTouchInput {
@@ -661,7 +661,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(32.dp, duration = 100L)
+      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(64.dp, duration = 50L)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(1),
@@ -669,7 +669,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(32.dp, duration = 100L)
+      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(64.dp, duration = 50L)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(2),
@@ -677,7 +677,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeRight(32.dp, duration = 100L)
+      rule.onNodeWithTag(pageStackBoardTag).swipeRight(64.dp, duration = 50L)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(1),
@@ -805,7 +805,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
       }
 
       rule.onNodeWithTag(pageStackBoardTag)
-         .swipeLeft(expectedPageStackWidth() + 20.dp, duration = 400L)
+         .swipeLeft(expectedPageStackWidth() + 40.dp, duration = 200L)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(2),
@@ -814,7 +814,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
       }
 
       rule.onNodeWithTag(pageStackBoardTag)
-         .swipeRight(expectedPageStackWidth() + 20.dp, duration = 400L)
+         .swipeRight(expectedPageStackWidth() + 40.dp, duration = 200L)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(0),

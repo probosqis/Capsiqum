@@ -515,7 +515,7 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
 
    private fun SemanticsNodeInteraction.swipeLeft(
       offset: Dp,
-      duration: Long = 200L,
+      duration: Long = 100L,
       interpolator: (Float) -> Float = { it }
    ) {
       performTouchInput {
@@ -533,7 +533,7 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
 
    private fun SemanticsNodeInteraction.swipeRight(
       offset: Dp,
-      duration: Long = 200L,
+      duration: Long = 100L,
       interpolator: (Float) -> Float = { it }
    ) {
       performTouchInput {
@@ -606,7 +606,7 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(32.dp, duration = 100L)
+      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(64.dp, duration = 50L)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(1),
@@ -614,7 +614,7 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(32.dp, duration = 100L)
+      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(64.dp, duration = 50L)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(2),
@@ -622,7 +622,7 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeRight(32.dp, duration = 100L)
+      rule.onNodeWithTag(pageStackBoardTag).swipeRight(64.dp, duration = 50L)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(1),
