@@ -20,6 +20,7 @@ import androidx.compose.animation.core.ExperimentalTransitionApi
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.createChildTransition
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
@@ -147,16 +148,6 @@ internal class PageTransitionState(
 
    @Composable
    fun updateTransition(): Transition<PageLayoutInfo> {
-      val pageStack = pageStackState.pageStack
-      val baseTransition = updateTransition(pageStack.indexedHead)
-
-      return createChildTransition(baseTransition)
-   }
-
-   @Composable
-   internal fun createChildTransition(
-      baseTransition: Transition<IndexedValue<PageStack.SavedPageState>>
-   ): Transition<PageLayoutInfo> {
       /*
        * pageStackState.pageStack.headが変化した際、直前に表示されていたPageを
        * 表示したまま一度裏で遷移先のPageをコンポーズし、PageLayoutInfoが
@@ -174,8 +165,8 @@ internal class PageTransitionState(
        *
        */
 
-      val targetPageState = baseTransition.targetState
-
+      val pageStack = pageStackState.pageStack
+      val targetPageState = pageStack.indexedHead
       val isTargetFirstComposition = getLayoutInfo(targetPageState.value.id).isEmpty()
 
       val transitionTargetPageState = if (isTargetFirstComposition) {
@@ -184,14 +175,14 @@ internal class PageTransitionState(
          targetPageState
       }
 
-      this.targetPageState = transitionTargetPageState
-
-      @OptIn(ExperimentalTransitionApi::class)
-      val transition = baseTransition.createChildTransition(
+      val transition = updateTransition(
+         transitionTargetPageState,
          label = "PageStackContentTransition"
-      ) { transitionTargetPageState }
+      )
 
       val currentPageState = transition.currentState
+
+      this.targetPageState = transitionTargetPageState
 
       if (currentPageState.index   != currentPageIndex ||
           targetPageState .index   != targetPageIndex  ||
@@ -206,12 +197,71 @@ internal class PageTransitionState(
       }
 
       @OptIn(ExperimentalTransitionApi::class)
-      val pageTransition: Transition<PageLayoutInfo>
-            = transition.createChildTransition(label = "PageTransition") {
-               getLayoutInfo(it.value.id)
-            }
+      return transition.createChildTransition(label = "PageTransition") {
+         getLayoutInfo(it.value.id)
+      }
+   }
 
-      return pageTransition
+   @Composable
+   internal fun createChildTransitionForPreview(
+      baseTransition: Transition<IndexedValue<PageStack.SavedPageState>>
+   ): Transition<PageLayoutInfo> {
+      val targetPageState = baseTransition.targetState
+      val isTargetFirstComposition = getLayoutInfo(targetPageState.value.id).isEmpty()
+
+      @OptIn(ExperimentalTransitionApi::class)
+      val transition = baseTransition.createChildTransition(
+         label = "PageStackContentTransition"
+      ) {
+         if (it != targetPageState) {
+            it
+         } else {
+            if (isTargetFirstComposition) {
+               this.targetPageState ?: targetPageState
+            } else {
+               targetPageState
+            }
+         }
+      }
+
+      // XXX
+      // isTargetFirstCompositionのとき、まだ遷移アニメーションは再生されていない。
+      // その次のリコンポジションでtransition.targetStateが変更されるものの、
+      // baseTransition.targetStateはこのリコンポジションで変更されているため、
+      // このリコンポジションで何もアニメーションが再生されないと
+      // そのままbaseTransitionはこのリコンポジションで遷移完了となってしまう。
+      transition.animateFloat(
+         transitionSpec = { snap(delayMillis = 200) },
+         label = "dummyAnim"
+      ) {
+         if (!this.isTargetFirstComposition && isTargetFirstComposition) {
+            1.0f
+         } else {
+            0.0f
+         }
+      }
+
+      val currentPageState = transition.currentState
+      val transitionTargetPageState = transition.targetState
+
+      this.targetPageState = transitionTargetPageState
+
+      if (currentPageState.index   != currentPageIndex ||
+          targetPageState .index   != targetPageIndex  ||
+          isTargetFirstComposition != this.isTargetFirstComposition)
+      {
+         updateVisiblePageStates(
+            currentPageState, targetPageState, isTargetFirstComposition)
+
+         currentPageIndex = currentPageState.index
+         targetPageIndex  = targetPageState .index
+         this.isTargetFirstComposition = isTargetFirstComposition
+      }
+
+      @OptIn(ExperimentalTransitionApi::class)
+      return transition.createChildTransition(label = "PageTransition") {
+         getLayoutInfo(it.value.id)
+      }
    }
 
    private fun getLayoutInfo(pageId: PageStack.PageId): PageLayoutInfoImpl {
@@ -309,7 +359,7 @@ internal fun PageTransition(
 }
 
 @Composable
-internal fun PageTransition(
+internal fun PageTransitionPreview(
    pageStackState: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
    pageStateStore: PageStateStore,
@@ -324,7 +374,7 @@ internal fun PageTransition(
       pageStackState,
       pageComposableSwitcher,
       pageStateStore,
-      transition = transitionState.createChildTransition(baseTransition)
+      transition = transitionState.createChildTransitionForPreview(baseTransition)
    )
 }
 
