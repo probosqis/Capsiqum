@@ -129,7 +129,7 @@ private typealias PageComposableArguments
       = Triple<PageStack.SavedPageState, MutablePageLayoutInfo, PageTransitionElementAnimSet>
 
 @Stable
-private class PageTransitionState(
+internal class PageTransitionState(
    private val pageStackState: PageStackState,
    private val pageComposableSwitcher: PageComposableSwitcher
 ) {
@@ -147,6 +147,16 @@ private class PageTransitionState(
 
    @Composable
    fun updateTransition(): Transition<PageLayoutInfo> {
+      val pageStack = pageStackState.pageStack
+      val baseTransition = updateTransition(pageStack.indexedHead)
+
+      return createChildTransition(baseTransition)
+   }
+
+   @Composable
+   internal fun createChildTransition(
+      baseTransition: Transition<IndexedValue<PageStack.SavedPageState>>
+   ): Transition<PageLayoutInfo> {
       /*
        * pageStackState.pageStack.headが変化した際、直前に表示されていたPageを
        * 表示したまま一度裏で遷移先のPageをコンポーズし、PageLayoutInfoが
@@ -164,9 +174,7 @@ private class PageTransitionState(
        *
        */
 
-      val pageStack = pageStackState.pageStack
-
-      val targetPageState = pageStack.indexedHead
+      val targetPageState = baseTransition.targetState
 
       val isTargetFirstComposition = getLayoutInfo(targetPageState.value.id).isEmpty()
 
@@ -178,10 +186,10 @@ private class PageTransitionState(
 
       this.targetPageState = transitionTargetPageState
 
-      val transition = updateTransition(
-         transitionTargetPageState,
+      @OptIn(ExperimentalTransitionApi::class)
+      val transition = baseTransition.createChildTransition(
          label = "PageStackContentTransition"
-      )
+      ) { transitionTargetPageState }
 
       val currentPageState = transition.currentState
 
@@ -291,8 +299,43 @@ internal fun PageTransition(
       PageTransitionState(pageStackState, pageComposableSwitcher)
    }
 
-   val transition = transitionState.updateTransition()
+   PageTransition(
+      transitionState,
+      pageStackState,
+      pageComposableSwitcher,
+      pageStateStore,
+      transition = transitionState.updateTransition()
+   )
+}
 
+@Composable
+internal fun PageTransition(
+   pageStackState: PageStackState,
+   pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
+   baseTransition: Transition<IndexedValue<PageStack.SavedPageState>>
+) {
+   val transitionState = remember(pageStackState, pageComposableSwitcher) {
+      PageTransitionState(pageStackState, pageComposableSwitcher)
+   }
+
+   PageTransition(
+      transitionState,
+      pageStackState,
+      pageComposableSwitcher,
+      pageStateStore,
+      transition = transitionState.createChildTransition(baseTransition)
+   )
+}
+
+@Composable
+private fun PageTransition(
+   transitionState: PageTransitionState,
+   pageStackState: PageStackState,
+   pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
+   transition: Transition<PageLayoutInfo>
+) {
    Box {
       val backgroundColor = MaterialTheme.colorScheme
          .surfaceColorAtElevation(LocalAbsoluteTonalElevation.current)
