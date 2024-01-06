@@ -150,11 +150,3 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
       pageStateTransition
    )
 }
-
-private class PreviewPageStackRepository : PageStackRepository {
-   override fun deleteAllPageStacks() {}
-   override fun loadPageStack(id: PageStack.Id): WritableCache<PageStack>
-         = throw NotImplementedError()
-   override fun savePageStack(pageStack: PageStack): WritableCache<PageStack>
-         = throw NotImplementedError()
-}

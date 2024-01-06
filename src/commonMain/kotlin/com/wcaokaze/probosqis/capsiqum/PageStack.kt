@@ -16,7 +16,20 @@
 
 package com.wcaokaze.probosqis.capsiqum
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asState
 import com.wcaokaze.probosqis.panoptiqon.update
@@ -156,4 +169,39 @@ class PageStackState internal constructor(
    fun removeFromBoard() {
       pageStackBoardState.removePageStack(pageStackId)
    }
+}
+
+@ExperimentalMaterial3Api
+@Composable
+internal fun PageStackAppBar(
+   state: PageStackState,
+   windowInsets: WindowInsets,
+   colors: TopAppBarColors,
+   modifier: Modifier = Modifier
+) {
+   TopAppBar(
+      title = {
+         Text(
+            "Home",
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+         )
+      },
+      navigationIcon = {
+         IconButton(
+            onClick = { state.finishPage() }
+         ) {
+            val icon = if (state.pageStack.tailOrNull() != null) {
+               Icons.Default.ArrowBack
+            } else {
+               Icons.Default.Close
+            }
+
+            Icon(icon, contentDescription = "Close")
+         }
+      },
+      windowInsets = windowInsets,
+      colors = colors,
+      modifier = modifier
+   )
 }

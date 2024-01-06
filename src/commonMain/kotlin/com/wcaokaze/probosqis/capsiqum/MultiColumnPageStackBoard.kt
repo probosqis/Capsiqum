@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -289,37 +289,12 @@ private fun PageStack(
       shadowElevation = if (isActive) { 4.dp } else { 2.dp },
       modifier = modifier
    ) {
-      val density by rememberUpdatedState(LocalDensity.current)
-
       Column {
-         @OptIn(ExperimentalMaterial3Api::class)
-         TopAppBar(
-            title = { Text("Home") },
-            navigationIcon = {
-               IconButton(
-                  onClick = { state.finishPage() }
-               ) {
-                  val icon = if (state.pageStack.tailOrNull() != null) {
-                     Icons.Default.ArrowBack
-                  } else {
-                     Icons.Default.Close
-                  }
+         val density by rememberUpdatedState(LocalDensity.current)
 
-                  Icon(icon, contentDescription = "Close")
-               }
-            },
-            windowInsets = WindowInsets(0, 0, 0, 0),
-            colors = TopAppBarDefaults.topAppBarColors(
-               containerColor = if (isActive) {
-                  MaterialTheme.colorScheme.primaryContainer
-                  MaterialTheme.colorScheme
-                     .surfaceTint.copy(alpha = 0.13f)
-                     .compositeOver(MaterialTheme.colorScheme.primaryContainer)
-               } else {
-                  MaterialTheme.colorScheme
-                     .surfaceColorAtElevation(4.dp)
-               }
-            ),
+         MultiColumnPageStackAppBar(
+            state,
+            isActive,
             modifier = Modifier
                .onSizeChanged {
                   val heightPx = it.height
@@ -335,6 +310,30 @@ private fun PageStack(
          )
       }
    }
+}
+
+@Composable
+private fun MultiColumnPageStackAppBar(
+   state: PageStackState,
+   isActive: Boolean,
+   modifier: Modifier = Modifier
+) {
+   @OptIn(ExperimentalMaterial3Api::class)
+   PageStackAppBar(
+      state,
+      windowInsets = WindowInsets(0, 0, 0, 0),
+      colors = TopAppBarDefaults.topAppBarColors(
+         containerColor = if (isActive) {
+            MaterialTheme.colorScheme
+               .surfaceTint.copy(alpha = 0.13f)
+               .compositeOver(MaterialTheme.colorScheme.primaryContainer)
+         } else {
+            MaterialTheme.colorScheme
+               .surfaceColorAtElevation(4.dp)
+         }
+      ),
+      modifier = modifier
+   )
 }
 
 @Stable
