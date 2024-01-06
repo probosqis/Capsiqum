@@ -49,7 +49,9 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
    parentPageStateSaver: StateSaverBuilder.() -> Unit = {},
    childPageStateSaver:  StateSaverBuilder.() -> Unit = {},
    parentPageState: (P, PageState.StateSaver) -> PS = parentPageComposable.pageStateFactory.pageStateFactory,
-   childPageState:  (C, PageState.StateSaver) -> CS = childPageComposable .pageStateFactory.pageStateFactory
+   childPageState:  (C, PageState.StateSaver) -> CS = childPageComposable .pageStateFactory.pageStateFactory,
+   parentPageStateModification: PS.() -> Unit = {},
+   childPageStateModification:  CS.() -> Unit = {},
 ) {
    val parentSavedPageState = PageStack.SavedPageState(PageStack.PageId(0L), parentPage)
    val childSavedPageState  = PageStack.SavedPageState(PageStack.PageId(1L), childPage)
@@ -97,7 +99,7 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
       parentPageComposable.pageStateFactory.copy(
          pageStateFactory = { page, _ ->
             val stateSaver = buildPreviewStateSaver(parentPageStateSaver, coroutineScope)
-            parentPageState(page, stateSaver)
+            parentPageState(page, stateSaver).apply(parentPageStateModification)
          }
       )
    }
@@ -106,7 +108,7 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
       childPageComposable.pageStateFactory.copy(
          pageStateFactory = { page, _ ->
             val stateSaver = buildPreviewStateSaver(childPageStateSaver, coroutineScope)
-            childPageState(page, stateSaver)
+            childPageState(page, stateSaver).apply(childPageStateModification)
          }
       )
    }
