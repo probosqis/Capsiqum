@@ -202,7 +202,7 @@ fun SingleColumnPageStackBoardAppBar(
                }
 
                val measurable = subcompose(pageStackLayout.pageStackId) {
-                  PageStackAppBar(
+                  SingleColumnPageStackAppBar(
                      pageStackLayout.pageStackState,
                      safeDrawingWindowInsets.only(WindowInsetsSides.Horizontal),
                      pageComposableSwitcher,
@@ -324,35 +324,16 @@ fun SingleColumnPageStackBoard(
 }
 
 @Composable
-private fun PageStackAppBar(
+private fun SingleColumnPageStackAppBar(
    state: PageStackState,
    windowInsets: WindowInsets,
    pageComposableSwitcher: PageComposableSwitcher,
    modifier: Modifier = Modifier
 ) {
    @OptIn(ExperimentalMaterial3Api::class)
-   TopAppBar(
-      title = {
-         Text(
-            "Home",
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-         )
-      },
-      navigationIcon = {
-         IconButton(
-            onClick = { state.finishPage() }
-         ) {
-            val icon = if (state.pageStack.tailOrNull() != null) {
-               Icons.Default.ArrowBack
-            } else {
-               Icons.Default.Close
-            }
-
-            Icon(icon, contentDescription = "Close")
-         }
-      },
-      windowInsets = windowInsets,
+   PageStackAppBar(
+      state,
+      windowInsets,
       colors = TopAppBarDefaults.topAppBarColors(
          containerColor = Color.Transparent
       ),

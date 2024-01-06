@@ -14,37 +14,42 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.capsiqum
+package com.wcaokaze.probosqis.capsiqum.preview
 
-import androidx.compose.animation.core.ExperimentalTransitionApi
-import androidx.compose.animation.core.createChildTransition
-import androidx.compose.animation.core.updateTransition
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import com.wcaokaze.probosqis.capsiqum.transition.PageTransitionPreview
+import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.capsiqum.MultiColumnPageStackBoardState
+import com.wcaokaze.probosqis.capsiqum.Page
+import com.wcaokaze.probosqis.capsiqum.PageComposable
+import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
+import com.wcaokaze.probosqis.capsiqum.PageContent
+import com.wcaokaze.probosqis.capsiqum.PageStack
+import com.wcaokaze.probosqis.capsiqum.PageStackAppBar
+import com.wcaokaze.probosqis.capsiqum.PageStackBoard
+import com.wcaokaze.probosqis.capsiqum.PageStackRepository
+import com.wcaokaze.probosqis.capsiqum.PageStackState
+import com.wcaokaze.probosqis.capsiqum.PageStateStore
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 
-enum class PageTransitionPreviewValue {
-   Parent,
-   Child
-}
-
 @Composable
-fun <P : Page, C : Page> PageTransitionPreview(
-   parentPage: P,
-   childPage:  C,
-   parentPageComposable: PageComposable<P, *>,
-   childPageComposable:  PageComposable<C, *>
+fun <P : Page> PagePreview(
+   page: P,
+   pageComposable: PageComposable<P, *>
 ) {
-   val parentPageState = PageStack.SavedPageState(PageStack.PageId(0L), parentPage)
-   val childPageState  = PageStack.SavedPageState(PageStack.PageId(1L), childPage)
-
-   val indexedParentPageState = IndexedValue(0, parentPageState)
-   val indexedChildPageState  = IndexedValue(1, childPageState)
+   val savedPageState = remember {
+      PageStack.SavedPageState(PageStack.PageId(0L), page)
+   }
 
    val pageStackCache = remember {
-      val pageStack = PageStack(PageStack.Id(0L), parentPageState)
+      val pageStack = PageStack(PageStack.Id(0L), savedPageState)
       WritableCache(pageStack)
    }
 
@@ -81,40 +86,43 @@ fun <P : Page, C : Page> PageTransitionPreview(
 
    val pageComposableSwitcher = remember {
       PageComposableSwitcher(
-         listOf(parentPageComposable, childPageComposable)
+         listOf(pageComposable)
       )
    }
 
    val pageStateStore = remember {
       PageStateStore(
-         listOf(
-            parentPageComposable.pageStateFactory,
-            childPageComposable .pageStateFactory,
-         ),
+         listOf(pageComposable.pageStateFactory),
          coroutineScope
       )
    }
 
-   val transition = updateTransition(
-      PageTransitionPreviewValue.Parent, label = "PageTransition")
+   Surface(
+      shape = MaterialTheme.shapes.large,
+      tonalElevation = 3.dp,
+      shadowElevation = 4.dp
+   ) {
+      Column {
+         @OptIn(ExperimentalMaterial3Api::class)
+         PageStackAppBar(
+            pageStackState,
+            windowInsets = WindowInsets(0, 0, 0, 0),
+            colors = TopAppBarDefaults.topAppBarColors(
+               containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+         )
 
-   @OptIn(ExperimentalTransitionApi::class)
-   val pageStateTransition = transition.createChildTransition {
-      when (it) {
-         PageTransitionPreviewValue.Parent -> indexedParentPageState
-         PageTransitionPreviewValue.Child  -> indexedChildPageState
+         PageContent(
+            savedPageState,
+            pageComposableSwitcher,
+            pageStateStore,
+            pageStackState
+         )
       }
    }
-
-   PageTransitionPreview(
-      pageStackState,
-      pageComposableSwitcher,
-      pageStateStore,
-      pageStateTransition
-   )
 }
 
-private class PreviewPageStackRepository : PageStackRepository {
+internal class PreviewPageStackRepository : PageStackRepository {
    override fun deleteAllPageStacks() {}
    override fun loadPageStack(id: PageStack.Id): WritableCache<PageStack>
          = throw NotImplementedError()
