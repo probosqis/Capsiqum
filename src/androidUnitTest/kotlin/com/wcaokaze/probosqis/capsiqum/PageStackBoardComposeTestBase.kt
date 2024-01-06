@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,19 +112,36 @@ abstract class PageStackBoardComposeTestBase {
    protected fun createPageStackBoard(
       pageStackCount: Int
    ): WritableCache<PageStackBoard> {
-      val rootRow = PageStackBoard.Row(
-         List(pageStackCount) { createPageStack(it) }.toImmutableList()
+      return createPageStackBoard(
+         List(pageStackCount) { createPageStack(it) }
       )
+   }
+
+   protected fun createPageStackBoard(page: Page): WritableCache<PageStackBoard> {
+      return createPageStackBoard(
+         listOf(
+            createPageStack(0, page),
+         )
+      )
+   }
+
+   protected fun createPageStackBoard(
+      pageStackList: List<PageStackBoard.PageStack>
+   ): WritableCache<PageStackBoard> {
+      val rootRow = PageStackBoard.Row(pageStackList)
       val pageStackBoard = PageStackBoard(rootRow)
       return WritableCache(pageStackBoard)
    }
 
    protected fun createPageStack(i: Int): PageStackBoard.PageStack {
-      val page = TestPage(i)
+      return createPageStack(i, TestPage(i))
+   }
+
+   protected fun createPageStack(id: Int, page: Page): PageStackBoard.PageStack {
       val pageStack = PageStack(
-         PageStack.Id(i.toLong()),
+         PageStack.Id(id.toLong()),
          PageStack.SavedPageState(
-            PageStack.PageId(page.i.toLong()),
+            PageStack.PageId(id.toLong()),
             page
          )
       )

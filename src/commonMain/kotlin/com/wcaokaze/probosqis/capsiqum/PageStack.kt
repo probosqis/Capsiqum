@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asState
 import com.wcaokaze.probosqis.panoptiqon.update
@@ -174,24 +174,38 @@ class PageStackState internal constructor(
 @ExperimentalMaterial3Api
 @Composable
 internal fun PageStackAppBar(
-   state: PageStackState,
+   pageStackState: PageStackState,
+   pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
    windowInsets: WindowInsets,
    colors: TopAppBarColors,
    modifier: Modifier = Modifier
 ) {
+   val savedPageState = pageStackState.pageStack.head
+   val page = savedPageState.page
+   val pageComposable = pageComposableSwitcher[page]
+   val pageState = remember(savedPageState.id) {
+      pageStateStore.get(savedPageState)
+   }
+
    TopAppBar(
       title = {
-         Text(
-            "Home",
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-         )
+         if (pageComposable == null) {
+            TODO()
+         } else {
+            PageHeader(
+               pageComposable.headerComposable,
+               page,
+               pageState,
+               pageStackState
+            )
+         }
       },
       navigationIcon = {
          IconButton(
-            onClick = { state.finishPage() }
+            onClick = { pageStackState.finishPage() }
          ) {
-            val icon = if (state.pageStack.tailOrNull() != null) {
+            val icon = if (pageStackState.pageStack.tailOrNull() != null) {
                Icons.Default.ArrowBack
             } else {
                Icons.Default.Close
@@ -203,5 +217,20 @@ internal fun PageStackAppBar(
       windowInsets = windowInsets,
       colors = colors,
       modifier = modifier
+   )
+}
+
+@Composable
+private inline fun <P : Page, S : PageState> PageHeader(
+   headerComposable: @Composable (P, S, PageStackState) -> Unit,
+   page: P,
+   pageState: PageState,
+   pageStackState: PageStackState
+) {
+   @Suppress("UNCHECKED_CAST")
+   headerComposable(
+      page,
+      pageState as S,
+      pageStackState
    )
 }

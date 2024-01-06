@@ -294,6 +294,8 @@ private fun PageStack(
 
          MultiColumnPageStackAppBar(
             state,
+            pageComposableSwitcher,
+            pageStateStore,
             isActive,
             modifier = Modifier
                .onSizeChanged {
@@ -314,13 +316,17 @@ private fun PageStack(
 
 @Composable
 private fun MultiColumnPageStackAppBar(
-   state: PageStackState,
+   pageStackState: PageStackState,
+   pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
    isActive: Boolean,
    modifier: Modifier = Modifier
 ) {
    @OptIn(ExperimentalMaterial3Api::class)
    PageStackAppBar(
-      state,
+      pageStackState,
+      pageComposableSwitcher,
+      pageStateStore,
       windowInsets = WindowInsets(0, 0, 0, 0),
       colors = TopAppBarDefaults.topAppBarColors(
          containerColor = if (isActive) {

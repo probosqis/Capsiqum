@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -165,6 +165,7 @@ internal class SingleColumnLayoutLogic(
 fun SingleColumnPageStackBoardAppBar(
    state: SingleColumnPageStackBoardState,
    pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
    modifier: Modifier = Modifier,
    safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
 ) {
@@ -204,8 +205,9 @@ fun SingleColumnPageStackBoardAppBar(
                val measurable = subcompose(pageStackLayout.pageStackId) {
                   SingleColumnPageStackAppBar(
                      pageStackLayout.pageStackState,
-                     safeDrawingWindowInsets.only(WindowInsetsSides.Horizontal),
                      pageComposableSwitcher,
+                     pageStateStore,
+                     safeDrawingWindowInsets.only(WindowInsetsSides.Horizontal),
                      modifier = Modifier.alpha(pageStackLayout.alpha)
                   )
                } .single()
@@ -325,14 +327,17 @@ fun SingleColumnPageStackBoard(
 
 @Composable
 private fun SingleColumnPageStackAppBar(
-   state: PageStackState,
-   windowInsets: WindowInsets,
+   pageStackState: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
+   windowInsets: WindowInsets,
    modifier: Modifier = Modifier
 ) {
    @OptIn(ExperimentalMaterial3Api::class)
    PageStackAppBar(
-      state,
+      pageStackState,
+      pageComposableSwitcher,
+      pageStateStore,
       windowInsets,
       colors = TopAppBarDefaults.topAppBarColors(
          containerColor = Color.Transparent

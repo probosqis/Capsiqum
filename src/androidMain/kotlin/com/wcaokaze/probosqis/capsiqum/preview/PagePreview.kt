@@ -106,6 +106,8 @@ fun <P : Page> PagePreview(
          @OptIn(ExperimentalMaterial3Api::class)
          PageStackAppBar(
             pageStackState,
+            pageComposableSwitcher,
+            pageStateStore,
             windowInsets = WindowInsets(0, 0, 0, 0),
             colors = TopAppBarDefaults.topAppBarColors(
                containerColor = MaterialTheme.colorScheme.primaryContainer
