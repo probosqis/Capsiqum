@@ -53,11 +53,15 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
    parentPageStateModification: PS.() -> Unit = {},
    childPageStateModification:  CS.() -> Unit = {},
 ) {
-   val parentSavedPageState = PageStack.SavedPageState(PageStack.PageId(0L), parentPage)
-   val childSavedPageState  = PageStack.SavedPageState(PageStack.PageId(1L), childPage)
+   val parentSavedPageState = remember {
+      PageStack.SavedPageState(PageStack.PageId(0L), parentPage)
+   }
+   val childSavedPageState = remember {
+      PageStack.SavedPageState(PageStack.PageId(1L), childPage)
+   }
 
-   val indexedParentPageState = IndexedValue(0, parentSavedPageState)
-   val indexedChildPageState  = IndexedValue(1, childSavedPageState)
+   val indexedParentPageState = remember { IndexedValue(0, parentSavedPageState) }
+   val indexedChildPageState  = remember { IndexedValue(1, childSavedPageState)  }
 
    val pageStackCache = remember {
       val pageStack = PageStack(PageStack.Id(0L), parentSavedPageState)
