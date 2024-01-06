@@ -31,20 +31,22 @@ enum class PageTransitionPreviewValue {
 }
 
 @Composable
-fun <P : Page, C : Page> PageTransitionPreview(
+fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
    parentPage: P,
    childPage:  C,
-   parentPageComposable: PageComposable<P, *>,
-   childPageComposable:  PageComposable<C, *>
+   parentPageComposable: PageComposable<P, PS>,
+   childPageComposable:  PageComposable<C, CS>,
+   parentPageState: (P, PageState.StateSaver) -> PS = parentPageComposable.pageStateFactory.pageStateFactory,
+   childPageState:  (C, PageState.StateSaver) -> CS = childPageComposable .pageStateFactory.pageStateFactory
 ) {
-   val parentPageState = PageStack.SavedPageState(PageStack.PageId(0L), parentPage)
-   val childPageState  = PageStack.SavedPageState(PageStack.PageId(1L), childPage)
+   val parentSavedPageState = PageStack.SavedPageState(PageStack.PageId(0L), parentPage)
+   val childSavedPageState  = PageStack.SavedPageState(PageStack.PageId(1L), childPage)
 
-   val indexedParentPageState = IndexedValue(0, parentPageState)
-   val indexedChildPageState  = IndexedValue(1, childPageState)
+   val indexedParentPageState = IndexedValue(0, parentSavedPageState)
+   val indexedChildPageState  = IndexedValue(1, childSavedPageState)
 
    val pageStackCache = remember {
-      val pageStack = PageStack(PageStack.Id(0L), parentPageState)
+      val pageStack = PageStack(PageStack.Id(0L), parentSavedPageState)
       WritableCache(pageStack)
    }
 
@@ -79,17 +81,27 @@ fun <P : Page, C : Page> PageTransitionPreview(
       )
    }
 
+   val parentPageStateFactory = remember {
+      parentPageComposable.pageStateFactory.copy(pageStateFactory = parentPageState)
+   }
+   val childPageStateFactory = remember {
+      childPageComposable.pageStateFactory.copy(pageStateFactory = childPageState)
+   }
+
    val pageComposableSwitcher = remember {
       PageComposableSwitcher(
-         listOf(parentPageComposable, childPageComposable)
+         listOf(
+            parentPageComposable.copy(pageStateFactory = parentPageStateFactory),
+            childPageComposable .copy(pageStateFactory = childPageStateFactory),
+         )
       )
    }
 
    val pageStateStore = remember {
       PageStateStore(
          listOf(
-            parentPageComposable.pageStateFactory,
-            childPageComposable .pageStateFactory,
+            parentPageStateFactory,
+            childPageStateFactory,
          ),
          coroutineScope
       )
