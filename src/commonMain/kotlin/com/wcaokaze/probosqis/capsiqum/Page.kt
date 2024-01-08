@@ -17,8 +17,10 @@
 package com.wcaokaze.probosqis.capsiqum
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -35,6 +37,7 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.input.pointer.pointerInput
@@ -362,4 +365,20 @@ private inline fun <P : Page, S : PageState> PageFooter(
       pageState as S,
       pageStackState
    )
+}
+
+@Composable
+inline fun FooterButton(
+   noinline onClick: () -> Unit,
+   modifier: Modifier = Modifier,
+   content: @Composable () -> Unit
+) {
+   Box(
+      contentAlignment = Alignment.Center,
+      modifier = modifier
+         .fillMaxHeight()
+         .clickable(onClick = onClick)
+   ) {
+      content()
+   }
 }
