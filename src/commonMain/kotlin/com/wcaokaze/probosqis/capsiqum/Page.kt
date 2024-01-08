@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asState
@@ -334,6 +335,7 @@ internal fun PageFooter(
                .requiredHeight(pageFooterHeight)
                .shadow(4.dp)
                .background(background)
+               .pointerInput(Unit) {}
                .windowInsetsPadding(windowInsets)
          ) {
             PageFooter(
