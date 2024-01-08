@@ -19,6 +19,7 @@ package com.wcaokaze.probosqis.capsiqum
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -97,6 +98,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
       )
    }
 
+   @OptIn(ExperimentalMaterial3Api::class)
    @Composable
    private fun MultiColumnPageStackBoard(
       state: MultiColumnPageStackBoardState,

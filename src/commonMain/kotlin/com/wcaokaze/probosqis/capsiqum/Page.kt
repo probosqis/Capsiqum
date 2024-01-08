@@ -25,9 +25,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.LocalAbsoluteTonalElevation
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -341,12 +343,16 @@ internal fun PageFooter(
                .pointerInput(Unit) {}
                .windowInsetsPadding(windowInsets)
          ) {
-            PageFooter(
-               footerComposable,
-               page,
-               pageState,
-               pageStackState
-            )
+            CompositionLocalProvider(
+               LocalContentColor provides MaterialTheme.colorScheme.onSurface,
+            ) {
+               PageFooter(
+                  footerComposable,
+                  page,
+                  pageState,
+                  pageStackState
+               )
+            }
          }
       }
    }
