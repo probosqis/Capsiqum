@@ -1807,6 +1807,10 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
 
       var pageAHeaderComposed = false
       var pageBHeaderComposed = false
+      var pageAHeaderActionsComposed = false
+      var pageBHeaderActionsComposed = false
+      var pageAFooterComposed = false
+      var pageBFooterComposed = false
 
       val pageAComposable = pageComposable<PageA, PageAState>(
          pageStateFactory { _, _ -> PageAState() },
@@ -1819,7 +1823,22 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
                }
             }
          },
-         footer = null,
+         headerActions = { _, _, _ ->
+            DisposableEffect(Unit) {
+               pageAHeaderActionsComposed = true
+               onDispose {
+                  pageAHeaderActionsComposed = false
+               }
+            }
+         },
+         footer = { _, _, _ ->
+            DisposableEffect(Unit) {
+               pageAFooterComposed = true
+               onDispose {
+                  pageAFooterComposed = false
+               }
+            }
+         },
          pageTransitions = {}
       )
 
@@ -1834,7 +1853,22 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
                }
             }
          },
-         footer = null,
+         headerActions = { _, _, _ ->
+            DisposableEffect(Unit) {
+               pageBHeaderActionsComposed = true
+               onDispose {
+                  pageBHeaderActionsComposed = false
+               }
+            }
+         },
+         footer = { _, _, _ ->
+            DisposableEffect(Unit) {
+               pageBFooterComposed = true
+               onDispose {
+                  pageBFooterComposed = false
+               }
+            }
+         },
          pageTransitions = {}
       )
 
@@ -1869,22 +1903,34 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
       }
 
       rule.runOnIdle {
-         assertTrue (pageAHeaderComposed)
+         assertTrue(pageAHeaderComposed)
+         assertTrue(pageAHeaderActionsComposed)
+         assertTrue(pageAFooterComposed)
          assertFalse(pageBHeaderComposed)
+         assertFalse(pageBHeaderActionsComposed)
+         assertFalse(pageBFooterComposed)
       }
 
       pageStackBoardState.pageStackState(0).startPage(PageB())
 
       rule.runOnIdle {
          assertFalse(pageAHeaderComposed)
-         assertTrue (pageBHeaderComposed)
+         assertFalse(pageAHeaderActionsComposed)
+         assertFalse(pageAFooterComposed)
+         assertTrue(pageBHeaderComposed)
+         assertTrue(pageBHeaderActionsComposed)
+         assertTrue(pageBFooterComposed)
       }
 
       pageStackBoardState.pageStackState(0).finishPage()
 
       rule.runOnIdle {
-         assertTrue (pageAHeaderComposed)
+         assertTrue(pageAHeaderComposed)
+         assertTrue(pageAHeaderActionsComposed)
+         assertTrue(pageAFooterComposed)
          assertFalse(pageBHeaderComposed)
+         assertFalse(pageBHeaderActionsComposed)
+         assertFalse(pageBFooterComposed)
       }
    }
 }

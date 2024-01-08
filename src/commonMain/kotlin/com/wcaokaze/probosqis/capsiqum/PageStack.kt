@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.capsiqum
 
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -182,23 +183,19 @@ internal fun PageStackAppBar(
 ) {
    val savedPageState = pageStackState.pageStack.head
    val page = savedPageState.page
-   val pageComposable = pageComposableSwitcher[page]
+   val pageComposable = pageComposableSwitcher[page] ?: TODO()
    val pageState = remember(savedPageState.id) {
       pageStateStore.get(savedPageState)
    }
 
    TopAppBar(
       title = {
-         if (pageComposable == null) {
-            TODO()
-         } else {
-            PageHeader(
-               pageComposable.headerComposable,
-               page,
-               pageState,
-               pageStackState
-            )
-         }
+         PageHeader(
+            pageComposable.headerComposable,
+            page,
+            pageState,
+            pageStackState
+         )
       },
       navigationIcon = {
          IconButton(
@@ -211,6 +208,17 @@ internal fun PageStackAppBar(
             }
 
             Icon(icon, contentDescription = "Close")
+         }
+      },
+      actions = {
+         val headerActionsComposable = pageComposable.headerActionsComposable
+         if (headerActionsComposable != null) {
+            PageHeaderActions(
+               headerActionsComposable,
+               page,
+               pageState,
+               pageStackState
+            )
          }
       },
       windowInsets = windowInsets,
@@ -228,6 +236,21 @@ private inline fun <P : Page, S : PageState> PageHeader(
 ) {
    @Suppress("UNCHECKED_CAST")
    headerComposable(
+      page,
+      pageState as S,
+      pageStackState
+   )
+}
+
+@Composable
+private inline fun <P : Page, S : PageState> RowScope.PageHeaderActions(
+   actionsComposable: @Composable RowScope.(P, S, PageStackState) -> Unit,
+   page: P,
+   pageState: PageState,
+   pageStackState: PageStackState
+) {
+   @Suppress("UNCHECKED_CAST")
+   actionsComposable(
       page,
       pageState as S,
       pageStackState
