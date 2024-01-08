@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,6 +96,7 @@ class PageTransitionTest {
       pageStateFactory { _, _ -> PageAState() },
       content,
       headerComposable = { _, _, _ -> },
+      headerActionsComposable = { _, _, _ -> },
       footerComposable = null,
       pageTransitionSet = PageTransitionSet.Builder().apply(pageTransitions).build()
    )
@@ -108,6 +109,7 @@ class PageTransitionTest {
       pageStateFactory { _, _ -> PageBState() },
       content,
       headerComposable = { _, _, _ -> },
+      headerActionsComposable = { _, _, _ -> },
       footerComposable = null,
       pageTransitionSet = PageTransitionSet.Builder().apply(pageTransitions).build()
    )

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,15 +23,10 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -41,9 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.SubcomposeLayout
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
@@ -54,6 +47,21 @@ import kotlinx.coroutines.CoroutineScope
 import org.jetbrains.annotations.TestOnly
 
 private const val PAGE_STACK_PADDING_DP = 8
+
+object SingleColumnPageStackBoardDefaults {
+   @ExperimentalMaterial3Api
+   @Composable
+   fun appBarColors(): TopAppBarColors {
+      val colorScheme = MaterialTheme.colorScheme
+
+      return TopAppBarDefaults.topAppBarColors(
+         containerColor = colorScheme.primaryContainer,
+         navigationIconContentColor = colorScheme.onPrimaryContainer,
+         titleContentColor = colorScheme.onPrimaryContainer,
+         actionIconContentColor = colorScheme.onPrimaryContainer,
+      )
+   }
+}
 
 @Stable
 class SingleColumnPageStackBoardState(
@@ -161,12 +169,15 @@ internal class SingleColumnLayoutLogic(
    }
 }
 
+@ExperimentalMaterial3Api
 @Composable
 fun SingleColumnPageStackBoardAppBar(
    state: SingleColumnPageStackBoardState,
    pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
    modifier: Modifier = Modifier,
-   safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing
+   safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing,
+   colors: TopAppBarColors = SingleColumnPageStackBoardDefaults.appBarColors()
 ) {
    SubcomposeLayout(
       modifier = modifier
@@ -204,8 +215,10 @@ fun SingleColumnPageStackBoardAppBar(
                val measurable = subcompose(pageStackLayout.pageStackId) {
                   SingleColumnPageStackAppBar(
                      pageStackLayout.pageStackState,
-                     safeDrawingWindowInsets.only(WindowInsetsSides.Horizontal),
                      pageComposableSwitcher,
+                     pageStateStore,
+                     safeDrawingWindowInsets.only(WindowInsetsSides.Horizontal),
+                     colors,
                      modifier = Modifier.alpha(pageStackLayout.alpha)
                   )
                } .single()
@@ -323,20 +336,22 @@ fun SingleColumnPageStackBoard(
    )
 }
 
+@ExperimentalMaterial3Api
 @Composable
 private fun SingleColumnPageStackAppBar(
-   state: PageStackState,
-   windowInsets: WindowInsets,
+   pageStackState: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
+   windowInsets: WindowInsets,
+   colors: TopAppBarColors,
    modifier: Modifier = Modifier
 ) {
-   @OptIn(ExperimentalMaterial3Api::class)
    PageStackAppBar(
-      state,
+      pageStackState,
+      pageComposableSwitcher,
+      pageStateStore,
       windowInsets,
-      colors = TopAppBarDefaults.topAppBarColors(
-         containerColor = Color.Transparent
-      ),
+      colors,
       modifier = modifier
    )
 }

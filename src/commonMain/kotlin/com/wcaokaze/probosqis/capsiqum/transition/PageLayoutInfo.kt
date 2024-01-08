@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,6 +61,7 @@ open class PageLayoutIds {
       val root       = PageLayoutInfo.LayoutId()
       val background = PageLayoutInfo.LayoutId()
       val content    = PageLayoutInfo.LayoutId()
+      val footer     = PageLayoutInfo.LayoutId()
    }
 
    /**
@@ -79,6 +80,13 @@ open class PageLayoutIds {
     * Page本体。[PageComposable.contentComposable]の親。
     */
    val content = GlobalIds.content
+
+   /**
+    * フッター。[PageComposable.footerComposable]の親。
+    * ヘッダーと異なり、フッターは各Pageごとに別々にコンポーズされ、[content]等と
+    * 同様に遷移アニメーションを付与することが可能。
+    */
+   val footer = GlobalIds.footer
 
    companion object : PageLayoutIds()
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,20 @@
 
 package com.wcaokaze.probosqis.capsiqum
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.LocalAbsoluteTonalElevation
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -26,6 +39,11 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asState
 import com.wcaokaze.probosqis.panoptiqon.update
@@ -276,7 +294,7 @@ internal fun PageContent(
 }
 
 @Composable
-inline fun <P : Page, S : PageState> PageContent(
+private inline fun <P : Page, S : PageState> PageContent(
    pageContentComposable: @Composable (P, S, PageStackState) -> Unit,
    page: P,
    pageState: PageState,
@@ -288,4 +306,85 @@ inline fun <P : Page, S : PageState> PageContent(
       pageState as S,
       pageStackState
    )
+}
+
+private val pageFooterHeight = 48.dp
+
+@Composable
+internal fun PageFooter(
+   savedPageState: PageStack.SavedPageState,
+   pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
+   pageStackState: PageStackState,
+   windowInsets: WindowInsets
+) {
+   val page = savedPageState.page
+   val pageComposable = pageComposableSwitcher[page]
+   val pageState = remember(savedPageState.id) {
+      pageStateStore.get(savedPageState)
+   }
+
+   if (pageComposable == null) {
+      TODO()
+   } else {
+      val footerComposable = pageComposable.footerComposable
+
+      if (footerComposable != null) {
+         val absoluteElevation = LocalAbsoluteTonalElevation.current
+         val background = MaterialTheme.colorScheme
+            .surfaceColorAtElevation(absoluteElevation + 4.dp)
+
+         Box(
+            modifier = Modifier
+               .fillMaxWidth()
+               .requiredHeight(pageFooterHeight)
+               .shadow(4.dp)
+               .background(background)
+               .pointerInput(Unit) {}
+               .windowInsetsPadding(windowInsets)
+         ) {
+            CompositionLocalProvider(
+               LocalContentColor provides MaterialTheme.colorScheme.onSurface,
+            ) {
+               PageFooter(
+                  footerComposable,
+                  page,
+                  pageState,
+                  pageStackState
+               )
+            }
+         }
+      }
+   }
+}
+
+@Composable
+private inline fun <P : Page, S : PageState> PageFooter(
+   footerComposable: @Composable (P, S, PageStackState) -> Unit,
+   page: P,
+   pageState: PageState,
+   pageStackState: PageStackState
+) {
+   @Suppress("UNCHECKED_CAST")
+   footerComposable(
+      page,
+      pageState as S,
+      pageStackState
+   )
+}
+
+@Composable
+inline fun FooterButton(
+   noinline onClick: () -> Unit,
+   modifier: Modifier = Modifier,
+   content: @Composable () -> Unit
+) {
+   Box(
+      contentAlignment = Alignment.Center,
+      modifier = modifier
+         .fillMaxHeight()
+         .clickable(onClick = onClick)
+   ) {
+      content()
+   }
 }

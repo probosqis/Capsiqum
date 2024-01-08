@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.capsiqum
 
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
@@ -29,6 +30,9 @@ inline fun <reified P : Page, S : PageState> pageComposable(
    pageStateFactory: PageStateFactory<P, S>,
    noinline content: @Composable (P, S, PageStackState) -> Unit,
    noinline header: @Composable (P, S, PageStackState) -> Unit,
+   // 本来nullableである必要はないがデフォルト引数でreified型引数のPとSを使えないため
+   // headerActionsが空の状態をnullでも表せるようにする
+   noinline headerActions: (@Composable RowScope.(P, S, PageStackState) -> Unit)? = null,
    noinline footer: (@Composable (P, S, PageStackState) -> Unit)?,
    pageTransitions: PageTransitionSet.Builder.() -> Unit
 ) = PageComposable(
@@ -36,6 +40,7 @@ inline fun <reified P : Page, S : PageState> pageComposable(
    pageStateFactory,
    content,
    header,
+   headerActions,
    footer,
    pageTransitionSet = PageTransitionSet.Builder().apply(pageTransitions).build()
 )
@@ -46,6 +51,7 @@ data class PageComposable<P : Page, S : PageState>(
    val pageStateFactory: PageStateFactory<P, S>,
    val contentComposable: @Composable (P, S, PageStackState) -> Unit,
    val headerComposable: @Composable (P, S, PageStackState) -> Unit,
+   val headerActionsComposable: (@Composable RowScope.(P, S, PageStackState) -> Unit)?,
    val footerComposable: (@Composable (P, S, PageStackState) -> Unit)?,
    val pageTransitionSet: PageTransitionSet
 )

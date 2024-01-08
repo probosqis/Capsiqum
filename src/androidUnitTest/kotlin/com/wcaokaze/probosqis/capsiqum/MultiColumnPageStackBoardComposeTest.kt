@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,10 @@ package com.wcaokaze.probosqis.capsiqum
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -96,6 +98,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
       )
    }
 
+   @OptIn(ExperimentalMaterial3Api::class)
    @Composable
    private fun MultiColumnPageStackBoard(
       state: MultiColumnPageStackBoardState,
@@ -1793,6 +1796,143 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
             expectedScrollOffset(0),
             pageStackBoardState.scrollState.scrollOffset
          )
+      }
+   }
+
+   @Test
+   fun pageStackHeaderFooter() {
+      class PageA : Page()
+      class PageB : Page()
+
+      class PageAState : PageState()
+      class PageBState : PageState()
+
+      var pageAHeaderComposed = false
+      var pageBHeaderComposed = false
+      var pageAHeaderActionsComposed = false
+      var pageBHeaderActionsComposed = false
+      var pageAFooterComposed = false
+      var pageBFooterComposed = false
+
+      val pageAComposable = pageComposable<PageA, PageAState>(
+         pageStateFactory { _, _ -> PageAState() },
+         content = { _, _, _ -> },
+         header = { _, _, _ ->
+            DisposableEffect(Unit) {
+               pageAHeaderComposed = true
+               onDispose {
+                  pageAHeaderComposed = false
+               }
+            }
+         },
+         headerActions = { _, _, _ ->
+            DisposableEffect(Unit) {
+               pageAHeaderActionsComposed = true
+               onDispose {
+                  pageAHeaderActionsComposed = false
+               }
+            }
+         },
+         footer = { _, _, _ ->
+            DisposableEffect(Unit) {
+               pageAFooterComposed = true
+               onDispose {
+                  pageAFooterComposed = false
+               }
+            }
+         },
+         pageTransitions = {}
+      )
+
+      val pageBComposable = pageComposable<PageB, PageBState>(
+         pageStateFactory { _, _ -> PageBState() },
+         content = { _, _, _ -> },
+         header = { _, _, _ ->
+            DisposableEffect(Unit) {
+               pageBHeaderComposed = true
+               onDispose {
+                  pageBHeaderComposed = false
+               }
+            }
+         },
+         headerActions = { _, _, _ ->
+            DisposableEffect(Unit) {
+               pageBHeaderActionsComposed = true
+               onDispose {
+                  pageBHeaderActionsComposed = false
+               }
+            }
+         },
+         footer = { _, _, _ ->
+            DisposableEffect(Unit) {
+               pageBFooterComposed = true
+               onDispose {
+                  pageBFooterComposed = false
+               }
+            }
+         },
+         pageTransitions = {}
+      )
+
+      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+      lateinit var coroutineScope: CoroutineScope
+
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+
+         pageStackBoardState = remember {
+            MultiColumnPageStackBoardState(
+               createPageStackBoard(PageA()),
+               pageStackRepository,
+               coroutineScope
+            )
+         }
+
+         MultiColumnPageStackBoard(
+            pageStackBoardState,
+            pageComposableSwitcher = remember {
+               PageComposableSwitcher(
+                  listOf(pageAComposable, pageBComposable)
+               )
+            },
+            pageStateStore = remember {
+               PageStateStore(
+                  listOf(pageAComposable.pageStateFactory, pageBComposable.pageStateFactory),
+                  coroutineScope
+               )
+            }
+         )
+      }
+
+      rule.runOnIdle {
+         assertTrue(pageAHeaderComposed)
+         assertTrue(pageAHeaderActionsComposed)
+         assertTrue(pageAFooterComposed)
+         assertFalse(pageBHeaderComposed)
+         assertFalse(pageBHeaderActionsComposed)
+         assertFalse(pageBFooterComposed)
+      }
+
+      pageStackBoardState.pageStackState(0).startPage(PageB())
+
+      rule.runOnIdle {
+         assertFalse(pageAHeaderComposed)
+         assertFalse(pageAHeaderActionsComposed)
+         assertFalse(pageAFooterComposed)
+         assertTrue(pageBHeaderComposed)
+         assertTrue(pageBHeaderActionsComposed)
+         assertTrue(pageBFooterComposed)
+      }
+
+      pageStackBoardState.pageStackState(0).finishPage()
+
+      rule.runOnIdle {
+         assertTrue(pageAHeaderComposed)
+         assertTrue(pageAHeaderActionsComposed)
+         assertTrue(pageAFooterComposed)
+         assertFalse(pageBHeaderComposed)
+         assertFalse(pageBHeaderActionsComposed)
+         assertFalse(pageBFooterComposed)
       }
    }
 }

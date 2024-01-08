@@ -23,19 +23,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,6 +59,27 @@ import org.jetbrains.annotations.TestOnly
 import kotlin.math.roundToInt
 
 private const val PAGE_STACK_PADDING_DP = 8
+
+object MultiColumnPageStackBoardDefaults {
+   @ExperimentalMaterial3Api
+   @Composable
+   fun pageStackAppBarColors(): MultiColumnPageStackAppBarColors {
+      val colorScheme = MaterialTheme.colorScheme
+
+      return MultiColumnPageStackAppBarColors(
+         active = TopAppBarDefaults.topAppBarColors(
+            containerColor = colorScheme.surfaceTint.copy(alpha = 0.13f)
+               .compositeOver(MaterialTheme.colorScheme.primaryContainer),
+            navigationIconContentColor = colorScheme.onPrimaryContainer,
+            titleContentColor = colorScheme.onPrimaryContainer,
+            actionIconContentColor = colorScheme.onPrimaryContainer,
+         ),
+         inactive = TopAppBarDefaults.topAppBarColors(
+            containerColor = colorScheme.surfaceColorAtElevation(4.dp),
+         )
+      )
+   }
+}
 
 @Stable
 class MultiColumnPageStackBoardState(
@@ -174,6 +190,14 @@ internal class MultiColumnLayoutLogic(
    }
 }
 
+@ExperimentalMaterial3Api
+@Immutable
+data class MultiColumnPageStackAppBarColors(
+   val active: TopAppBarColors,
+   val inactive: TopAppBarColors
+)
+
+@ExperimentalMaterial3Api
 @Composable
 fun MultiColumnPageStackBoard(
    state: MultiColumnPageStackBoardState,
@@ -182,6 +206,8 @@ fun MultiColumnPageStackBoard(
    pageStackCount: Int,
    windowInsets: WindowInsets,
    modifier: Modifier = Modifier,
+   pageStackAppBarColors: MultiColumnPageStackAppBarColors
+         = MultiColumnPageStackBoardDefaults.pageStackAppBarColors(),
    onTopAppBarHeightChanged: (Dp) -> Unit = {}
 ) {
    SubcomposeLayout(
@@ -237,6 +263,7 @@ fun MultiColumnPageStackBoard(
                   pageStackLayout.pageStackState,
                   isActive = index == state.activePageStackIndex,
                   windowInsets.only(WindowInsetsSides.Bottom),
+                  pageStackAppBarColors,
                   pageComposableSwitcher,
                   pageStateStore,
                   onTopAppBarHeightChanged,
@@ -273,11 +300,13 @@ fun MultiColumnPageStackBoard(
    )
 }
 
+@ExperimentalMaterial3Api
 @Composable
 private fun PageStack(
    state: PageStackState,
    isActive: Boolean,
    windowInsets: WindowInsets,
+   appBarColors: MultiColumnPageStackAppBarColors,
    pageComposableSwitcher: PageComposableSwitcher,
    pageStateStore: PageStateStore,
    onTopAppBarHeightChanged: (Dp) -> Unit,
@@ -294,7 +323,10 @@ private fun PageStack(
 
          MultiColumnPageStackAppBar(
             state,
+            pageComposableSwitcher,
+            pageStateStore,
             isActive,
+            appBarColors,
             modifier = Modifier
                .onSizeChanged {
                   val heightPx = it.height
@@ -312,26 +344,23 @@ private fun PageStack(
    }
 }
 
+@ExperimentalMaterial3Api
 @Composable
 private fun MultiColumnPageStackAppBar(
-   state: PageStackState,
+   pageStackState: PageStackState,
+   pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
    isActive: Boolean,
+   colors: MultiColumnPageStackAppBarColors,
    modifier: Modifier = Modifier
 ) {
    @OptIn(ExperimentalMaterial3Api::class)
    PageStackAppBar(
-      state,
+      pageStackState,
+      pageComposableSwitcher,
+      pageStateStore,
       windowInsets = WindowInsets(0, 0, 0, 0),
-      colors = TopAppBarDefaults.topAppBarColors(
-         containerColor = if (isActive) {
-            MaterialTheme.colorScheme
-               .surfaceTint.copy(alpha = 0.13f)
-               .compositeOver(MaterialTheme.colorScheme.primaryContainer)
-         } else {
-            MaterialTheme.colorScheme
-               .surfaceColorAtElevation(4.dp)
-         }
-      ),
+      colors = if (isActive) { colors.active } else { colors.inactive },
       modifier = modifier
    )
 }
