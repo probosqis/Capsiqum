@@ -27,6 +27,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
@@ -51,6 +52,7 @@ import com.wcaokaze.probosqis.capsiqum.PageFooter
 import com.wcaokaze.probosqis.capsiqum.PageStack
 import com.wcaokaze.probosqis.capsiqum.PageStackState
 import com.wcaokaze.probosqis.capsiqum.PageStateStore
+import com.wcaokaze.probosqis.capsiqum.pageFooterHeight
 import kotlinx.collections.immutable.persistentMapOf
 
 internal val LocalPageTransitionAnimations
@@ -478,31 +480,50 @@ private fun PageTransition(
                         .background(backgroundColor)
                   )
 
+                  val page = savedPageState.page
+                  val pageComposable = pageComposableSwitcher[page] ?: TODO()
+
+                  val pageState = remember(savedPageState.id) {
+                     pageStateStore.get(savedPageState)
+                  }
+
+                  val footerComposable = pageComposable.footerComposable
+
+                  val contentBottomPaddingModifier
+                        = if (footerComposable != null) {
+                           Modifier.padding(bottom = pageFooterHeight)
+                        } else {
+                           Modifier
+                        }
+
                   Box(
                      modifier = Modifier
                         .transitionElement(PageLayoutIds.content)
                         .windowInsetsPadding(windowInsets)
+                        .then(contentBottomPaddingModifier)
                   ) {
                      PageContent(
-                        savedPageState,
-                        pageComposableSwitcher,
-                        pageStateStore,
+                        pageComposable.contentComposable,
+                        page,
+                        pageState,
                         pageStackState
                      )
                   }
 
-                  Box(
-                     Modifier
-                        .align(Alignment.BottomCenter)
-                        .transitionElement(PageLayoutIds.footer)
-                  ) {
-                     PageFooter(
-                        savedPageState,
-                        pageComposableSwitcher,
-                        pageStateStore,
-                        pageStackState,
-                        WindowInsets(0, 0, 0, 0)
-                     )
+                  if (footerComposable != null) {
+                     Box(
+                        Modifier
+                           .align(Alignment.BottomCenter)
+                           .transitionElement(PageLayoutIds.footer)
+                     ) {
+                        PageFooter(
+                           footerComposable,
+                           page,
+                           pageState,
+                           pageStackState,
+                           WindowInsets(0, 0, 0, 0)
+                        )
+                     }
                   }
                }
             }

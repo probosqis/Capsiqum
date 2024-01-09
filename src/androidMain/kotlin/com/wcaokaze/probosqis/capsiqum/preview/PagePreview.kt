@@ -97,6 +97,8 @@ fun <P : Page> PagePreview(
       )
    }
 
+   val pageState = remember { pageStateStore.get(savedPageState) }
+
    Surface(
       shape = MaterialTheme.shapes.large,
       tonalElevation = 3.dp,
@@ -115,9 +117,9 @@ fun <P : Page> PagePreview(
          )
 
          PageContent(
-            savedPageState,
-            pageComposableSwitcher,
-            pageStateStore,
+            pageComposable.contentComposable,
+            page,
+            pageState,
             pageStackState
          )
       }

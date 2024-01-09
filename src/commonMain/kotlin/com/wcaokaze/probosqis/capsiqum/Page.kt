@@ -269,108 +269,54 @@ abstract class PageState {
 }
 
 @Composable
-internal fun PageContent(
-   savedPageState: PageStack.SavedPageState,
-   pageComposableSwitcher: PageComposableSwitcher,
-   pageStateStore: PageStateStore,
-   pageStackState: PageStackState
-) {
-   val page = savedPageState.page
-   val pageContentComposable = pageComposableSwitcher[page]
-   val pageState = remember(savedPageState.id) {
-      pageStateStore.get(savedPageState)
-   }
-
-   if (pageContentComposable == null) {
-      TODO()
-   } else {
-      PageContent(
-         pageContentComposable.contentComposable,
-         page,
-         pageState,
-         pageStackState
-      )
-   }
-}
-
-@Composable
-private inline fun <P : Page, S : PageState> PageContent(
+internal fun <P : Page, S : PageState> PageContent(
    pageContentComposable: @Composable (P, S, PageStackState) -> Unit,
-   page: P,
+   page: Page,
    pageState: PageState,
    pageStackState: PageStackState
 ) {
    @Suppress("UNCHECKED_CAST")
    pageContentComposable(
-      page,
+      page as P,
       pageState as S,
       pageStackState
    )
 }
 
-private val pageFooterHeight = 48.dp
+internal val pageFooterHeight = 48.dp
 
 @Composable
-internal fun PageFooter(
-   savedPageState: PageStack.SavedPageState,
-   pageComposableSwitcher: PageComposableSwitcher,
-   pageStateStore: PageStateStore,
+internal fun <P : Page, S : PageState> PageFooter(
+   footerComposable: @Composable (P, S, PageStackState) -> Unit,
+   page: Page,
+   pageState: PageState,
    pageStackState: PageStackState,
    windowInsets: WindowInsets
 ) {
-   val page = savedPageState.page
-   val pageComposable = pageComposableSwitcher[page]
-   val pageState = remember(savedPageState.id) {
-      pageStateStore.get(savedPageState)
-   }
+   val absoluteElevation = LocalAbsoluteTonalElevation.current
+   val background = MaterialTheme.colorScheme
+      .surfaceColorAtElevation(absoluteElevation + 4.dp)
 
-   if (pageComposable == null) {
-      TODO()
-   } else {
-      val footerComposable = pageComposable.footerComposable
-
-      if (footerComposable != null) {
-         val absoluteElevation = LocalAbsoluteTonalElevation.current
-         val background = MaterialTheme.colorScheme
-            .surfaceColorAtElevation(absoluteElevation + 4.dp)
-
-         Box(
-            modifier = Modifier
-               .fillMaxWidth()
-               .requiredHeight(pageFooterHeight)
-               .shadow(4.dp)
-               .background(background)
-               .pointerInput(Unit) {}
-               .windowInsetsPadding(windowInsets)
-         ) {
-            CompositionLocalProvider(
-               LocalContentColor provides MaterialTheme.colorScheme.onSurface,
-            ) {
-               PageFooter(
-                  footerComposable,
-                  page,
-                  pageState,
-                  pageStackState
-               )
-            }
-         }
+   Box(
+      modifier = Modifier
+         .fillMaxWidth()
+         .requiredHeight(pageFooterHeight)
+         .shadow(4.dp)
+         .background(background)
+         .pointerInput(Unit) {}
+         .windowInsetsPadding(windowInsets)
+   ) {
+      CompositionLocalProvider(
+         LocalContentColor provides MaterialTheme.colorScheme.onSurface,
+      ) {
+         @Suppress("UNCHECKED_CAST")
+         footerComposable(
+            page as P,
+            pageState as S,
+            pageStackState
+         )
       }
    }
-}
-
-@Composable
-private inline fun <P : Page, S : PageState> PageFooter(
-   footerComposable: @Composable (P, S, PageStackState) -> Unit,
-   page: P,
-   pageState: PageState,
-   pageStackState: PageStackState
-) {
-   @Suppress("UNCHECKED_CAST")
-   footerComposable(
-      page,
-      pageState as S,
-      pageStackState
-   )
 }
 
 @Composable

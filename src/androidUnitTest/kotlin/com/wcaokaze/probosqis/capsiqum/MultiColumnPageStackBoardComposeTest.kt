@@ -61,6 +61,7 @@ import kotlin.test.assertFails
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotEquals
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
@@ -1800,7 +1801,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
    }
 
    @Test
-   fun pageStackHeaderFooter() {
+   fun pageComposableCalled() {
       class PageA : Page()
       class PageB : Page()
 
@@ -1811,12 +1812,21 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
       var pageBHeaderComposed = false
       var pageAHeaderActionsComposed = false
       var pageBHeaderActionsComposed = false
+      var pageAContentComposed = false
+      var pageBContentComposed = false
       var pageAFooterComposed = false
       var pageBFooterComposed = false
 
       val pageAComposable = pageComposable<PageA, PageAState>(
          pageStateFactory { _, _ -> PageAState() },
-         content = { _, _, _ -> },
+         content = { _, _, _ ->
+            DisposableEffect(Unit) {
+               pageAContentComposed = true
+               onDispose {
+                  pageAContentComposed = false
+               }
+            }
+         },
          header = { _, _, _ ->
             DisposableEffect(Unit) {
                pageAHeaderComposed = true
@@ -1846,7 +1856,14 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
 
       val pageBComposable = pageComposable<PageB, PageBState>(
          pageStateFactory { _, _ -> PageBState() },
-         content = { _, _, _ -> },
+         content = { _, _, _ ->
+            DisposableEffect(Unit) {
+               pageBContentComposed = true
+               onDispose {
+                  pageBContentComposed = false
+               }
+            }
+         },
          header = { _, _, _ ->
             DisposableEffect(Unit) {
                pageBHeaderComposed = true
@@ -1907,9 +1924,11 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
       rule.runOnIdle {
          assertTrue(pageAHeaderComposed)
          assertTrue(pageAHeaderActionsComposed)
+         assertTrue(pageAContentComposed)
          assertTrue(pageAFooterComposed)
          assertFalse(pageBHeaderComposed)
          assertFalse(pageBHeaderActionsComposed)
+         assertFalse(pageBContentComposed)
          assertFalse(pageBFooterComposed)
       }
 
@@ -1918,9 +1937,11 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
       rule.runOnIdle {
          assertFalse(pageAHeaderComposed)
          assertFalse(pageAHeaderActionsComposed)
+         assertFalse(pageAContentComposed)
          assertFalse(pageAFooterComposed)
          assertTrue(pageBHeaderComposed)
          assertTrue(pageBHeaderActionsComposed)
+         assertTrue(pageBContentComposed)
          assertTrue(pageBFooterComposed)
       }
 
@@ -1929,10 +1950,101 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
       rule.runOnIdle {
          assertTrue(pageAHeaderComposed)
          assertTrue(pageAHeaderActionsComposed)
+         assertTrue(pageAContentComposed)
          assertTrue(pageAFooterComposed)
          assertFalse(pageBHeaderComposed)
          assertFalse(pageBHeaderActionsComposed)
+         assertFalse(pageBContentComposed)
          assertFalse(pageBFooterComposed)
+      }
+   }
+
+   @Test
+   fun pageComposableArguments() {
+      var contentArgumentPage:       TestPage? = null
+      var headerArgumentPage:        TestPage? = null
+      var headerActionsArgumentPage: TestPage? = null
+      var footerArgumentPage:        TestPage? = null
+      var contentArgumentPageState:       TestPageState? = null
+      var headerArgumentPageState:        TestPageState? = null
+      var headerActionsArgumentPageState: TestPageState? = null
+      var footerArgumentPageState:        TestPageState? = null
+      var contentArgumentPageStackState:       PageStackState? = null
+      var headerArgumentPageStackState:        PageStackState? = null
+      var headerActionsArgumentPageStackState: PageStackState? = null
+      var footerArgumentPageStackState:        PageStackState? = null
+
+      val pageComposable = pageComposable<TestPage, TestPageState>(
+         pageStateFactory { _, _ -> TestPageState() },
+         content = { page, pageState, pageStackState ->
+            contentArgumentPage = page
+            contentArgumentPageState = pageState
+            contentArgumentPageStackState = pageStackState
+         },
+         header = { page, pageState, pageStackState ->
+            headerArgumentPage = page
+            headerArgumentPageState = pageState
+            headerArgumentPageStackState = pageStackState
+         },
+         headerActions = { page, pageState, pageStackState ->
+            headerActionsArgumentPage = page
+            headerActionsArgumentPageState = pageState
+            headerActionsArgumentPageStackState = pageStackState
+         },
+         footer = { page, pageState, pageStackState ->
+            footerArgumentPage = page
+            footerArgumentPageState = pageState
+            footerArgumentPageStackState = pageStackState
+         },
+         pageTransitions = {}
+      )
+
+      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+
+      val page = TestPage(0)
+
+      rule.setContent {
+         val coroutineScope = rememberCoroutineScope()
+
+         pageStackBoardState = remember {
+            MultiColumnPageStackBoardState(
+               createPageStackBoard(page),
+               pageStackRepository,
+               coroutineScope
+            )
+         }
+
+         MultiColumnPageStackBoard(
+            pageStackBoardState,
+            pageComposableSwitcher = remember {
+               PageComposableSwitcher(
+                  listOf(pageComposable)
+               )
+            },
+            pageStateStore = remember {
+               PageStateStore(
+                  listOf(pageComposable.pageStateFactory),
+                  coroutineScope
+               )
+            }
+         )
+      }
+
+      rule.runOnIdle {
+         assertSame(page, contentArgumentPage)
+         assertSame(page, headerArgumentPage)
+         assertSame(page, headerActionsArgumentPage)
+         assertSame(page, footerArgumentPage)
+
+         assertSame(contentArgumentPageState, headerArgumentPageState)
+         assertSame(contentArgumentPageState, headerActionsArgumentPageState)
+         assertSame(contentArgumentPageState, footerArgumentPageState)
+
+         val pageStackState = pageStackBoardState.pageStackState(0)
+         assertSame(pageStackState, contentArgumentPageStackState)
+         assertSame(pageStackState, headerArgumentPageStackState)
+         assertSame(pageStackState, headerActionsArgumentPageStackState)
+         assertSame(pageStackState, footerArgumentPageStackState)
       }
    }
 }
