@@ -27,6 +27,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.surfaceColorAtElevation
@@ -408,7 +409,8 @@ internal class PageTransitionState(
 internal fun PageTransition(
    pageStackState: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
-   pageStateStore: PageStateStore
+   pageStateStore: PageStateStore,
+   windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
 ) {
    val transitionState = remember(pageStackState, pageComposableSwitcher) {
       PageTransitionState(pageStackState, pageComposableSwitcher)
@@ -419,7 +421,8 @@ internal fun PageTransition(
       pageStackState,
       pageComposableSwitcher,
       pageStateStore,
-      transition = transitionState.updateTransition()
+      transition = transitionState.updateTransition(),
+      windowInsets
    )
 }
 
@@ -428,7 +431,8 @@ internal fun PageTransitionPreview(
    pageStackState: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
    pageStateStore: PageStateStore,
-   baseTransition: Transition<IndexedValue<PageStack.SavedPageState>>
+   baseTransition: Transition<IndexedValue<PageStack.SavedPageState>>,
+   windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
 ) {
    val transitionState = remember(pageStackState, pageComposableSwitcher) {
       PageTransitionState(pageStackState, pageComposableSwitcher)
@@ -439,7 +443,8 @@ internal fun PageTransitionPreview(
       pageStackState,
       pageComposableSwitcher,
       pageStateStore,
-      transition = transitionState.createChildTransitionForPreview(baseTransition)
+      transition = transitionState.createChildTransitionForPreview(baseTransition),
+      windowInsets
    )
 }
 
@@ -449,7 +454,8 @@ private fun PageTransition(
    pageStackState: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
    pageStateStore: PageStateStore,
-   transition: Transition<PageLayoutInfo>
+   transition: Transition<PageLayoutInfo>,
+   windowInsets: WindowInsets
 ) {
    Box {
       val backgroundColor = MaterialTheme.colorScheme
@@ -472,7 +478,11 @@ private fun PageTransition(
                         .background(backgroundColor)
                   )
 
-                  Box(Modifier.transitionElement(PageLayoutIds.content)) {
+                  Box(
+                     modifier = Modifier
+                        .transitionElement(PageLayoutIds.content)
+                        .windowInsetsPadding(windowInsets)
+                  ) {
                      PageContent(
                         savedPageState,
                         pageComposableSwitcher,

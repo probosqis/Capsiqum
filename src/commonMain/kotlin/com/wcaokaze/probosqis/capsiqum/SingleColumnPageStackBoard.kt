@@ -176,7 +176,8 @@ fun SingleColumnPageStackBoardAppBar(
    pageComposableSwitcher: PageComposableSwitcher,
    pageStateStore: PageStateStore,
    modifier: Modifier = Modifier,
-   safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing,
+   windowInsets: WindowInsets = WindowInsets
+      .safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
    colors: TopAppBarColors = SingleColumnPageStackBoardDefaults.appBarColors()
 ) {
    SubcomposeLayout(
@@ -217,7 +218,7 @@ fun SingleColumnPageStackBoardAppBar(
                      pageStackLayout.pageStackState,
                      pageComposableSwitcher,
                      pageStateStore,
-                     safeDrawingWindowInsets.only(WindowInsetsSides.Horizontal),
+                     windowInsets,
                      colors,
                      modifier = Modifier.alpha(pageStackLayout.alpha)
                   )
@@ -309,6 +310,7 @@ fun SingleColumnPageStackBoard(
                   pageStackLayout.pageStackState,
                   pageComposableSwitcher,
                   pageStateStore,
+                  windowInsets = windowInsets,
                   modifier = Modifier.alpha(pageStackLayout.alpha)
                )
             } .single()
@@ -361,6 +363,7 @@ private fun PageStackContent(
    state: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
    pageStateStore: PageStateStore,
+   windowInsets: WindowInsets,
    modifier: Modifier = Modifier
 ) {
    Surface(
@@ -368,6 +371,6 @@ private fun PageStackContent(
       shadowElevation = 4.dp,
       modifier = modifier
    ) {
-      PageTransition(state, pageComposableSwitcher, pageStateStore)
+      PageTransition(state, pageComposableSwitcher, pageStateStore, windowInsets)
    }
 }
