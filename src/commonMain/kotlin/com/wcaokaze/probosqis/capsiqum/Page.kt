@@ -299,12 +299,12 @@ internal fun <P : Page, S : PageState> PageFooter(
 
    Box(
       modifier = Modifier
-         .fillMaxWidth()
-         .requiredHeight(pageFooterHeight)
          .shadow(4.dp)
          .background(background)
          .pointerInput(Unit) {}
          .windowInsetsPadding(windowInsets)
+         .fillMaxWidth()
+         .requiredHeight(pageFooterHeight)
    ) {
       CompositionLocalProvider(
          LocalContentColor provides MaterialTheme.colorScheme.onSurface,
