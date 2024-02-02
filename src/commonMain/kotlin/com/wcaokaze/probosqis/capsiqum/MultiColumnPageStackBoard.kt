@@ -338,7 +338,8 @@ private fun PageStack(
          PageTransition(
             state,
             pageComposableSwitcher,
-            pageStateStore
+            pageStateStore,
+            windowInsets
          )
       }
    }
