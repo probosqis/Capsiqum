@@ -18,6 +18,8 @@ package com.wcaokaze.probosqis.capsiqum.preview
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -42,7 +44,8 @@ import com.wcaokaze.probosqis.panoptiqon.WritableCache
 @Composable
 fun <P : Page> PagePreview(
    page: P,
-   pageComposable: PageComposable<P, *>
+   pageComposable: PageComposable<P, *>,
+   windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
 ) {
    val savedPageState = remember {
       PageStack.SavedPageState(PageStack.PageId(0L), page)
@@ -110,7 +113,7 @@ fun <P : Page> PagePreview(
             pageStackState,
             pageComposableSwitcher,
             pageStateStore,
-            windowInsets = WindowInsets(0, 0, 0, 0),
+            windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
             colors = TopAppBarDefaults.topAppBarColors(
                containerColor = MaterialTheme.colorScheme.primaryContainer
             )
@@ -121,7 +124,7 @@ fun <P : Page> PagePreview(
             page,
             pageState,
             pageStackState,
-            windowInsets = WindowInsets(0, 0, 0, 0),
+            windowInsets.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
          )
       }
    }
