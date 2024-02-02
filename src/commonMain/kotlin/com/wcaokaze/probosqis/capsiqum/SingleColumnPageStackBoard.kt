@@ -40,6 +40,7 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransition
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
@@ -115,7 +116,12 @@ class SingleColumnPageStackBoardState(
       density: Density,
       pageStackBoardWidth: Int,
       pageStackPadding: Int
-   ) = layout(density, pageStackBoardWidth, pageStackCount = 1, pageStackPadding)
+   ) {
+      super.layout(density)
+
+      layout.layout(animCoroutineScope, pageStackBoardWidth,
+         pageStackPadding, scrollState)
+   }
 }
 
 @Stable
@@ -138,10 +144,14 @@ internal class SingleColumnLayoutLogic(
       currentScrollOffset: Float
    ): Int = pageStackLayoutState.position.x
 
-   override fun layout(
+   /**
+    * @param animCoroutineScope
+    *   PageStackの移動や幅変更があったときのアニメーションを再生するための
+    *   CoroutineScope
+    */
+   fun layout(
       animCoroutineScope: CoroutineScope,
       pageStackBoardWidth: Int,
-      pageStackCount: Int,
       pageStackPadding: Int,
       scrollState: PageStackBoardScrollState
    ) {

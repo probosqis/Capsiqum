@@ -49,8 +49,10 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransition
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
@@ -111,6 +113,21 @@ class MultiColumnPageStackBoardState(
 
    override fun pageStackState(index: Int): PageStackState
          = layout.pageStackLayout(index).pageStackState
+
+   internal fun layout(
+      density: Density,
+      pageStackBoardWidth: Int,
+      pageStackCount: Int,
+      pageStackPadding: Int,
+      windowInsets: WindowInsets,
+      layoutDirection: LayoutDirection
+   ) {
+      super.layout(density)
+
+      layout.layout(density, animCoroutineScope, pageStackBoardWidth,
+         pageStackCount, pageStackPadding, windowInsets, layoutDirection,
+         scrollState)
+   }
 }
 
 @Stable
@@ -155,19 +172,32 @@ internal class MultiColumnLayoutLogic(
       }
    }
 
-   override fun layout(
+   /**
+    * @param animCoroutineScope
+    *   PageStackの移動や幅変更があったときのアニメーションを再生するための
+    *   CoroutineScope
+    */
+   fun layout(
+      density: Density,
       animCoroutineScope: CoroutineScope,
       pageStackBoardWidth: Int,
       pageStackCount: Int,
       pageStackPadding: Int,
+      windowInsets: WindowInsets,
+      layoutDirection: LayoutDirection,
       scrollState: PageStackBoardScrollState
    ) {
+      val leftWindowInset  = windowInsets.getLeft (density, layoutDirection)
+      val rightWindowInset = windowInsets.getRight(density, layoutDirection)
+
       val pageStackWidth = (
-         (pageStackBoardWidth - pageStackPadding * 2) / pageStackCount
+         (pageStackBoardWidth
+               - leftWindowInset - rightWindowInset
+               - pageStackPadding * 2) / pageStackCount
          - pageStackPadding * 2
       )
 
-      var x = pageStackPadding
+      var x = leftWindowInset + pageStackPadding
 
       for (layoutState in list) {
          x += pageStackPadding
@@ -180,7 +210,7 @@ internal class MultiColumnLayoutLogic(
          x += pageStackWidth + pageStackPadding
       }
 
-      x += pageStackPadding
+      x += pageStackPadding + rightWindowInset
 
       this.pageStackBoardWidth = pageStackBoardWidth
       this.pageStackPadding = pageStackPadding
@@ -229,7 +259,7 @@ fun MultiColumnPageStackBoard(
          val pageStackPadding = PAGE_STACK_PADDING_DP.dp.roundToPx()
 
          state.layout(density = this, pageStackBoardWidth, pageStackCount,
-            pageStackPadding)
+            pageStackPadding, windowInsets, layoutDirection)
 
          val scrollOffset = state.scrollState.scrollOffset.toInt()
 
