@@ -1819,7 +1819,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
 
       val pageAComposable = pageComposable<PageA, PageAState>(
          pageStateFactory { _, _ -> PageAState() },
-         content = { _, _, _ ->
+         content = { _, _, _, _ ->
             DisposableEffect(Unit) {
                pageAContentComposed = true
                onDispose {
@@ -1856,7 +1856,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
 
       val pageBComposable = pageComposable<PageB, PageBState>(
          pageStateFactory { _, _ -> PageBState() },
-         content = { _, _, _ ->
+         content = { _, _, _, _ ->
             DisposableEffect(Unit) {
                pageBContentComposed = true
                onDispose {
@@ -1976,7 +1976,7 @@ class MultiColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
 
       val pageComposable = pageComposable<TestPage, TestPageState>(
          pageStateFactory { _, _ -> TestPageState() },
-         content = { page, pageState, pageStackState ->
+         content = { page, pageState, pageStackState, _ ->
             contentArgumentPage = page
             contentArgumentPageState = pageState
             contentArgumentPageStackState = pageStackState

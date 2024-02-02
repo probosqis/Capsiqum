@@ -120,7 +120,8 @@ fun <P : Page> PagePreview(
             pageComposable.contentComposable,
             page,
             pageState,
-            pageStackState
+            pageStackState,
+            windowInsets = WindowInsets(0, 0, 0, 0),
          )
       }
    }

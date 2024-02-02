@@ -49,7 +49,9 @@ abstract class PageStackBoardComposeTestBase {
       return remember {
          val testPageComposable = pageComposable(
             pageStateFactory(pageStateFactory),
-            pageComposable,
+            content = { page, pageState, pageStackState, _ ->
+               pageComposable(page, pageState, pageStackState)
+            },
             headerComposable,
             footer = null,
             pageTransitions = {}

@@ -34,7 +34,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.setValue
@@ -270,16 +269,18 @@ abstract class PageState {
 
 @Composable
 internal fun <P : Page, S : PageState> PageContent(
-   pageContentComposable: @Composable (P, S, PageStackState) -> Unit,
+   pageContentComposable: @Composable (P, S, PageStackState, WindowInsets) -> Unit,
    page: Page,
    pageState: PageState,
-   pageStackState: PageStackState
+   pageStackState: PageStackState,
+   windowInsets: WindowInsets
 ) {
    @Suppress("UNCHECKED_CAST")
    pageContentComposable(
       page as P,
       pageState as S,
-      pageStackState
+      pageStackState,
+      windowInsets
    )
 }
 

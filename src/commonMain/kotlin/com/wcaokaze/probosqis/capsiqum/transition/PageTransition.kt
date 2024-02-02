@@ -27,6 +27,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
@@ -492,24 +493,24 @@ private fun PageTransition(
 
                   val footerComposable = pageComposable.footerComposable
 
-                  val contentBottomPaddingModifier
-                        = if (footerComposable != null) {
-                           Modifier.padding(bottom = pageFooterHeight)
-                        } else {
-                           Modifier
-                        }
-
                   Box(
                      modifier = Modifier
                         .transitionElement(PageLayoutIds.content)
-                        .windowInsetsPadding(windowInsets)
-                        .then(contentBottomPaddingModifier)
                   ) {
+                     val contentWindowInsets = if (footerComposable != null) {
+                        windowInsets
+                           .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
+                           .add(WindowInsets(bottom = pageFooterHeight))
+                     } else {
+                        windowInsets
+                     }
+
                      PageContent(
                         pageComposable.contentComposable,
                         page,
                         pageState,
-                        pageStackState
+                        pageStackState,
+                        contentWindowInsets
                      )
                   }
 

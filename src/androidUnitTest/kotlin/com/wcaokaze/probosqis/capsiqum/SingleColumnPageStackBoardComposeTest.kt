@@ -1453,7 +1453,7 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
 
       val pageAComposable = pageComposable<PageA, PageAState>(
          pageStateFactory { _, _ -> PageAState() },
-         content = { _, _, _ -> },
+         content = { _, _, _, _ -> },
          header = { _, _, _ ->
             DisposableEffect(Unit) {
                pageAHeaderComposed = true
@@ -1468,7 +1468,7 @@ class SingleColumnPageStackBoardComposeTest : PageStackBoardComposeTestBase() {
 
       val pageBComposable = pageComposable<PageB, PageBState>(
          pageStateFactory { _, _ -> PageBState() },
-         content = { _, _, _ -> },
+         content = { _, _, _, _ -> },
          header = { _, _, _ ->
             DisposableEffect(Unit) {
                pageBHeaderComposed = true
