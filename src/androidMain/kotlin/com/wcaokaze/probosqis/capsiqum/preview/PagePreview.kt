@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.capsiqum.preview
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -27,12 +28,15 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.MultiColumnPageStackBoardState
 import com.wcaokaze.probosqis.capsiqum.Page
 import com.wcaokaze.probosqis.capsiqum.PageComposable
 import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
 import com.wcaokaze.probosqis.capsiqum.PageContent
+import com.wcaokaze.probosqis.capsiqum.PageFooter
 import com.wcaokaze.probosqis.capsiqum.PageStack
 import com.wcaokaze.probosqis.capsiqum.PageStackAppBar
 import com.wcaokaze.probosqis.capsiqum.PageStackBoard
@@ -107,25 +111,48 @@ fun <P : Page> PagePreview(
       tonalElevation = 3.dp,
       shadowElevation = 4.dp
    ) {
-      Column {
-         @OptIn(ExperimentalMaterial3Api::class)
-         PageStackAppBar(
-            pageStackState,
-            pageComposableSwitcher,
-            pageStateStore,
-            windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
-            colors = TopAppBarDefaults.topAppBarColors(
-               containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
-         )
+      val footerComposable = pageComposable.footerComposable
 
-         PageContent(
-            pageComposable.contentComposable,
-            page,
-            pageState,
-            pageStackState,
-            windowInsets.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
-         )
+      Box {
+         Column {
+            @OptIn(ExperimentalMaterial3Api::class)
+            PageStackAppBar(
+               pageStackState,
+               pageComposableSwitcher,
+               pageStateStore,
+               windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+               colors = TopAppBarDefaults.topAppBarColors(
+                  containerColor = MaterialTheme.colorScheme.primaryContainer
+               )
+            )
+
+            val contentWindowInsetsSides = if (footerComposable != null) {
+               WindowInsetsSides.Horizontal
+            } else {
+               WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
+            }
+
+            PageContent(
+               pageComposable.contentComposable,
+               page,
+               pageState,
+               pageStackState,
+               windowInsets.only(contentWindowInsetsSides)
+            )
+         }
+
+         if (footerComposable != null) {
+            Box(Modifier.align(Alignment.BottomCenter)) {
+               PageFooter(
+                  pageComposable.footerComposable,
+                  page,
+                  pageState,
+                  pageStackState,
+                  windowInsets
+                     .only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)
+               )
+            }
+         }
       }
    }
 }
