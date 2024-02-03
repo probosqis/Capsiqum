@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.capsiqum
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
@@ -28,6 +29,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -75,6 +77,33 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
    }
 
    @Test
+   fun windowInsets() {
+      val windowInsets = WindowInsets(left = 32.dp, right = 32.dp)
+
+      rule.setContent {
+         val (pageStackBoardState, _)
+               = rememberMultiColumnPageStackBoardState(pageStackCount = 2)
+         MultiColumnPageStackBoard(pageStackBoardState, windowInsets = windowInsets)
+      }
+
+      rule.onNodeWithText("0")
+         .assertLeftPositionInRootIsEqualTo(
+            expectedPageStackLeftPosition(0, windowInsets = windowInsets)
+         )
+         .assertWidthIsEqualTo(
+            expectedPageStackWidth(windowInsets = windowInsets)
+         )
+
+      rule.onNodeWithText("1")
+         .assertLeftPositionInRootIsEqualTo(
+            expectedPageStackLeftPosition(1, windowInsets = windowInsets)
+         )
+         .assertWidthIsEqualTo(
+            expectedPageStackWidth(windowInsets = windowInsets)
+         )
+   }
+
+   @Test
    fun notEnoughPageStacks() {
       rule.setContent {
          val (pageStackBoardState, _)
@@ -85,6 +114,25 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
       rule.onNodeWithText("0")
          .assertLeftPositionInRootIsEqualTo(expectedPageStackLeftPosition(0))
          .assertWidthIsEqualTo(expectedPageStackWidth())
+   }
+
+   @Test
+   fun notEnoughPageStacks_windowInsets() {
+      val windowInsets = WindowInsets(left = 32.dp, right = 32.dp)
+
+      rule.setContent {
+         val (pageStackBoardState, _)
+               = rememberMultiColumnPageStackBoardState(pageStackCount = 1)
+         MultiColumnPageStackBoard(pageStackBoardState, windowInsets = windowInsets)
+      }
+
+      rule.onNodeWithText("0")
+         .assertLeftPositionInRootIsEqualTo(
+            expectedPageStackLeftPosition(0, windowInsets = windowInsets)
+         )
+         .assertWidthIsEqualTo(
+            expectedPageStackWidth(windowInsets = windowInsets)
+         )
    }
 
    @Test
@@ -459,6 +507,93 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
 
       rule.runOnIdle {
          assertEquals(2, pageStackBoardState.lastVisiblePageStackIndex)
+      }
+   }
+
+   @Test
+   fun firstVisibleIndex_windowInsets() {
+      val windowInsets = WindowInsets(left = 32.dp, right = 32.dp)
+
+      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+      rule.setContent {
+         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
+         SideEffect {
+            pageStackBoardState = remembered.pageStackBoardState
+         }
+         MultiColumnPageStackBoard(remembered.pageStackBoardState, windowInsets = windowInsets)
+      }
+
+      rule.runOnIdle {
+         assertEquals(0, pageStackBoardState.firstVisiblePageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         down(Offset(0.0f, 0.0f))
+         moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
+         moveBy(Offset(-expectedScrollOffset(1, windowInsets = windowInsets) + 1.0f, 0.0f))
+      }
+      rule.runOnIdle {
+         assertEquals(0, pageStackBoardState.firstVisiblePageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         val i = windowInsets.getLeft(this, LayoutDirection.Ltr)
+         moveBy(Offset(-i.toFloat(), 0.0f))
+      }
+      rule.runOnIdle {
+         assertEquals(0, pageStackBoardState.firstVisiblePageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         moveBy(Offset(-2.0f, 0.0f))
+      }
+      rule.runOnIdle {
+         assertEquals(1, pageStackBoardState.firstVisiblePageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         up()
+      }
+   }
+
+   @Test
+   fun lastVisibleIndex_windowInsets() {
+      val windowInsets = WindowInsets(left = 32.dp, right = 32.dp)
+
+      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+      rule.setContent {
+         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
+         SideEffect {
+            pageStackBoardState = remembered.pageStackBoardState
+         }
+         MultiColumnPageStackBoard(remembered.pageStackBoardState, windowInsets = windowInsets)
+      }
+
+      rule.runOnIdle {
+         assertEquals(2, pageStackBoardState.lastVisiblePageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         down(Offset(0.0f, 0.0f))
+         moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
+
+         val fullScrollOffset = expectedScrollOffset(1, windowInsets = windowInsets)
+         val inset = windowInsets.getRight(this, LayoutDirection.Ltr)
+         moveBy(Offset(-(fullScrollOffset - inset) + 1.0f, 0.0f))
+      }
+      rule.runOnIdle {
+         assertEquals(2, pageStackBoardState.lastVisiblePageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         moveBy(Offset(-2.0f, 0.0f))
+      }
+      rule.runOnIdle {
+         assertEquals(3, pageStackBoardState.lastVisiblePageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         up()
       }
    }
 

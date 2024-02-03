@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import io.mockk.every
@@ -181,6 +182,7 @@ abstract class MultiColumnPageStackBoardComposeTestBase
 {
    protected val defaultPageStackBoardWidth = 200.dp
    protected val defaultPageStackCount = 2
+   protected val defaultWindowInsets = WindowInsets(0, 0, 0, 0)
 
    protected abstract val density: Density
 
@@ -188,7 +190,8 @@ abstract class MultiColumnPageStackBoardComposeTestBase
    protected fun MultiColumnPageStackBoard(
       state: MultiColumnPageStackBoardState,
       width: Dp = defaultPageStackBoardWidth,
-      pageStackCount: Int = defaultPageStackCount
+      pageStackCount: Int = defaultPageStackCount,
+      windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
    ) {
       val (defaultPageComposableSwitcher, defaultPageStateStore)
             = rememberDefaultPageComposableSwitcher()
@@ -198,7 +201,8 @@ abstract class MultiColumnPageStackBoardComposeTestBase
          width,
          pageStackCount,
          defaultPageComposableSwitcher,
-         defaultPageStateStore
+         defaultPageStateStore,
+         windowInsets
       )
    }
 
@@ -209,14 +213,15 @@ abstract class MultiColumnPageStackBoardComposeTestBase
       width: Dp = defaultPageStackBoardWidth,
       pageStackCount: Int = defaultPageStackCount,
       pageComposableSwitcher: PageComposableSwitcher,
-      pageStateStore: PageStateStore
+      pageStateStore: PageStateStore,
+      windowInsets: WindowInsets = defaultWindowInsets
    ) {
       MultiColumnPageStackBoard(
          state,
          pageComposableSwitcher,
          pageStateStore,
          pageStackCount,
-         WindowInsets(0, 0, 0, 0),
+         windowInsets,
          modifier = Modifier
             .width(width)
             .testTag(pageStackBoardTag)
@@ -238,30 +243,47 @@ abstract class MultiColumnPageStackBoardComposeTestBase
 
    protected fun expectedPageStackWidth(
       pageStackBoardWidth: Dp = defaultPageStackBoardWidth,
-      pageStackCount: Int = defaultPageStackCount
+      pageStackCount: Int = defaultPageStackCount,
+      windowInsets: WindowInsets = defaultWindowInsets
    ): Dp {
-      return (pageStackBoardWidth - 16.dp) / pageStackCount - 16.dp
+      val leftWindowInset:  Dp
+      val rightWindowInset: Dp
+
+      with (density) {
+         leftWindowInset  = windowInsets.getLeft (this, LayoutDirection.Ltr).toDp()
+         rightWindowInset = windowInsets.getRight(this, LayoutDirection.Ltr).toDp()
+      }
+
+      return (pageStackBoardWidth - leftWindowInset - rightWindowInset
+            - 16.dp) / pageStackCount - 16.dp
    }
 
    protected fun expectedPageStackLeftPosition(
       indexInBoard: Int,
       pageStackBoardWidth: Dp = defaultPageStackBoardWidth,
-      pageStackCount: Int = defaultPageStackCount
+      pageStackCount: Int = defaultPageStackCount,
+      windowInsets: WindowInsets = defaultWindowInsets
    ): Dp {
-      val pageStackWidth = expectedPageStackWidth(
-         pageStackBoardWidth, pageStackCount)
+      val leftWindowInset = with (density) {
+         windowInsets.getLeft(this, LayoutDirection.Ltr).toDp()
+      }
 
-      return 16.dp + (pageStackWidth + 16.dp) * indexInBoard
+      val pageStackWidth = expectedPageStackWidth(
+         pageStackBoardWidth, pageStackCount, windowInsets)
+
+      return leftWindowInset + 16.dp + (pageStackWidth + 16.dp) * indexInBoard
    }
 
    protected fun expectedScrollOffset(
       index: Int,
       pageStackBoardWidth: Dp = defaultPageStackBoardWidth,
-      pageStackCount: Int = defaultPageStackCount
+      pageStackCount: Int = defaultPageStackCount,
+      windowInsets: WindowInsets = defaultWindowInsets
    ): Float {
-      return with (density) {
-         (pageStackBoardWidth - 16.dp).toPx() / pageStackCount * index
-      }
+      val pageStackDistance = expectedPageStackWidth(
+         pageStackBoardWidth, pageStackCount, windowInsets) + 16.dp
+
+      return with (density) { pageStackDistance.toPx() * index }
    }
 }
 
