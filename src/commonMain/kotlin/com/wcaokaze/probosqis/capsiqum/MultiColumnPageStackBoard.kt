@@ -180,6 +180,20 @@ internal class MultiColumnLayoutLogic(
       }
    }
 
+   override fun indexOfScrollOffset(scrollOffset: Float): Int {
+      return when (list.size) {
+         0 -> -1
+         1 -> 0
+         else -> {
+            val o = scrollOffset + leftWindowInset + pageStackPadding * 2
+            for (i in 1..list.lastIndex) {
+               if (list[i].position.x > o) { return i - 1 }
+            }
+            list.lastIndex
+         }
+      }
+   }
+
    /**
     * @param animCoroutineScope
     *   PageStackの移動や幅変更があったときのアニメーションを再生するための

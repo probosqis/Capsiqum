@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.capsiqum
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -289,10 +290,79 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
          )
       }
 
+      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(40.dp)
+      rule.runOnIdle {
+         assertEquals(
+            expectedScrollOffset(2),
+            pageStackBoardState.scrollState.scrollOffset
+         )
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).swipeRight(40.dp)
+      rule.runOnIdle {
+         assertEquals(
+            expectedScrollOffset(1),
+            pageStackBoardState.scrollState.scrollOffset
+         )
+      }
+
       rule.onNodeWithTag(pageStackBoardTag).swipeRight(40.dp)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(0),
+            pageStackBoardState.scrollState.scrollOffset
+         )
+      }
+   }
+
+   @Test
+   fun scroll_snap_windowInsets() {
+      val windowInsets = WindowInsets(left = 32.dp, right = 32.dp)
+
+      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+      rule.setContent {
+         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
+         SideEffect {
+            pageStackBoardState = remembered.pageStackBoardState
+         }
+         MultiColumnPageStackBoard(remembered.pageStackBoardState, windowInsets = windowInsets)
+      }
+
+      rule.runOnIdle {
+         assertEquals(
+            expectedScrollOffset(0, windowInsets = windowInsets),
+            pageStackBoardState.scrollState.scrollOffset
+         )
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(40.dp)
+      rule.runOnIdle {
+         assertEquals(
+            expectedScrollOffset(1, windowInsets = windowInsets),
+            pageStackBoardState.scrollState.scrollOffset
+         )
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(40.dp)
+      rule.runOnIdle {
+         assertEquals(
+            expectedScrollOffset(2, windowInsets = windowInsets),
+            pageStackBoardState.scrollState.scrollOffset
+         )
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).swipeRight(40.dp)
+      rule.runOnIdle {
+         assertEquals(
+            expectedScrollOffset(1, windowInsets = windowInsets),
+            pageStackBoardState.scrollState.scrollOffset
+         )
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).swipeRight(40.dp)
+      rule.runOnIdle {
+         assertEquals(
+            expectedScrollOffset(0, windowInsets = windowInsets),
             pageStackBoardState.scrollState.scrollOffset
          )
       }

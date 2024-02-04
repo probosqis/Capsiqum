@@ -610,6 +610,12 @@ internal abstract class PageStackBoardLayoutLogic(
       currentScrollOffset: Float
    ): Int
 
+   /**
+    * `indexOfLast { getScrollOffset(it, FirstVisible) <= scrollOffset }` と
+    * 同値
+    */
+   internal abstract fun indexOfScrollOffset(scrollOffset: Float): Int
+
    internal fun <T> pageStackPositionAnimSpec() = spring<T>()
 
    internal fun recreateLayoutState(pageStackBoard: PageStackBoard) {

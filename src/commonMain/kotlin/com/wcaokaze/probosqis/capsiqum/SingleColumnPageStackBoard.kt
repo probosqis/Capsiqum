@@ -149,6 +149,19 @@ internal class SingleColumnLayoutLogic(
       currentScrollOffset: Float
    ): Int = pageStackLayoutState.position.x
 
+   override fun indexOfScrollOffset(scrollOffset: Float): Int {
+      return when (list.size) {
+         0 -> -1
+         1 -> 0
+         else -> {
+            for (i in 1..list.lastIndex) {
+               if (list[i].position.x > scrollOffset) { return i - 1 }
+            }
+            list.lastIndex
+         }
+      }
+   }
+
    /**
     * @param animCoroutineScope
     *   PageStackの移動や幅変更があったときのアニメーションを再生するための
