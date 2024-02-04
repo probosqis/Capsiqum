@@ -17,17 +17,27 @@
 package com.wcaokaze.probosqis.capsiqum
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import kotlinx.collections.immutable.toImmutableList
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
+import org.robolectric.annotation.Config
 
 abstract class PageStackBoardComposeTestBase {
    protected abstract val pageStackRepository: PageStackRepository
@@ -36,6 +46,10 @@ abstract class PageStackBoardComposeTestBase {
 
    protected class TestPage(val i: Int) : Page()
    protected class TestPageState : PageState()
+
+   protected fun createPageStackRepositoryMock(): PageStackRepository = mockk {
+      every { savePageStack(any()) } answers { WritableCache(firstArg()) }
+   }
 
    @Composable
    protected inline fun <reified P : Page> rememberPageComposableSwitcher(
@@ -50,7 +64,9 @@ abstract class PageStackBoardComposeTestBase {
       return remember {
          val testPageComposable = pageComposable(
             pageStateFactory(pageStateFactory),
-            pageComposable,
+            content = { page, pageState, pageStackState, _ ->
+               pageComposable(page, pageState, pageStackState)
+            },
             headerComposable,
             footer = null,
             pageTransitions = {}
@@ -154,10 +170,192 @@ abstract class PageStackBoardComposeTestBase {
 }
 
 @Stable
-internal class RememberedPageStackBoardState<S : PageStackBoardState>(
+class RememberedPageStackBoardState<S : PageStackBoardState>(
    val pageStackBoardState: S,
    val coroutineScope: CoroutineScope
 ) {
    operator fun component1() = pageStackBoardState
    operator fun component2() = coroutineScope
+}
+
+@Config(qualifiers = "w600dp")
+abstract class MultiColumnPageStackBoardComposeTestBase
+   : PageStackBoardComposeTestBase()
+{
+   protected val defaultPageStackBoardWidth = 600.dp
+   protected val defaultPageStackCount = 2
+   protected val defaultWindowInsets = WindowInsets(0, 0, 0, 0)
+
+   protected abstract val density: Density
+
+   @Composable
+   protected fun MultiColumnPageStackBoard(
+      state: MultiColumnPageStackBoardState,
+      width: Dp = defaultPageStackBoardWidth,
+      pageStackCount: Int = defaultPageStackCount,
+      windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
+   ) {
+      val (defaultPageComposableSwitcher, defaultPageStateStore)
+            = rememberDefaultPageComposableSwitcher()
+
+      MultiColumnPageStackBoard(
+         state,
+         width,
+         pageStackCount,
+         defaultPageComposableSwitcher,
+         defaultPageStateStore,
+         windowInsets
+      )
+   }
+
+   @OptIn(ExperimentalMaterial3Api::class)
+   @Composable
+   protected fun MultiColumnPageStackBoard(
+      state: MultiColumnPageStackBoardState,
+      width: Dp = defaultPageStackBoardWidth,
+      pageStackCount: Int = defaultPageStackCount,
+      pageComposableSwitcher: PageComposableSwitcher,
+      pageStateStore: PageStateStore,
+      windowInsets: WindowInsets = defaultWindowInsets
+   ) {
+      MultiColumnPageStackBoard(
+         state,
+         pageComposableSwitcher,
+         pageStateStore,
+         pageStackCount,
+         windowInsets,
+         modifier = Modifier
+            .width(width)
+            .testTag(pageStackBoardTag)
+      )
+   }
+
+   @Composable
+   protected fun rememberMultiColumnPageStackBoardState(
+      pageStackCount: Int
+   ): RememberedPageStackBoardState<MultiColumnPageStackBoardState> {
+      val animCoroutineScope = rememberCoroutineScope()
+      return remember(animCoroutineScope) {
+         val pageStackBoardCache = createPageStackBoard(pageStackCount)
+         val pageStackBoardState = MultiColumnPageStackBoardState(
+            pageStackBoardCache, pageStackRepository, animCoroutineScope)
+         RememberedPageStackBoardState(pageStackBoardState, animCoroutineScope)
+      }
+   }
+
+   protected fun expectedPageStackWidth(
+      pageStackBoardWidth: Dp = defaultPageStackBoardWidth,
+      pageStackCount: Int = defaultPageStackCount,
+      windowInsets: WindowInsets = defaultWindowInsets
+   ): Dp {
+      val leftWindowInset:  Dp
+      val rightWindowInset: Dp
+
+      with (density) {
+         leftWindowInset  = windowInsets.getLeft (this, LayoutDirection.Ltr).toDp()
+         rightWindowInset = windowInsets.getRight(this, LayoutDirection.Ltr).toDp()
+      }
+
+      return (pageStackBoardWidth - leftWindowInset - rightWindowInset
+            - 16.dp) / pageStackCount - 16.dp
+   }
+
+   protected fun expectedPageStackLeftPosition(
+      indexInBoard: Int,
+      pageStackBoardWidth: Dp = defaultPageStackBoardWidth,
+      pageStackCount: Int = defaultPageStackCount,
+      windowInsets: WindowInsets = defaultWindowInsets
+   ): Dp {
+      val leftWindowInset = with (density) {
+         windowInsets.getLeft(this, LayoutDirection.Ltr).toDp()
+      }
+
+      val pageStackWidth = expectedPageStackWidth(
+         pageStackBoardWidth, pageStackCount, windowInsets)
+
+      return leftWindowInset + 16.dp + (pageStackWidth + 16.dp) * indexInBoard
+   }
+
+   protected fun expectedScrollOffset(
+      index: Int,
+      pageStackBoardWidth: Dp = defaultPageStackBoardWidth,
+      pageStackCount: Int = defaultPageStackCount,
+      windowInsets: WindowInsets = defaultWindowInsets
+   ): Float {
+      val pageStackDistance = expectedPageStackWidth(
+         pageStackBoardWidth, pageStackCount, windowInsets) + 16.dp
+
+      return with (density) { pageStackDistance.toPx() * index }
+   }
+}
+
+abstract class SingleColumnPageStackBoardComposeTestBase
+   : PageStackBoardComposeTestBase()
+{
+   protected val defaultPageStackBoardWidth = 300.dp
+
+   protected abstract val density: Density
+
+   @Composable
+   protected fun SingleColumnPageStackBoard(
+      state: SingleColumnPageStackBoardState,
+      width: Dp = defaultPageStackBoardWidth
+   ) {
+      val (defaultPageComposableSwitcher, defaultPageStateStore)
+            = rememberDefaultPageComposableSwitcher()
+
+      SingleColumnPageStackBoard(
+         state,
+         width,
+         defaultPageComposableSwitcher,
+         defaultPageStateStore
+      )
+   }
+
+   @Composable
+   protected fun SingleColumnPageStackBoard(
+      state: SingleColumnPageStackBoardState,
+      width: Dp = defaultPageStackBoardWidth,
+      pageComposableSwitcher: PageComposableSwitcher,
+      pageStateStore: PageStateStore
+   ) {
+      SingleColumnPageStackBoard(
+         state,
+         pageComposableSwitcher,
+         pageStateStore,
+         WindowInsets(0, 0, 0, 0),
+         modifier = Modifier
+            .width(width)
+            .testTag(pageStackBoardTag)
+      )
+   }
+
+   @Composable
+   protected fun rememberSingleColumnPageStackBoardState(
+      pageStackCount: Int
+   ): RememberedPageStackBoardState<SingleColumnPageStackBoardState> {
+      val animCoroutineScope = rememberCoroutineScope()
+      return remember(animCoroutineScope) {
+         val pageStackBoardCache = createPageStackBoard(pageStackCount)
+         val pageStackBoardState = SingleColumnPageStackBoardState(
+            pageStackBoardCache, pageStackRepository, animCoroutineScope)
+         RememberedPageStackBoardState(pageStackBoardState, animCoroutineScope)
+      }
+   }
+
+   protected fun expectedPageStackLeftPosition(
+      indexInBoard: Int,
+      pageStackBoardWidth: Dp = defaultPageStackBoardWidth
+   ): Dp {
+      return (pageStackBoardWidth + 16.dp) * indexInBoard
+   }
+
+   protected fun expectedScrollOffset(
+      index: Int,
+      pageStackBoardWidth: Dp = defaultPageStackBoardWidth
+   ): Float {
+      return with (density) {
+         (pageStackBoardWidth + 16.dp).toPx() * index
+      }
+   }
 }

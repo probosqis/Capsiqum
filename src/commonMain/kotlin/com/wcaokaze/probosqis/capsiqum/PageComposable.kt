@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.capsiqum
 
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
@@ -28,7 +29,7 @@ import kotlin.reflect.KClass
 
 inline fun <reified P : Page, S : PageState> pageComposable(
    pageStateFactory: PageStateFactory<P, S>,
-   noinline content: @Composable (P, S, PageStackState) -> Unit,
+   noinline content: @Composable (P, S, PageStackState, WindowInsets) -> Unit,
    noinline header: @Composable (P, S, PageStackState) -> Unit,
    // 本来nullableである必要はないがデフォルト引数でreified型引数のPとSを使えないため
    // headerActionsが空の状態をnullでも表せるようにする
@@ -49,7 +50,7 @@ inline fun <reified P : Page, S : PageState> pageComposable(
 data class PageComposable<P : Page, S : PageState>(
    val pageClass: KClass<P>,
    val pageStateFactory: PageStateFactory<P, S>,
-   val contentComposable: @Composable (P, S, PageStackState) -> Unit,
+   val contentComposable: @Composable (P, S, PageStackState, WindowInsets) -> Unit,
    val headerComposable: @Composable (P, S, PageStackState) -> Unit,
    val headerActionsComposable: (@Composable RowScope.(P, S, PageStackState) -> Unit)?,
    val footerComposable: (@Composable (P, S, PageStackState) -> Unit)?,

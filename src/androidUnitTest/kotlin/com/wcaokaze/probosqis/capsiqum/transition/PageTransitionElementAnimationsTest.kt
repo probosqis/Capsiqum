@@ -175,7 +175,7 @@ class PageTransitionElementAnimationsTest {
       val pageAComposables = PageComposable(
          PageA::class,
          pageStateFactory { _, _ -> PageAState() },
-         contentComposable = { _, _, _ ->
+         contentComposable = { _, _, _, _ ->
             pageAComposable()
          },
          headerComposable = { _, _, _ -> },
@@ -187,7 +187,7 @@ class PageTransitionElementAnimationsTest {
       val pageBComposables = PageComposable(
          PageB::class,
          pageStateFactory { _, _ -> PageBState() },
-         contentComposable = { _, _, _ ->
+         contentComposable = { _, _, _, _ ->
             pageBComposable()
          },
          headerComposable = { _, _, _ -> },

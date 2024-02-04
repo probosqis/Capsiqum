@@ -40,6 +40,7 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransition
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
@@ -78,6 +79,11 @@ class SingleColumnPageStackBoardState(
    override var lastVisiblePageStackIndex by mutableStateOf(0)
       internal set
 
+   override val firstContentPageStackIndex: Int
+      get() = firstVisiblePageStackIndex
+   override val lastContentPageStackIndex: Int
+      get() = lastVisiblePageStackIndex
+
    override val activePageStackIndex: Int get() {
       val firstVisibleIndex = firstVisiblePageStackIndex
       val lastVisibleIndex = lastVisiblePageStackIndex
@@ -115,7 +121,12 @@ class SingleColumnPageStackBoardState(
       density: Density,
       pageStackBoardWidth: Int,
       pageStackPadding: Int
-   ) = layout(density, pageStackBoardWidth, pageStackCount = 1, pageStackPadding)
+   ) {
+      super.layout(density)
+
+      layout.layout(animCoroutineScope, pageStackBoardWidth,
+         pageStackPadding, scrollState)
+   }
 }
 
 @Stable
@@ -138,10 +149,27 @@ internal class SingleColumnLayoutLogic(
       currentScrollOffset: Float
    ): Int = pageStackLayoutState.position.x
 
-   override fun layout(
+   override fun indexOfScrollOffset(scrollOffset: Float): Int {
+      return when (list.size) {
+         0 -> -1
+         1 -> 0
+         else -> {
+            for (i in 1..list.lastIndex) {
+               if (list[i].position.x > scrollOffset) { return i - 1 }
+            }
+            list.lastIndex
+         }
+      }
+   }
+
+   /**
+    * @param animCoroutineScope
+    *   PageStackの移動や幅変更があったときのアニメーションを再生するための
+    *   CoroutineScope
+    */
+   fun layout(
       animCoroutineScope: CoroutineScope,
       pageStackBoardWidth: Int,
-      pageStackCount: Int,
       pageStackPadding: Int,
       scrollState: PageStackBoardScrollState
    ) {
@@ -176,7 +204,8 @@ fun SingleColumnPageStackBoardAppBar(
    pageComposableSwitcher: PageComposableSwitcher,
    pageStateStore: PageStateStore,
    modifier: Modifier = Modifier,
-   safeDrawingWindowInsets: WindowInsets = WindowInsets.safeDrawing,
+   windowInsets: WindowInsets = WindowInsets
+      .safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
    colors: TopAppBarColors = SingleColumnPageStackBoardDefaults.appBarColors()
 ) {
    SubcomposeLayout(
@@ -217,7 +246,7 @@ fun SingleColumnPageStackBoardAppBar(
                      pageStackLayout.pageStackState,
                      pageComposableSwitcher,
                      pageStateStore,
-                     safeDrawingWindowInsets.only(WindowInsetsSides.Horizontal),
+                     windowInsets,
                      colors,
                      modifier = Modifier.alpha(pageStackLayout.alpha)
                   )
@@ -309,6 +338,7 @@ fun SingleColumnPageStackBoard(
                   pageStackLayout.pageStackState,
                   pageComposableSwitcher,
                   pageStateStore,
+                  windowInsets = windowInsets,
                   modifier = Modifier.alpha(pageStackLayout.alpha)
                )
             } .single()
@@ -361,6 +391,7 @@ private fun PageStackContent(
    state: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
    pageStateStore: PageStateStore,
+   windowInsets: WindowInsets,
    modifier: Modifier = Modifier
 ) {
    Surface(
@@ -368,6 +399,6 @@ private fun PageStackContent(
       shadowElevation = 4.dp,
       modifier = modifier
    ) {
-      PageTransition(state, pageComposableSwitcher, pageStateStore)
+      PageTransition(state, pageComposableSwitcher, pageStateStore, windowInsets)
    }
 }

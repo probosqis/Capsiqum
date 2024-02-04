@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ private fun SpyPage(page: SpyPage) {
 
 internal val spyPageComposable = pageComposable<SpyPage, SpyPageState>(
    pageStateFactory { _, _ -> SpyPageState() },
-   content = { page, _, _ -> SpyPage(page) },
+   content = { page, _, _, _ -> SpyPage(page) },
    header = { _, _, _ -> },
    footer = null,
    pageTransitions = {}

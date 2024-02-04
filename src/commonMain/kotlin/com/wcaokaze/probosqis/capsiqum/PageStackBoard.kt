@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
@@ -322,7 +324,7 @@ enum class PositionInBoard {
 sealed class PageStackBoardState(
    pageStackBoardCache: WritableCache<PageStackBoard>,
    private val pageStackRepository: PageStackRepository,
-   private val animCoroutineScope: CoroutineScope
+   protected val animCoroutineScope: CoroutineScope
 ) {
    private val pageStackBoardState = pageStackBoardCache.asMutableState()
 
@@ -337,8 +339,41 @@ sealed class PageStackBoardState(
 
    internal abstract val layout: PageStackBoardLayoutLogic
 
+   /**
+    * PageStackBoard内(WindowInsets領域を含む)の最初に表示されている
+    * PageStackのindex。
+    *
+    * WindowInsetsを含まない領域内の最初に表示されるPageStackを使う場合は
+    * [firstContentPageStackIndex]
+    */
    abstract val firstVisiblePageStackIndex: Int
+
+   /**
+    * PageStackBoard内(WindowInsets領域を含む)の最後に表示されている
+    * PageStackのindex。
+    *
+    * WindowInsetsを含まない領域内の最後に表示されるPageStackを使う場合は
+    * [lastContentPageStackIndex]
+    */
    abstract val lastVisiblePageStackIndex: Int
+
+   /**
+    * PageStackBoard内のWindowInsets領域を除いた領域の最初に表示されている
+    * PageStackのindex。
+    *
+    * WindowInsetsを含む領域内の最初に表示されるPageStackを使う場合は
+    * [firstVisiblePageStackIndex]
+    */
+   abstract val firstContentPageStackIndex: Int
+
+   /**
+    * PageStackBoard内のWindowInsets領域を除いた領域の最後に表示されている
+    * PageStackのindex。
+    *
+    * WindowInsetsを含む領域内の最後に表示されるPageStackを使う場合は
+    * [lastVisiblePageStackIndex]
+    */
+   abstract val lastContentPageStackIndex: Int
 
    abstract val activePageStackIndex: Int
 
@@ -428,18 +463,10 @@ sealed class PageStackBoardState(
       }
    }
 
-   internal fun layout(
-      density: Density,
-      pageStackBoardWidth: Int,
-      pageStackCount: Int,
-      pageStackPadding: Int
-   ) {
+   protected fun layout(density: Density) {
       with (density) {
          pageStackInsertionAnimOffset = 64.dp.toPx()
       }
-
-      layout.layout(animCoroutineScope, pageStackBoardWidth, pageStackCount,
-         pageStackPadding, scrollState)
    }
 }
 
@@ -566,19 +593,6 @@ internal abstract class PageStackBoardLayoutLogic(
    override operator fun iterator(): Iterator<PageStackLayoutState>
          = list.iterator()
 
-   /**
-    * @param animCoroutineScope
-    *   PageStackの移動や幅変更があったときのアニメーションを再生するための
-    *   CoroutineScope
-    */
-   internal abstract fun layout(
-      animCoroutineScope: CoroutineScope,
-      pageStackBoardWidth: Int,
-      pageStackCount: Int,
-      pageStackPadding: Int,
-      scrollState: PageStackBoardScrollState
-   )
-
    fun pageStackLayout(id: PageStackBoard.PageStackId): PageStackLayoutState?
          = map[id]
 
@@ -595,6 +609,12 @@ internal abstract class PageStackBoardLayoutLogic(
       targetPositionInBoard: PositionInBoard,
       currentScrollOffset: Float
    ): Int
+
+   /**
+    * `indexOfLast { getScrollOffset(it, FirstVisible) <= scrollOffset }` と
+    * 同値
+    */
+   internal abstract fun indexOfScrollOffset(scrollOffset: Float): Int
 
    internal fun <T> pageStackPositionAnimSpec() = spring<T>()
 

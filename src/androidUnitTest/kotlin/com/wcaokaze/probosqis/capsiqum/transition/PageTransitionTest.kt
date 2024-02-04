@@ -94,7 +94,9 @@ class PageTransitionTest {
    ) = PageComposable(
       PageA::class,
       pageStateFactory { _, _ -> PageAState() },
-      content,
+      contentComposable = { page, pageState, pageStackState, _ ->
+         content(page, pageState, pageStackState)
+      },
       headerComposable = { _, _, _ -> },
       headerActionsComposable = { _, _, _ -> },
       footerComposable = null,
@@ -107,7 +109,9 @@ class PageTransitionTest {
    ) = PageComposable(
       PageB::class,
       pageStateFactory { _, _ -> PageBState() },
-      content,
+      contentComposable = { page, pageState, pageStackState, _ ->
+         content(page, pageState, pageStackState)
+      },
       headerComposable = { _, _, _ -> },
       headerActionsComposable = { _, _, _ -> },
       footerComposable = null,

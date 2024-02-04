@@ -49,13 +49,16 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransition
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.coroutines.CoroutineScope
 import org.jetbrains.annotations.TestOnly
+import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 private const val PAGE_STACK_PADDING_DP = 8
@@ -95,6 +98,10 @@ class MultiColumnPageStackBoardState(
       internal set
    override var lastVisiblePageStackIndex by mutableStateOf(0)
       internal set
+   override var firstContentPageStackIndex by mutableStateOf(0)
+      internal set
+   override var lastContentPageStackIndex by mutableStateOf(0)
+      internal set
 
    override var activePageStackIndex by mutableStateOf(0)
       internal set
@@ -111,6 +118,21 @@ class MultiColumnPageStackBoardState(
 
    override fun pageStackState(index: Int): PageStackState
          = layout.pageStackLayout(index).pageStackState
+
+   internal fun layout(
+      density: Density,
+      pageStackBoardWidth: Int,
+      pageStackCount: Int,
+      pageStackPadding: Int,
+      windowInsets: WindowInsets,
+      layoutDirection: LayoutDirection
+   ) {
+      super.layout(density)
+
+      layout.layout(density, animCoroutineScope, pageStackBoardWidth,
+         pageStackCount, pageStackPadding, windowInsets, layoutDirection,
+         scrollState)
+   }
 }
 
 @Stable
@@ -120,7 +142,9 @@ internal class MultiColumnLayoutLogic(
       (PageStackBoard.PageStackId, WritableCache<PageStack>) -> PageStackState
 ) : PageStackBoardLayoutLogic(pageStackBoard, pageStackStateConstructor) {
    private var pageStackBoardWidth by mutableStateOf(0)
-   private var pageStackPadding by mutableStateOf(0)
+   private var pageStackPadding    by mutableStateOf(0)
+   private var leftWindowInset     by mutableStateOf(0)
+   private var rightWindowInset    by mutableStateOf(0)
 
    internal val layoutStateList
       @TestOnly get() = list
@@ -135,12 +159,13 @@ internal class MultiColumnLayoutLogic(
    ): Int {
       when (targetPositionInBoard) {
          PositionInBoard.FirstVisible -> {
-            return pageStackLayoutState.position.x - pageStackPadding * 2
+            return pageStackLayoutState.position.x -
+                  (leftWindowInset + pageStackPadding * 2)
          }
          PositionInBoard.LastVisible -> {
             return pageStackLayoutState.position.x - (
                   pageStackBoardWidth - pageStackLayoutState.width
-                  - pageStackPadding * 2
+                  - pageStackPadding * 2 - rightWindowInset
             )
          }
          PositionInBoard.NearestVisible -> {
@@ -155,19 +180,46 @@ internal class MultiColumnLayoutLogic(
       }
    }
 
-   override fun layout(
+   override fun indexOfScrollOffset(scrollOffset: Float): Int {
+      return when (list.size) {
+         0 -> -1
+         1 -> 0
+         else -> {
+            val o = scrollOffset + leftWindowInset + pageStackPadding * 2
+            for (i in 1..list.lastIndex) {
+               if (list[i].position.x > o) { return i - 1 }
+            }
+            list.lastIndex
+         }
+      }
+   }
+
+   /**
+    * @param animCoroutineScope
+    *   PageStackの移動や幅変更があったときのアニメーションを再生するための
+    *   CoroutineScope
+    */
+   fun layout(
+      density: Density,
       animCoroutineScope: CoroutineScope,
       pageStackBoardWidth: Int,
       pageStackCount: Int,
       pageStackPadding: Int,
+      windowInsets: WindowInsets,
+      layoutDirection: LayoutDirection,
       scrollState: PageStackBoardScrollState
    ) {
-      val pageStackWidth = (
-         (pageStackBoardWidth - pageStackPadding * 2) / pageStackCount
-         - pageStackPadding * 2
-      )
+      val leftWindowInset  = windowInsets.getLeft (density, layoutDirection)
+      val rightWindowInset = windowInsets.getRight(density, layoutDirection)
 
-      var x = pageStackPadding
+      val pageStackWidth = ceil(
+         (pageStackBoardWidth
+               - leftWindowInset - rightWindowInset
+               - pageStackPadding * 2) / pageStackCount.toDouble()
+         - pageStackPadding * 2
+      ).toInt()
+
+      var x = leftWindowInset + pageStackPadding
 
       for (layoutState in list) {
          x += pageStackPadding
@@ -180,10 +232,12 @@ internal class MultiColumnLayoutLogic(
          x += pageStackWidth + pageStackPadding
       }
 
-      x += pageStackPadding
+      x += pageStackPadding + rightWindowInset
 
       this.pageStackBoardWidth = pageStackBoardWidth
-      this.pageStackPadding = pageStackPadding
+      this.pageStackPadding    = pageStackPadding
+      this.leftWindowInset     = leftWindowInset
+      this.rightWindowInset    = rightWindowInset
 
       val maxScrollOffset = (x - pageStackBoardWidth).toFloat().coerceAtLeast(0f)
       updateMaxScrollOffset(scrollState, maxScrollOffset, animCoroutineScope)
@@ -229,31 +283,47 @@ fun MultiColumnPageStackBoard(
          val pageStackPadding = PAGE_STACK_PADDING_DP.dp.roundToPx()
 
          state.layout(density = this, pageStackBoardWidth, pageStackCount,
-            pageStackPadding)
+            pageStackPadding, windowInsets, layoutDirection)
 
          val scrollOffset = state.scrollState.scrollOffset.toInt()
+         val visibleLeft = state.scrollState.scrollOffset.toInt()
+         val visibleRight = visibleLeft + pageStackBoardWidth
+         val contentLeft  = visibleLeft  + windowInsets.getLeft (this, LayoutDirection.Ltr)
+         val contentRight = visibleRight - windowInsets.getRight(this, LayoutDirection.Ltr)
 
          var firstVisibleIndex = -1
-         var lastVisibleIndex = -1
+         var lastVisibleIndex  = -1
+         var firstContentIndex = -1
+         var lastContentIndex  = -1
 
          val placeables = state.layout.mapIndexedNotNull { index, pageStackLayout ->
             val pageStackPosition = pageStackLayout.position
             val pageStackWidth = pageStackLayout.width
 
             if (firstVisibleIndex < 0) {
-               if (pageStackPosition.x + pageStackWidth > scrollOffset) {
+               if (pageStackPosition.x + pageStackWidth > visibleLeft) {
                   firstVisibleIndex = index
                }
             }
 
-            if (pageStackPosition.x < scrollOffset + pageStackBoardWidth) {
+            if (firstContentIndex < 0) {
+               if (pageStackPosition.x + pageStackWidth > contentLeft) {
+                  firstContentIndex = index
+               }
+            }
+
+            if (pageStackPosition.x < visibleRight) {
                lastVisibleIndex = index
+            }
+
+            if (pageStackPosition.x < contentRight) {
+               lastContentIndex = index
             }
 
             // TODO: PageStackに影がつくかつかないか未定のためギリギリ範囲外の
             //       PageStackもコンポーズしている。影の件が決まり次第変更する
-            if (pageStackPosition.x + pageStackWidth + pageStackPadding < scrollOffset ||
-                pageStackPosition.x - pageStackPadding > scrollOffset + pageStackBoardWidth)
+            if (pageStackPosition.x + pageStackWidth + pageStackPadding < visibleLeft ||
+                pageStackPosition.x - pageStackPadding > visibleRight)
             {
                return@mapIndexedNotNull null
             }
@@ -283,9 +353,11 @@ fun MultiColumnPageStackBoard(
          }
 
          state.firstVisiblePageStackIndex = firstVisibleIndex
-         state.lastVisiblePageStackIndex = lastVisibleIndex
+         state.lastVisiblePageStackIndex  = lastVisibleIndex
+         state.firstContentPageStackIndex = firstContentIndex
+         state.lastContentPageStackIndex  = lastContentIndex
          state.activePageStackIndex = state.activePageStackIndex
-            .coerceIn(firstVisibleIndex, lastVisibleIndex)
+            .coerceIn(firstContentIndex, lastContentIndex)
 
          layout(pageStackBoardWidth, pageStackBoardHeight) {
             for ((layout, placeable) in placeables) {
@@ -338,7 +410,8 @@ private fun PageStack(
          PageTransition(
             state,
             pageComposableSwitcher,
-            pageStateStore
+            pageStateStore,
+            windowInsets
          )
       }
    }

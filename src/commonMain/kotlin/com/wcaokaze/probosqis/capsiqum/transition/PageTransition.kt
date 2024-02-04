@@ -26,7 +26,13 @@ import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.add
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.surfaceColorAtElevation
@@ -50,6 +56,7 @@ import com.wcaokaze.probosqis.capsiqum.PageFooter
 import com.wcaokaze.probosqis.capsiqum.PageStack
 import com.wcaokaze.probosqis.capsiqum.PageStackState
 import com.wcaokaze.probosqis.capsiqum.PageStateStore
+import com.wcaokaze.probosqis.capsiqum.pageFooterHeight
 import kotlinx.collections.immutable.persistentMapOf
 
 internal val LocalPageTransitionAnimations
@@ -408,7 +415,8 @@ internal class PageTransitionState(
 internal fun PageTransition(
    pageStackState: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
-   pageStateStore: PageStateStore
+   pageStateStore: PageStateStore,
+   windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
 ) {
    val transitionState = remember(pageStackState, pageComposableSwitcher) {
       PageTransitionState(pageStackState, pageComposableSwitcher)
@@ -419,7 +427,8 @@ internal fun PageTransition(
       pageStackState,
       pageComposableSwitcher,
       pageStateStore,
-      transition = transitionState.updateTransition()
+      transition = transitionState.updateTransition(),
+      windowInsets
    )
 }
 
@@ -428,7 +437,8 @@ internal fun PageTransitionPreview(
    pageStackState: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
    pageStateStore: PageStateStore,
-   baseTransition: Transition<IndexedValue<PageStack.SavedPageState>>
+   baseTransition: Transition<IndexedValue<PageStack.SavedPageState>>,
+   windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
 ) {
    val transitionState = remember(pageStackState, pageComposableSwitcher) {
       PageTransitionState(pageStackState, pageComposableSwitcher)
@@ -439,7 +449,8 @@ internal fun PageTransitionPreview(
       pageStackState,
       pageComposableSwitcher,
       pageStateStore,
-      transition = transitionState.createChildTransitionForPreview(baseTransition)
+      transition = transitionState.createChildTransitionForPreview(baseTransition),
+      windowInsets
    )
 }
 
@@ -449,7 +460,8 @@ private fun PageTransition(
    pageStackState: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
    pageStateStore: PageStateStore,
-   transition: Transition<PageLayoutInfo>
+   transition: Transition<PageLayoutInfo>,
+   windowInsets: WindowInsets
 ) {
    Box {
       val backgroundColor = MaterialTheme.colorScheme
@@ -472,27 +484,51 @@ private fun PageTransition(
                         .background(backgroundColor)
                   )
 
-                  Box(Modifier.transitionElement(PageLayoutIds.content)) {
+                  val page = savedPageState.page
+                  val pageComposable = pageComposableSwitcher[page] ?: TODO()
+
+                  val pageState = remember(savedPageState.id) {
+                     pageStateStore.get(savedPageState)
+                  }
+
+                  val footerComposable = pageComposable.footerComposable
+
+                  Box(
+                     modifier = Modifier
+                        .transitionElement(PageLayoutIds.content)
+                  ) {
+                     val contentWindowInsets = if (footerComposable != null) {
+                        windowInsets
+                           .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
+                           .add(WindowInsets(bottom = pageFooterHeight))
+                     } else {
+                        windowInsets
+                     }
+
                      PageContent(
-                        savedPageState,
-                        pageComposableSwitcher,
-                        pageStateStore,
-                        pageStackState
+                        pageComposable.contentComposable,
+                        page,
+                        pageState,
+                        pageStackState,
+                        contentWindowInsets
                      )
                   }
 
-                  Box(
-                     Modifier
-                        .align(Alignment.BottomCenter)
-                        .transitionElement(PageLayoutIds.footer)
-                  ) {
-                     PageFooter(
-                        savedPageState,
-                        pageComposableSwitcher,
-                        pageStateStore,
-                        pageStackState,
-                        WindowInsets(0, 0, 0, 0)
-                     )
+                  if (footerComposable != null) {
+                     Box(
+                        Modifier
+                           .align(Alignment.BottomCenter)
+                           .transitionElement(PageLayoutIds.footer)
+                     ) {
+                        PageFooter(
+                           footerComposable,
+                           page,
+                           pageState,
+                           pageStackState,
+                           windowInsets.only(
+                              WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
+                        )
+                     }
                   }
                }
             }
