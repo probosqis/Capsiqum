@@ -277,7 +277,7 @@ class SingleColumnPageStackBoardScrollTest : SingleColumnPageStackBoardComposeTe
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(20.dp)
+      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(40.dp)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(1),
@@ -285,7 +285,7 @@ class SingleColumnPageStackBoardScrollTest : SingleColumnPageStackBoardComposeTe
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeRight(20.dp)
+      rule.onNodeWithTag(pageStackBoardTag).swipeRight(40.dp)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(0),
@@ -312,7 +312,7 @@ class SingleColumnPageStackBoardScrollTest : SingleColumnPageStackBoardComposeTe
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(64.dp, duration = 50L)
+      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(96.dp, duration = 50L)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(1),
@@ -320,7 +320,7 @@ class SingleColumnPageStackBoardScrollTest : SingleColumnPageStackBoardComposeTe
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(64.dp, duration = 50L)
+      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(96.dp, duration = 50L)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(2),
@@ -328,7 +328,7 @@ class SingleColumnPageStackBoardScrollTest : SingleColumnPageStackBoardComposeTe
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeRight(64.dp, duration = 50L)
+      rule.onNodeWithTag(pageStackBoardTag).swipeRight(96.dp, duration = 50L)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(1),
@@ -355,7 +355,7 @@ class SingleColumnPageStackBoardScrollTest : SingleColumnPageStackBoardComposeTe
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeRight(20.dp)
+      rule.onNodeWithTag(pageStackBoardTag).swipeRight(40.dp)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(0),
@@ -364,7 +364,7 @@ class SingleColumnPageStackBoardScrollTest : SingleColumnPageStackBoardComposeTe
       }
 
       repeat (3) {
-         rule.onNodeWithTag(pageStackBoardTag).swipeLeft(20.dp)
+         rule.onNodeWithTag(pageStackBoardTag).swipeLeft(40.dp)
       }
       rule.runOnIdle {
          assertEquals(
@@ -373,7 +373,7 @@ class SingleColumnPageStackBoardScrollTest : SingleColumnPageStackBoardComposeTe
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(20.dp)
+      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(40.dp)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(3),
@@ -393,7 +393,7 @@ class SingleColumnPageStackBoardScrollTest : SingleColumnPageStackBoardComposeTe
          SingleColumnPageStackBoard(remembered.pageStackBoardState)
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(20.dp)
+      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(40.dp)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(1),

@@ -37,6 +37,7 @@ import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
+import org.robolectric.annotation.Config
 
 abstract class PageStackBoardComposeTestBase {
    protected abstract val pageStackRepository: PageStackRepository
@@ -177,10 +178,11 @@ class RememberedPageStackBoardState<S : PageStackBoardState>(
    operator fun component2() = coroutineScope
 }
 
+@Config(qualifiers = "w600dp")
 abstract class MultiColumnPageStackBoardComposeTestBase
    : PageStackBoardComposeTestBase()
 {
-   protected val defaultPageStackBoardWidth = 200.dp
+   protected val defaultPageStackBoardWidth = 600.dp
    protected val defaultPageStackCount = 2
    protected val defaultWindowInsets = WindowInsets(0, 0, 0, 0)
 
@@ -290,7 +292,7 @@ abstract class MultiColumnPageStackBoardComposeTestBase
 abstract class SingleColumnPageStackBoardComposeTestBase
    : PageStackBoardComposeTestBase()
 {
-   protected val defaultPageStackBoardWidth = 100.dp
+   protected val defaultPageStackBoardWidth = 300.dp
 
    protected abstract val density: Density
 

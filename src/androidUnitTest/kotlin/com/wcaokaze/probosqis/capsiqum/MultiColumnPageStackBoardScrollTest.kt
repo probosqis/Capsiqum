@@ -281,7 +281,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(20.dp)
+      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(40.dp)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(1),
@@ -289,7 +289,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeRight(20.dp)
+      rule.onNodeWithTag(pageStackBoardTag).swipeRight(40.dp)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(0),
@@ -316,7 +316,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(64.dp, duration = 50L)
+      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(96.dp, duration = 50L)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(1),
@@ -324,7 +324,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(64.dp, duration = 50L)
+      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(96.dp, duration = 50L)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(2),
@@ -332,7 +332,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeRight(64.dp, duration = 50L)
+      rule.onNodeWithTag(pageStackBoardTag).swipeRight(96.dp, duration = 50L)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(1),
@@ -359,7 +359,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeRight(20.dp)
+      rule.onNodeWithTag(pageStackBoardTag).swipeRight(40.dp)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(0),
@@ -368,7 +368,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
       }
 
       repeat (2) {
-         rule.onNodeWithTag(pageStackBoardTag).swipeLeft(20.dp)
+         rule.onNodeWithTag(pageStackBoardTag).swipeLeft(40.dp)
       }
       rule.runOnIdle {
          assertEquals(
@@ -377,7 +377,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
          )
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(20.dp)
+      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(40.dp)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(2),
@@ -397,7 +397,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
          MultiColumnPageStackBoard(remembered.pageStackBoardState)
       }
 
-      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(20.dp)
+      rule.onNodeWithTag(pageStackBoardTag).swipeLeft(40.dp)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(1),
@@ -460,7 +460,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
       }
 
       rule.onNodeWithTag(pageStackBoardTag)
-         .swipeLeft(expectedPageStackWidth() + 40.dp, duration = 200L)
+         .swipeLeft(expectedPageStackWidth() + 48.dp, duration = 200L)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(2),
@@ -469,7 +469,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
       }
 
       rule.onNodeWithTag(pageStackBoardTag)
-         .swipeRight(expectedPageStackWidth() + 40.dp, duration = 200L)
+         .swipeRight(expectedPageStackWidth() + 48.dp, duration = 200L)
       rule.runOnIdle {
          assertEquals(
             expectedScrollOffset(0),
