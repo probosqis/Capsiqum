@@ -142,7 +142,9 @@ internal class MultiColumnLayoutLogic(
       (PageStackBoard.PageStackId, WritableCache<PageStack>) -> PageStackState
 ) : PageStackBoardLayoutLogic(pageStackBoard, pageStackStateConstructor) {
    private var pageStackBoardWidth by mutableStateOf(0)
-   private var pageStackPadding by mutableStateOf(0)
+   private var pageStackPadding    by mutableStateOf(0)
+   private var leftWindowInset     by mutableStateOf(0)
+   private var rightWindowInset    by mutableStateOf(0)
 
    internal val layoutStateList
       @TestOnly get() = list
@@ -157,12 +159,13 @@ internal class MultiColumnLayoutLogic(
    ): Int {
       when (targetPositionInBoard) {
          PositionInBoard.FirstVisible -> {
-            return pageStackLayoutState.position.x - pageStackPadding * 2
+            return pageStackLayoutState.position.x -
+                  (leftWindowInset + pageStackPadding * 2)
          }
          PositionInBoard.LastVisible -> {
             return pageStackLayoutState.position.x - (
                   pageStackBoardWidth - pageStackLayoutState.width
-                  - pageStackPadding * 2
+                  - pageStackPadding * 2 - rightWindowInset
             )
          }
          PositionInBoard.NearestVisible -> {
@@ -218,7 +221,9 @@ internal class MultiColumnLayoutLogic(
       x += pageStackPadding + rightWindowInset
 
       this.pageStackBoardWidth = pageStackBoardWidth
-      this.pageStackPadding = pageStackPadding
+      this.pageStackPadding    = pageStackPadding
+      this.leftWindowInset     = leftWindowInset
+      this.rightWindowInset    = rightWindowInset
 
       val maxScrollOffset = (x - pageStackBoardWidth).toFloat().coerceAtLeast(0f)
       updateMaxScrollOffset(scrollState, maxScrollOffset, animCoroutineScope)

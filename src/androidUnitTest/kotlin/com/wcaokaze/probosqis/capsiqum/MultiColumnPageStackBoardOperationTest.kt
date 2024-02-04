@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.capsiqum
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.SideEffect
@@ -27,6 +28,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.junit.Rule
@@ -60,6 +62,7 @@ class MultiColumnPageStackBoardOperationTest : MultiColumnPageStackBoardComposeT
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
       lateinit var coroutineScope: CoroutineScope
       var pageStackCount by mutableStateOf(2)
+      var windowInsets by mutableStateOf(WindowInsets(0, 0, 0, 0))
       rule.setContent {
          val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
          SideEffect {
@@ -68,7 +71,8 @@ class MultiColumnPageStackBoardOperationTest : MultiColumnPageStackBoardComposeT
          }
          MultiColumnPageStackBoard(
             remembered.pageStackBoardState,
-            pageStackCount = pageStackCount
+            pageStackCount = pageStackCount,
+            windowInsets = windowInsets
          )
       }
 
@@ -98,379 +102,386 @@ class MultiColumnPageStackBoardOperationTest : MultiColumnPageStackBoardComposeT
       fun assertScrollOffset(leftmostPageStackIndex: Int) {
          rule.onNodeWithText("$leftmostPageStackIndex")
             .assertLeftPositionInRootIsEqualTo(
-               expectedPageStackLeftPosition(0, pageStackCount = pageStackCount)
+               expectedPageStackLeftPosition(0,
+                  pageStackCount = pageStackCount, windowInsets = windowInsets)
             )
 
          rule.runOnIdle {
             assertEquals(
-               expectedScrollOffset(
-                  leftmostPageStackIndex, pageStackCount = pageStackCount
-               ),
+               expectedScrollOffset(leftmostPageStackIndex,
+                  pageStackCount = pageStackCount, windowInsets = windowInsets),
                pageStackBoardState.scrollState.scrollOffset
             )
          }
       }
 
-      for (parameterType in listOf(byIndex, byId)) {
-         // -------- pageStackCount = 2 --------
-         pageStackCount = 2
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.FirstVisible, byIndex)
-         }
-         assertScrollOffset(0)
+      for (insets in listOf(
+         WindowInsets(left = 0, right = 0),
+         WindowInsets(left = 32.dp, right = 32.dp)))
+      {
+         windowInsets = insets
 
-         // ==== FirstVisible ====
-
-         //  0]1 2]3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(3, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0[1 2]3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         // [0 1]2 3
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         // [0 1]2 3
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         coroutineScope.launch {
-            assertFails {
-               animateScroll(4, PositionInBoard.FirstVisible, parameterType)
+         for (parameterType in listOf(byIndex, byId)) {
+            // -------- pageStackCount = 2 --------
+            pageStackCount = 2
+            coroutineScope.launch {
+               animateScroll(0, PositionInBoard.FirstVisible, byIndex)
             }
-            assertFails {
-               animateScroll(-1, PositionInBoard.FirstVisible, parameterType)
+            assertScrollOffset(0)
+
+            // ==== FirstVisible ====
+
+            //  0]1 2]3
+            coroutineScope.launch {
+               animateScroll(1, PositionInBoard.FirstVisible, parameterType)
             }
-         }
+            assertScrollOffset(1)
 
-         // ==== LastVisible ====
-
-         //  0[1 2]3
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(3, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0[1 2]3
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         // [0 1]2 3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         // [0 1]2 3
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(3, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         // [0 1]2 3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         coroutineScope.launch {
-            assertFails {
-               pageStackBoardState.animateScroll(4, PositionInBoard.LastVisible)
+            //  0 1[2 3]
+            coroutineScope.launch {
+               animateScroll(2, PositionInBoard.FirstVisible, parameterType)
             }
-            assertFails {
-               pageStackBoardState.animateScroll(-1, PositionInBoard.LastVisible)
+            assertScrollOffset(2)
+
+            //  0 1[2 3]
+            coroutineScope.launch {
+               animateScroll(3, PositionInBoard.FirstVisible, parameterType)
             }
-         }
+            assertScrollOffset(2)
 
-         // ==== NearestVisible ====
-
-         // [0 1]2 3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         //  0[1 2]3
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(3, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0[1 2]3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         // [0 1]2 3
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         //  0 1[2 3]
-         coroutineScope.launch {
-            animateScroll(3, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         // [0 1]2 3
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         coroutineScope.launch {
-            assertFails {
-               animateScroll(4, PositionInBoard.NearestVisible, parameterType)
+            //  0 1[2 3]
+            coroutineScope.launch {
+               animateScroll(2, PositionInBoard.FirstVisible, parameterType)
             }
-            assertFails {
-               animateScroll(-1, PositionInBoard.NearestVisible, parameterType)
+            assertScrollOffset(2)
+
+            //  0[1 2]3
+            coroutineScope.launch {
+               animateScroll(1, PositionInBoard.FirstVisible, parameterType)
             }
-         }
+            assertScrollOffset(1)
 
-         // -------- pageStackCount = 1 --------
-         pageStackCount = 1
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.FirstVisible, byIndex)
-         }
-         assertScrollOffset(0)
-
-         // ==== FirstVisible ====
-
-         //  0[1]2 3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         //  0 1[2]3
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0 1 2[3]
-         coroutineScope.launch {
-            animateScroll(3, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(3)
-
-         //  0 1[2]3
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0[1]2 3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         // [0]1 2 3
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         //  0 1[2]3
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         // [0]1 2 3
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.FirstVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         coroutineScope.launch {
-            assertFails {
-               animateScroll(4, PositionInBoard.FirstVisible, parameterType)
+            // [0 1]2 3
+            coroutineScope.launch {
+               animateScroll(0, PositionInBoard.FirstVisible, parameterType)
             }
-            assertFails {
-               animateScroll(-1, PositionInBoard.FirstVisible, parameterType)
+            assertScrollOffset(0)
+
+            //  0 1[2 3]
+            coroutineScope.launch {
+               animateScroll(2, PositionInBoard.FirstVisible, parameterType)
             }
-         }
+            assertScrollOffset(2)
 
-         // ==== LastVisible ====
-
-         //  0[1]2 3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         //  0 1[2]3
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0 1 2[3]
-         coroutineScope.launch {
-            animateScroll(3, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(3)
-
-         //  0 1[2]3
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0[1]2 3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         // [0]1 2 3
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         //  0 1[2]3
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         // [0]1 2 3
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.LastVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         coroutineScope.launch {
-            assertFails {
-               animateScroll(4, PositionInBoard.LastVisible, parameterType)
+            // [0 1]2 3
+            coroutineScope.launch {
+               animateScroll(0, PositionInBoard.FirstVisible, parameterType)
             }
-            assertFails {
-               animateScroll(-1, PositionInBoard.LastVisible, parameterType)
+            assertScrollOffset(0)
+
+            coroutineScope.launch {
+               assertFails {
+                  animateScroll(4, PositionInBoard.FirstVisible, parameterType)
+               }
+               assertFails {
+                  animateScroll(-1, PositionInBoard.FirstVisible, parameterType)
+               }
             }
-         }
 
-         // ==== NearestVisible ====
+            // ==== LastVisible ====
 
-         //  0[1]2 3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         //  0 1[2]3
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0 1 2[3]
-         coroutineScope.launch {
-            animateScroll(3, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(3)
-
-         //  0 1[2]3
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         //  0[1]2 3
-         coroutineScope.launch {
-            animateScroll(1, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(1)
-
-         // [0]1 2 3
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         //  0 1[2]3
-         coroutineScope.launch {
-            animateScroll(2, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(2)
-
-         // [0]1 2 3
-         coroutineScope.launch {
-            animateScroll(0, PositionInBoard.NearestVisible, parameterType)
-         }
-         assertScrollOffset(0)
-
-         coroutineScope.launch {
-            assertFails {
-               animateScroll(4, PositionInBoard.NearestVisible, parameterType)
+            //  0[1 2]3
+            coroutineScope.launch {
+               animateScroll(2, PositionInBoard.LastVisible, parameterType)
             }
-            assertFails {
-               animateScroll(-1, PositionInBoard.NearestVisible, parameterType)
+            assertScrollOffset(1)
+
+            //  0 1[2 3]
+            coroutineScope.launch {
+               animateScroll(3, PositionInBoard.LastVisible, parameterType)
+            }
+            assertScrollOffset(2)
+
+            //  0[1 2]3
+            coroutineScope.launch {
+               animateScroll(2, PositionInBoard.LastVisible, parameterType)
+            }
+            assertScrollOffset(1)
+
+            // [0 1]2 3
+            coroutineScope.launch {
+               animateScroll(1, PositionInBoard.LastVisible, parameterType)
+            }
+            assertScrollOffset(0)
+
+            // [0 1]2 3
+            coroutineScope.launch {
+               animateScroll(0, PositionInBoard.LastVisible, parameterType)
+            }
+            assertScrollOffset(0)
+
+            //  0 1[2 3]
+            coroutineScope.launch {
+               animateScroll(3, PositionInBoard.LastVisible, parameterType)
+            }
+            assertScrollOffset(2)
+
+            // [0 1]2 3
+            coroutineScope.launch {
+               animateScroll(1, PositionInBoard.LastVisible, parameterType)
+            }
+            assertScrollOffset(0)
+
+            coroutineScope.launch {
+               assertFails {
+                  pageStackBoardState.animateScroll(4, PositionInBoard.LastVisible)
+               }
+               assertFails {
+                  pageStackBoardState.animateScroll(-1, PositionInBoard.LastVisible)
+               }
+            }
+
+            // ==== NearestVisible ====
+
+            // [0 1]2 3
+            coroutineScope.launch {
+               animateScroll(1, PositionInBoard.NearestVisible, parameterType)
+            }
+            assertScrollOffset(0)
+
+            //  0[1 2]3
+            coroutineScope.launch {
+               animateScroll(2, PositionInBoard.NearestVisible, parameterType)
+            }
+            assertScrollOffset(1)
+
+            //  0 1[2 3]
+            coroutineScope.launch {
+               animateScroll(3, PositionInBoard.NearestVisible, parameterType)
+            }
+            assertScrollOffset(2)
+
+            //  0 1[2 3]
+            coroutineScope.launch {
+               animateScroll(2, PositionInBoard.NearestVisible, parameterType)
+            }
+            assertScrollOffset(2)
+
+            //  0[1 2]3
+            coroutineScope.launch {
+               animateScroll(1, PositionInBoard.NearestVisible, parameterType)
+            }
+            assertScrollOffset(1)
+
+            // [0 1]2 3
+            coroutineScope.launch {
+               animateScroll(0, PositionInBoard.NearestVisible, parameterType)
+            }
+            assertScrollOffset(0)
+
+            //  0 1[2 3]
+            coroutineScope.launch {
+               animateScroll(3, PositionInBoard.NearestVisible, parameterType)
+            }
+            assertScrollOffset(2)
+
+            // [0 1]2 3
+            coroutineScope.launch {
+               animateScroll(0, PositionInBoard.NearestVisible, parameterType)
+            }
+            assertScrollOffset(0)
+
+            coroutineScope.launch {
+               assertFails {
+                  animateScroll(4, PositionInBoard.NearestVisible, parameterType)
+               }
+               assertFails {
+                  animateScroll(-1, PositionInBoard.NearestVisible, parameterType)
+               }
+            }
+
+            // -------- pageStackCount = 1 --------
+            pageStackCount = 1
+            coroutineScope.launch {
+               animateScroll(0, PositionInBoard.FirstVisible, byIndex)
+            }
+            assertScrollOffset(0)
+
+            // ==== FirstVisible ====
+
+            //  0[1]2 3
+            coroutineScope.launch {
+               animateScroll(1, PositionInBoard.FirstVisible, parameterType)
+            }
+            assertScrollOffset(1)
+
+            //  0 1[2]3
+            coroutineScope.launch {
+               animateScroll(2, PositionInBoard.FirstVisible, parameterType)
+            }
+            assertScrollOffset(2)
+
+            //  0 1 2[3]
+            coroutineScope.launch {
+               animateScroll(3, PositionInBoard.FirstVisible, parameterType)
+            }
+            assertScrollOffset(3)
+
+            //  0 1[2]3
+            coroutineScope.launch {
+               animateScroll(2, PositionInBoard.FirstVisible, parameterType)
+            }
+            assertScrollOffset(2)
+
+            //  0[1]2 3
+            coroutineScope.launch {
+               animateScroll(1, PositionInBoard.FirstVisible, parameterType)
+            }
+            assertScrollOffset(1)
+
+            // [0]1 2 3
+            coroutineScope.launch {
+               animateScroll(0, PositionInBoard.FirstVisible, parameterType)
+            }
+            assertScrollOffset(0)
+
+            //  0 1[2]3
+            coroutineScope.launch {
+               animateScroll(2, PositionInBoard.FirstVisible, parameterType)
+            }
+            assertScrollOffset(2)
+
+            // [0]1 2 3
+            coroutineScope.launch {
+               animateScroll(0, PositionInBoard.FirstVisible, parameterType)
+            }
+            assertScrollOffset(0)
+
+            coroutineScope.launch {
+               assertFails {
+                  animateScroll(4, PositionInBoard.FirstVisible, parameterType)
+               }
+               assertFails {
+                  animateScroll(-1, PositionInBoard.FirstVisible, parameterType)
+               }
+            }
+
+            // ==== LastVisible ====
+
+            //  0[1]2 3
+            coroutineScope.launch {
+               animateScroll(1, PositionInBoard.LastVisible, parameterType)
+            }
+            assertScrollOffset(1)
+
+            //  0 1[2]3
+            coroutineScope.launch {
+               animateScroll(2, PositionInBoard.LastVisible, parameterType)
+            }
+            assertScrollOffset(2)
+
+            //  0 1 2[3]
+            coroutineScope.launch {
+               animateScroll(3, PositionInBoard.LastVisible, parameterType)
+            }
+            assertScrollOffset(3)
+
+            //  0 1[2]3
+            coroutineScope.launch {
+               animateScroll(2, PositionInBoard.LastVisible, parameterType)
+            }
+            assertScrollOffset(2)
+
+            //  0[1]2 3
+            coroutineScope.launch {
+               animateScroll(1, PositionInBoard.LastVisible, parameterType)
+            }
+            assertScrollOffset(1)
+
+            // [0]1 2 3
+            coroutineScope.launch {
+               animateScroll(0, PositionInBoard.LastVisible, parameterType)
+            }
+            assertScrollOffset(0)
+
+            //  0 1[2]3
+            coroutineScope.launch {
+               animateScroll(2, PositionInBoard.LastVisible, parameterType)
+            }
+            assertScrollOffset(2)
+
+            // [0]1 2 3
+            coroutineScope.launch {
+               animateScroll(0, PositionInBoard.LastVisible, parameterType)
+            }
+            assertScrollOffset(0)
+
+            coroutineScope.launch {
+               assertFails {
+                  animateScroll(4, PositionInBoard.LastVisible, parameterType)
+               }
+               assertFails {
+                  animateScroll(-1, PositionInBoard.LastVisible, parameterType)
+               }
+            }
+
+            // ==== NearestVisible ====
+
+            //  0[1]2 3
+            coroutineScope.launch {
+               animateScroll(1, PositionInBoard.NearestVisible, parameterType)
+            }
+            assertScrollOffset(1)
+
+            //  0 1[2]3
+            coroutineScope.launch {
+               animateScroll(2, PositionInBoard.NearestVisible, parameterType)
+            }
+            assertScrollOffset(2)
+
+            //  0 1 2[3]
+            coroutineScope.launch {
+               animateScroll(3, PositionInBoard.NearestVisible, parameterType)
+            }
+            assertScrollOffset(3)
+
+            //  0 1[2]3
+            coroutineScope.launch {
+               animateScroll(2, PositionInBoard.NearestVisible, parameterType)
+            }
+            assertScrollOffset(2)
+
+            //  0[1]2 3
+            coroutineScope.launch {
+               animateScroll(1, PositionInBoard.NearestVisible, parameterType)
+            }
+            assertScrollOffset(1)
+
+            // [0]1 2 3
+            coroutineScope.launch {
+               animateScroll(0, PositionInBoard.NearestVisible, parameterType)
+            }
+            assertScrollOffset(0)
+
+            //  0 1[2]3
+            coroutineScope.launch {
+               animateScroll(2, PositionInBoard.NearestVisible, parameterType)
+            }
+            assertScrollOffset(2)
+
+            // [0]1 2 3
+            coroutineScope.launch {
+               animateScroll(0, PositionInBoard.NearestVisible, parameterType)
+            }
+            assertScrollOffset(0)
+
+            coroutineScope.launch {
+               assertFails {
+                  animateScroll(4, PositionInBoard.NearestVisible, parameterType)
+               }
+               assertFails {
+                  animateScroll(-1, PositionInBoard.NearestVisible, parameterType)
+               }
             }
          }
       }
