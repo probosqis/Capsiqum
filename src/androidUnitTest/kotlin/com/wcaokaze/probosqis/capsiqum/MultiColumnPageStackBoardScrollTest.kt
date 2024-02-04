@@ -139,7 +139,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
    }
 
    @Test
-   fun scrollEdge() {
+   fun edge() {
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 3)
@@ -199,7 +199,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
    }
 
    @Test
-   fun scrollEdge_afterSizeChanged() {
+   fun edge_afterSizeChanged() {
       var boardWidth by mutableStateOf(200.dp)
 
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
@@ -265,7 +265,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
    }
 
    @Test
-   fun scroll_snap() {
+   fun snap() {
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
@@ -316,7 +316,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
    }
 
    @Test
-   fun scroll_snap_windowInsets() {
+   fun snap_windowInsets() {
       val windowInsets = WindowInsets(left = 32.dp, right = 32.dp)
 
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
@@ -369,7 +369,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
    }
 
    @Test
-   fun scroll_snap_tooFast() {
+   fun snap_tooFast() {
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
@@ -412,7 +412,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
    }
 
    @Test
-   fun scroll_snap_edges() {
+   fun snap_edges() {
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
@@ -457,7 +457,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
    }
 
    @Test
-   fun scroll_snap_afterImmobility() {
+   fun snap_afterImmobility() {
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
@@ -515,7 +515,7 @@ class MultiColumnPageStackBoardScrollTest : MultiColumnPageStackBoardComposeTest
    }
 
    @Test
-   fun scroll_swipe_overMultiplePageStacks() {
+   fun swipe_overMultiplePageStacks() {
       lateinit var pageStackBoardState: MultiColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)

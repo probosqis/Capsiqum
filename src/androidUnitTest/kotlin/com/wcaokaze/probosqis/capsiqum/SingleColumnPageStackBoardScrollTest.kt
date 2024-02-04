@@ -134,7 +134,7 @@ class SingleColumnPageStackBoardScrollTest : SingleColumnPageStackBoardComposeTe
    }
 
    @Test
-   fun scrollEdge() {
+   fun edge() {
       lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 2)
@@ -194,7 +194,7 @@ class SingleColumnPageStackBoardScrollTest : SingleColumnPageStackBoardComposeTe
    }
 
    @Test
-   fun scrollEdge_afterSizeChanged() {
+   fun edge_afterSizeChanged() {
       var boardWidth by mutableStateOf(200.dp)
 
       lateinit var pageStackBoardState: SingleColumnPageStackBoardState
@@ -260,7 +260,7 @@ class SingleColumnPageStackBoardScrollTest : SingleColumnPageStackBoardComposeTe
    }
 
    @Test
-   fun scroll_snap() {
+   fun snap() {
       lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 4)
@@ -295,7 +295,7 @@ class SingleColumnPageStackBoardScrollTest : SingleColumnPageStackBoardComposeTe
    }
 
    @Test
-   fun scroll_snap_tooFast() {
+   fun snap_tooFast() {
       lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 4)
@@ -338,7 +338,7 @@ class SingleColumnPageStackBoardScrollTest : SingleColumnPageStackBoardComposeTe
    }
 
    @Test
-   fun scroll_snap_edges() {
+   fun snap_edges() {
       lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 4)
@@ -383,7 +383,7 @@ class SingleColumnPageStackBoardScrollTest : SingleColumnPageStackBoardComposeTe
    }
 
    @Test
-   fun scroll_snap_afterImmobility() {
+   fun snap_afterImmobility() {
       lateinit var pageStackBoardState: SingleColumnPageStackBoardState
       rule.setContent {
          val remembered = rememberSingleColumnPageStackBoardState(pageStackCount = 4)
