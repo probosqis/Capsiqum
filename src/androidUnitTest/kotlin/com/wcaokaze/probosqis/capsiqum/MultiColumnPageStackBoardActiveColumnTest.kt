@@ -16,11 +16,13 @@
 
 package com.wcaokaze.probosqis.capsiqum
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.junit.Rule
@@ -118,6 +120,49 @@ class MultiColumnPageStackBoardActiveColumnTest : MultiColumnPageStackBoardCompo
 
       rule.runOnIdle {
          assertEquals(1, pageStackBoardState.activePageStackIndex)
+      }
+   }
+
+   @Test
+   fun scrolling_windowInsets() {
+      val windowInsets = WindowInsets(left = 32.dp, right = 32.dp)
+
+      lateinit var pageStackBoardState: MultiColumnPageStackBoardState
+      lateinit var coroutineScope: CoroutineScope
+      rule.setContent {
+         val remembered = rememberMultiColumnPageStackBoardState(pageStackCount = 4)
+         SideEffect {
+            pageStackBoardState = remembered.pageStackBoardState
+            coroutineScope = remembered.coroutineScope
+         }
+         MultiColumnPageStackBoard(remembered.pageStackBoardState, windowInsets = windowInsets)
+      }
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScroll(1, PositionInBoard.FirstVisible)
+      }
+      rule.runOnIdle {
+         assertEquals(1, pageStackBoardState.activePageStackIndex)
+      }
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScroll(2, PositionInBoard.FirstVisible)
+      }
+      rule.runOnIdle {
+         assertEquals(2, pageStackBoardState.activePageStackIndex)
+      }
+
+      rule.onNodeWithText("3").performClick()
+      rule.runOnIdle {
+         assertEquals(3, pageStackBoardState.activePageStackIndex)
+      }
+
+      coroutineScope.launch {
+         pageStackBoardState.animateScroll(2, PositionInBoard.LastVisible)
+      }
+
+      rule.runOnIdle {
+         assertEquals(2, pageStackBoardState.activePageStackIndex)
       }
    }
 }

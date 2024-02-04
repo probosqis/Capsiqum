@@ -79,6 +79,11 @@ class SingleColumnPageStackBoardState(
    override var lastVisiblePageStackIndex by mutableStateOf(0)
       internal set
 
+   override val firstContentPageStackIndex: Int
+      get() = firstVisiblePageStackIndex
+   override val lastContentPageStackIndex: Int
+      get() = lastVisiblePageStackIndex
+
    override val activePageStackIndex: Int get() {
       val firstVisibleIndex = firstVisiblePageStackIndex
       val lastVisibleIndex = lastVisiblePageStackIndex

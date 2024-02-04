@@ -365,6 +365,7 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
 
       rule.runOnIdle {
          assertEquals(0, pageStackBoardState.firstVisiblePageStackIndex)
+         assertEquals(0, pageStackBoardState.firstContentPageStackIndex)
       }
 
       rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
@@ -378,6 +379,7 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
          .let { assertEquals(1.0f, it.left + it.width, absoluteTolerance = 0.05f) }
       rule.runOnIdle {
          assertEquals(0, pageStackBoardState.firstVisiblePageStackIndex)
+         assertEquals(0, pageStackBoardState.firstContentPageStackIndex)
       }
 
       rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
@@ -389,6 +391,7 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
          .let { assertEquals(-1.0f, it.left + it.width, absoluteTolerance = 0.05f) }
       rule.runOnIdle {
          assertEquals(1, pageStackBoardState.firstVisiblePageStackIndex)
+         assertEquals(1, pageStackBoardState.firstContentPageStackIndex)
       }
 
       rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
@@ -400,6 +403,7 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
          .let { assertEquals(0.0f, it.left + it.width, absoluteTolerance = 0.05f) }
       rule.runOnIdle {
          assertEquals(1, pageStackBoardState.firstVisiblePageStackIndex)
+         assertEquals(1, pageStackBoardState.firstContentPageStackIndex)
       }
 
       coroutineScope.launch {
@@ -408,6 +412,7 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
 
       rule.runOnIdle {
          assertEquals(0, pageStackBoardState.firstVisiblePageStackIndex)
+         assertEquals(0, pageStackBoardState.firstContentPageStackIndex)
       }
 
       coroutineScope.launch {
@@ -416,6 +421,7 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
 
       rule.runOnIdle {
          assertEquals(1, pageStackBoardState.firstVisiblePageStackIndex)
+         assertEquals(1, pageStackBoardState.firstContentPageStackIndex)
       }
    }
 
@@ -434,6 +440,7 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
 
       rule.runOnIdle {
          assertEquals(1, pageStackBoardState.lastVisiblePageStackIndex)
+         assertEquals(1, pageStackBoardState.lastContentPageStackIndex)
       }
 
       val pageStackBoardWidth = with (rule.density) {
@@ -457,6 +464,7 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
          }
       rule.runOnIdle {
          assertEquals(2, pageStackBoardState.lastVisiblePageStackIndex)
+         assertEquals(2, pageStackBoardState.lastContentPageStackIndex)
       }
 
       rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
@@ -474,6 +482,7 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
          }
       rule.runOnIdle {
          assertEquals(3, pageStackBoardState.lastVisiblePageStackIndex)
+         assertEquals(3, pageStackBoardState.lastContentPageStackIndex)
       }
 
       rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
@@ -491,6 +500,7 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
          }
       rule.runOnIdle {
          assertEquals(2, pageStackBoardState.lastVisiblePageStackIndex)
+         assertEquals(2, pageStackBoardState.lastContentPageStackIndex)
       }
 
       coroutineScope.launch {
@@ -499,6 +509,7 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
 
       rule.runOnIdle {
          assertEquals(1, pageStackBoardState.lastVisiblePageStackIndex)
+         assertEquals(1, pageStackBoardState.lastContentPageStackIndex)
       }
 
       coroutineScope.launch {
@@ -507,6 +518,7 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
 
       rule.runOnIdle {
          assertEquals(2, pageStackBoardState.lastVisiblePageStackIndex)
+         assertEquals(2, pageStackBoardState.lastContentPageStackIndex)
       }
    }
 
@@ -525,6 +537,7 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
 
       rule.runOnIdle {
          assertEquals(0, pageStackBoardState.firstVisiblePageStackIndex)
+         assertEquals(0, pageStackBoardState.firstContentPageStackIndex)
       }
 
       rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
@@ -534,14 +547,24 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
       }
       rule.runOnIdle {
          assertEquals(0, pageStackBoardState.firstVisiblePageStackIndex)
+         assertEquals(0, pageStackBoardState.firstContentPageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         moveBy(Offset(-2.0f, 0.0f))
+      }
+      rule.runOnIdle {
+         assertEquals(0, pageStackBoardState.firstVisiblePageStackIndex)
+         assertEquals(1, pageStackBoardState.firstContentPageStackIndex)
       }
 
       rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
          val i = windowInsets.getLeft(this, LayoutDirection.Ltr)
-         moveBy(Offset(-i.toFloat(), 0.0f))
+         moveBy(Offset(-i.toFloat() + 2.0f, 0.0f))
       }
       rule.runOnIdle {
          assertEquals(0, pageStackBoardState.firstVisiblePageStackIndex)
+         assertEquals(1, pageStackBoardState.firstContentPageStackIndex)
       }
 
       rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
@@ -549,6 +572,7 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
       }
       rule.runOnIdle {
          assertEquals(1, pageStackBoardState.firstVisiblePageStackIndex)
+         assertEquals(1, pageStackBoardState.firstContentPageStackIndex)
       }
 
       rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
@@ -571,18 +595,27 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
 
       rule.runOnIdle {
          assertEquals(2, pageStackBoardState.lastVisiblePageStackIndex)
+         assertEquals(1, pageStackBoardState.lastContentPageStackIndex)
       }
 
       rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
          down(Offset(0.0f, 0.0f))
          moveBy(Offset(-viewConfiguration.touchSlop, 0.0f))
-
-         val fullScrollOffset = expectedScrollOffset(1, windowInsets = windowInsets)
-         val inset = windowInsets.getRight(this, LayoutDirection.Ltr)
-         moveBy(Offset(-(fullScrollOffset - inset) + 1.0f, 0.0f))
+         moveBy(Offset(-1.0f, 0.0f))
       }
       rule.runOnIdle {
          assertEquals(2, pageStackBoardState.lastVisiblePageStackIndex)
+         assertEquals(2, pageStackBoardState.lastContentPageStackIndex)
+      }
+
+      rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
+         val fullScrollOffset = expectedScrollOffset(1, windowInsets = windowInsets)
+         val inset = windowInsets.getRight(this, LayoutDirection.Ltr)
+         moveBy(Offset(-(fullScrollOffset - inset) + 2.0f, 0.0f))
+      }
+      rule.runOnIdle {
+         assertEquals(2, pageStackBoardState.lastVisiblePageStackIndex)
+         assertEquals(2, pageStackBoardState.lastContentPageStackIndex)
       }
 
       rule.onNodeWithTag(pageStackBoardTag).performTouchInput {
@@ -590,6 +623,7 @@ class MultiColumnPageStackBoardLayoutTest : MultiColumnPageStackBoardComposeTest
       }
       rule.runOnIdle {
          assertEquals(3, pageStackBoardState.lastVisiblePageStackIndex)
+         assertEquals(2, pageStackBoardState.lastContentPageStackIndex)
       }
 
       rule.onNodeWithTag(pageStackBoardTag).performTouchInput {

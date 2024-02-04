@@ -58,6 +58,7 @@ import com.wcaokaze.probosqis.capsiqum.transition.PageTransition
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.coroutines.CoroutineScope
 import org.jetbrains.annotations.TestOnly
+import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 private const val PAGE_STACK_PADDING_DP = 8
@@ -96,6 +97,10 @@ class MultiColumnPageStackBoardState(
    override var firstVisiblePageStackIndex by mutableStateOf(0)
       internal set
    override var lastVisiblePageStackIndex by mutableStateOf(0)
+      internal set
+   override var firstContentPageStackIndex by mutableStateOf(0)
+      internal set
+   override var lastContentPageStackIndex by mutableStateOf(0)
       internal set
 
    override var activePageStackIndex by mutableStateOf(0)
@@ -190,12 +195,12 @@ internal class MultiColumnLayoutLogic(
       val leftWindowInset  = windowInsets.getLeft (density, layoutDirection)
       val rightWindowInset = windowInsets.getRight(density, layoutDirection)
 
-      val pageStackWidth = (
+      val pageStackWidth = ceil(
          (pageStackBoardWidth
                - leftWindowInset - rightWindowInset
-               - pageStackPadding * 2) / pageStackCount
+               - pageStackPadding * 2) / pageStackCount.toDouble()
          - pageStackPadding * 2
-      )
+      ).toInt()
 
       var x = leftWindowInset + pageStackPadding
 
@@ -262,28 +267,44 @@ fun MultiColumnPageStackBoard(
             pageStackPadding, windowInsets, layoutDirection)
 
          val scrollOffset = state.scrollState.scrollOffset.toInt()
+         val visibleLeft = state.scrollState.scrollOffset.toInt()
+         val visibleRight = visibleLeft + pageStackBoardWidth
+         val contentLeft  = visibleLeft  + windowInsets.getLeft (this, LayoutDirection.Ltr)
+         val contentRight = visibleRight - windowInsets.getRight(this, LayoutDirection.Ltr)
 
          var firstVisibleIndex = -1
-         var lastVisibleIndex = -1
+         var lastVisibleIndex  = -1
+         var firstContentIndex = -1
+         var lastContentIndex  = -1
 
          val placeables = state.layout.mapIndexedNotNull { index, pageStackLayout ->
             val pageStackPosition = pageStackLayout.position
             val pageStackWidth = pageStackLayout.width
 
             if (firstVisibleIndex < 0) {
-               if (pageStackPosition.x + pageStackWidth > scrollOffset) {
+               if (pageStackPosition.x + pageStackWidth > visibleLeft) {
                   firstVisibleIndex = index
                }
             }
 
-            if (pageStackPosition.x < scrollOffset + pageStackBoardWidth) {
+            if (firstContentIndex < 0) {
+               if (pageStackPosition.x + pageStackWidth > contentLeft) {
+                  firstContentIndex = index
+               }
+            }
+
+            if (pageStackPosition.x < visibleRight) {
                lastVisibleIndex = index
+            }
+
+            if (pageStackPosition.x < contentRight) {
+               lastContentIndex = index
             }
 
             // TODO: PageStackに影がつくかつかないか未定のためギリギリ範囲外の
             //       PageStackもコンポーズしている。影の件が決まり次第変更する
-            if (pageStackPosition.x + pageStackWidth + pageStackPadding < scrollOffset ||
-                pageStackPosition.x - pageStackPadding > scrollOffset + pageStackBoardWidth)
+            if (pageStackPosition.x + pageStackWidth + pageStackPadding < visibleLeft ||
+                pageStackPosition.x - pageStackPadding > visibleRight)
             {
                return@mapIndexedNotNull null
             }
@@ -313,9 +334,11 @@ fun MultiColumnPageStackBoard(
          }
 
          state.firstVisiblePageStackIndex = firstVisibleIndex
-         state.lastVisiblePageStackIndex = lastVisibleIndex
+         state.lastVisiblePageStackIndex  = lastVisibleIndex
+         state.firstContentPageStackIndex = firstContentIndex
+         state.lastContentPageStackIndex  = lastContentIndex
          state.activePageStackIndex = state.activePageStackIndex
-            .coerceIn(firstVisibleIndex, lastVisibleIndex)
+            .coerceIn(firstContentIndex, lastContentIndex)
 
          layout(pageStackBoardWidth, pageStackBoardHeight) {
             for ((layout, placeable) in placeables) {

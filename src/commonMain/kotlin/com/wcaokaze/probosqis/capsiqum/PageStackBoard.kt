@@ -339,8 +339,41 @@ sealed class PageStackBoardState(
 
    internal abstract val layout: PageStackBoardLayoutLogic
 
+   /**
+    * PageStackBoard内(WindowInsets領域を含む)の最初に表示されている
+    * PageStackのindex。
+    *
+    * WindowInsetsを含まない領域内の最初に表示されるPageStackを使う場合は
+    * [firstContentPageStackIndex]
+    */
    abstract val firstVisiblePageStackIndex: Int
+
+   /**
+    * PageStackBoard内(WindowInsets領域を含む)の最後に表示されている
+    * PageStackのindex。
+    *
+    * WindowInsetsを含まない領域内の最後に表示されるPageStackを使う場合は
+    * [lastContentPageStackIndex]
+    */
    abstract val lastVisiblePageStackIndex: Int
+
+   /**
+    * PageStackBoard内のWindowInsets領域を除いた領域の最初に表示されている
+    * PageStackのindex。
+    *
+    * WindowInsetsを含む領域内の最初に表示されるPageStackを使う場合は
+    * [firstVisiblePageStackIndex]
+    */
+   abstract val firstContentPageStackIndex: Int
+
+   /**
+    * PageStackBoard内のWindowInsets領域を除いた領域の最後に表示されている
+    * PageStackのindex。
+    *
+    * WindowInsetsを含む領域内の最後に表示されるPageStackを使う場合は
+    * [lastVisiblePageStackIndex]
+    */
+   abstract val lastContentPageStackIndex: Int
 
    abstract val activePageStackIndex: Int
 
