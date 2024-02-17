@@ -112,3 +112,47 @@ abstract class MultiColumnDeckTestBase : DeckTestBase() {
       return with (density) { cardDistance.toPx() * index }
    }
 }
+
+abstract class SingleColumnDeckTestBase : DeckTestBase() {
+   protected val defaultDeckWidth = 300.dp
+
+   protected abstract val density: Density
+
+   protected fun createDeckState(cardCount: Int) = SingleColumnDeckState(
+      createDeck(cardCount),
+      key = { it }
+   )
+
+   @Composable
+   protected fun SingleColumnDeck(
+      state: SingleColumnDeckState<Int>,
+      width: Dp = defaultDeckWidth,
+      card: @Composable (Int) -> Unit = { Text("$it", Modifier.fillMaxWidth()) }
+   ) {
+      SingleColumnDeck(
+         state,
+         card = card,
+         modifier = Modifier
+            .width(width)
+            .testTag(deckTestTag)
+      )
+   }
+
+   protected fun expectedCardWidth(deckWidth: Dp = defaultDeckWidth): Dp = deckWidth
+
+   protected fun expectedCardLeftPosition(
+      index: Int,
+      deckWidth: Dp = defaultDeckWidth
+   ): Dp {
+      return (deckWidth + 16.dp) * index
+   }
+
+   protected fun expectedScrollOffset(
+      index: Int,
+      deckWidth: Dp = defaultDeckWidth
+   ): Float {
+      return with (density) {
+         (deckWidth + 16.dp).toPx() * index
+      }
+   }
+}
