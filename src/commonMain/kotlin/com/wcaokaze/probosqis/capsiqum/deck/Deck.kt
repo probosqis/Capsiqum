@@ -72,6 +72,9 @@ class Deck<out T>(val rootRow: Row<T>) {
    }
 
    val cardCount = rootRow.leafCount
+
+   override fun hashCode() = rootRow.hashCode()
+   override fun equals(other: Any?) = other is Deck<*> && other.rootRow == rootRow
 }
 
 fun <T> Deck.Column<T>.inserted(index: Int, element: T): Deck.Column<T>
