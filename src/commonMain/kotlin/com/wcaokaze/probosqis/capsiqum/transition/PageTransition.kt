@@ -219,9 +219,9 @@ internal class PageTransitionState(
          = persistentMapOf()
 
    @Composable
-   fun updateTransition(): Transition<PageLayoutInfo> {
+   fun updateTransition(pageStack: PageStack): Transition<PageLayoutInfo> {
       /*
-       * pageStackState.pageStack.headが変化した際、直前に表示されていたPageを
+       * pageStack.headが変化した際、直前に表示されていたPageを
        * 表示したまま一度裏で遷移先のPageをコンポーズし、PageLayoutInfoが
        * 収集できてから遷移先のPageを表にして遷移アニメーションを開始する。
        * そのため、pageが変化した直後のリコンポジションではTransitionには
@@ -237,7 +237,6 @@ internal class PageTransitionState(
        *
        */
 
-      val pageStack = pageStackState.pageStack
       val targetPageState = pageStack.indexedHead
       val isTargetFirstComposition = getLayoutInfo(targetPageState.value.id).isEmpty()
 
@@ -427,7 +426,7 @@ internal fun PageTransition(
       pageStackState,
       pageComposableSwitcher,
       pageStateStore,
-      transition = transitionState.updateTransition(),
+      transition = transitionState.updateTransition(pageStackState.pageStack),
       windowInsets
    )
 }
