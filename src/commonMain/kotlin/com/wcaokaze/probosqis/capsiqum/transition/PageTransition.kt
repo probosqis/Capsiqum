@@ -203,7 +203,6 @@ private typealias PageComposableArguments
 
 @Stable
 internal class PageTransitionState(
-   private val pageStackState: PageStackState,
    private val pageComposableSwitcher: PageComposableSwitcher
 ) {
    private val layoutInfoMap = mutableMapOf<PageStack.PageId, PageLayoutInfoImpl>()
@@ -337,7 +336,7 @@ internal class PageTransitionState(
 
    private fun getLayoutInfo(pageId: PageStack.PageId): PageLayoutInfoImpl {
       return layoutInfoMap.getOrPut(pageId) {
-         PageLayoutInfoImpl(pageStackState.pageStackId, pageId)
+         PageLayoutInfoImpl(pageId)
       }
    }
 
@@ -417,8 +416,8 @@ internal fun PageTransition(
    pageStateStore: PageStateStore,
    windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
 ) {
-   val transitionState = remember(pageStackState, pageComposableSwitcher) {
-      PageTransitionState(pageStackState, pageComposableSwitcher)
+   val transitionState = remember(pageComposableSwitcher) {
+      PageTransitionState(pageComposableSwitcher)
    }
 
    PageTransition(
@@ -439,8 +438,8 @@ internal fun PageTransitionPreview(
    baseTransition: Transition<IndexedValue<PageStack.SavedPageState>>,
    windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
 ) {
-   val transitionState = remember(pageStackState, pageComposableSwitcher) {
-      PageTransitionState(pageStackState, pageComposableSwitcher)
+   val transitionState = remember(pageComposableSwitcher) {
+      PageTransitionState(pageComposableSwitcher)
    }
 
    PageTransition(

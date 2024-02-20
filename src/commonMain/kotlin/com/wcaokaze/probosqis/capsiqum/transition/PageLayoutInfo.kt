@@ -115,7 +115,6 @@ interface PageLayoutInfo {
       }
    }
 
-   val pageStackId: PageStackBoard.PageStackId
    val pageId: PageStack.PageId
 
    operator fun get(id: LayoutId): LayoutCoordinates?
@@ -128,7 +127,6 @@ interface MutablePageLayoutInfo : PageLayoutInfo {
 
 @Stable
 internal class PageLayoutInfoImpl(
-   override val pageStackId: PageStackBoard.PageStackId,
    override val pageId: PageStack.PageId
 ) : MutablePageLayoutInfo {
    private val map = mutableStateMapOf<PageLayoutInfo.LayoutId, LayoutCoordinates>()
