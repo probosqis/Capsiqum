@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 package com.wcaokaze.probosqis.capsiqum.transition
 
-import androidx.compose.animation.core.ExperimentalTransitionApi
-import androidx.compose.animation.core.createChildTransition
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -51,20 +49,10 @@ fun Modifier.transitionElement(
    ) {
       null -> Modifier
       is CurrentPageTransitionElementAnim -> with (elementAnim) {
-         @OptIn(ExperimentalTransitionApi::class)
-         val elementTransition = transition
-            .createChildTransition(label = "transitionElement$layoutId") { it }
-
-         CurrentPageTransitionElementAnimScope(elementTransition)
-            .createAnimModifier()
+         CurrentPageTransitionElementAnimScope(transition).createAnimModifier()
       }
       is TargetPageTransitionElementAnim -> with (elementAnim) {
-         @OptIn(ExperimentalTransitionApi::class)
-         val elementTransition = transition
-            .createChildTransition(label = "transitionElement$layoutId") { it }
-
-         TargetPageTransitionElementAnimScope(elementTransition)
-            .createAnimModifier()
+         TargetPageTransitionElementAnimScope(transition).createAnimModifier()
       }
    }
 
