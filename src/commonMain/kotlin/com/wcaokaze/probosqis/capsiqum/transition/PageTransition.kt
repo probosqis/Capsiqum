@@ -50,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.capsiqum.Page
 import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
 import com.wcaokaze.probosqis.capsiqum.PageContent
 import com.wcaokaze.probosqis.capsiqum.PageFooter
@@ -202,9 +203,7 @@ private typealias PageComposableArguments
       = Triple<PageStack.SavedPageState, MutablePageLayoutInfo, PageTransitionElementAnimSet>
 
 @Stable
-internal class PageTransitionState(
-   private val pageComposableSwitcher: PageComposableSwitcher
-) {
+internal abstract class PageTransitionState {
    private val layoutInfoMap = mutableMapOf<PageStack.PageId, PageLayoutInfoImpl>()
 
    private var currentPageIndex = -1
@@ -216,6 +215,16 @@ internal class PageTransitionState(
 
    private val emptyPageTransitionAnimSet: PageTransitionElementAnimSet
          = persistentMapOf()
+
+   protected abstract fun getEnteringTransitionSpec(
+      currentPage: Page,
+      targetPage: Page
+   ): PageTransitionSpec
+
+   protected abstract fun getExitingTransitionSpec(
+      currentPage: Page,
+      targetPage: Page
+   ): PageTransitionSpec
 
    @Composable
    fun updateTransition(pageStack: PageStack): Transition<PageLayoutInfo> {
@@ -350,13 +359,7 @@ internal class PageTransitionState(
 
       visiblePageStates = when {
          currentIndex < targetIndex -> {
-            val currentPageComposable = pageComposableSwitcher[currentPage.page] ?: TODO()
-            val targetPageComposable  = pageComposableSwitcher[targetPage .page] ?: TODO()
-
-            val transitionSpec
-                  =  currentPageComposable.pageTransitionSet.getTransitionTo  (targetPage .page::class)
-                  ?: targetPageComposable .pageTransitionSet.getTransitionFrom(currentPage.page::class)
-                  ?: defaultPageTransitionSpec
+            val transitionSpec = getEnteringTransitionSpec(currentPage.page, targetPage.page)
 
             if (isTargetFirstComposition) {
                listOf(
@@ -371,13 +374,7 @@ internal class PageTransitionState(
             }
          }
          currentIndex > targetIndex -> {
-            val currentPageComposable = pageComposableSwitcher[currentPage.page] ?: TODO()
-            val targetPageComposable  = pageComposableSwitcher[targetPage .page] ?: TODO()
-
-            val transitionSpec
-                  =  targetPageComposable .pageTransitionSet.getTransitionTo  (currentPage.page::class)
-                  ?: currentPageComposable.pageTransitionSet.getTransitionFrom(targetPage .page::class)
-                  ?: defaultPageTransitionSpec
+            val transitionSpec = getExitingTransitionSpec(currentPage.page, targetPage.page)
 
             if (isTargetFirstComposition) {
                listOf(
@@ -409,6 +406,35 @@ internal class PageTransitionState(
    }
 }
 
+@Stable
+internal class PageTransitionStateImpl(
+   private val pageComposableSwitcher: PageComposableSwitcher
+) : PageTransitionState() {
+   override fun getEnteringTransitionSpec(
+      currentPage: Page,
+      targetPage: Page
+   ): PageTransitionSpec {
+      val currentPageComposable = pageComposableSwitcher[currentPage] ?: TODO()
+      val targetPageComposable  = pageComposableSwitcher[targetPage ] ?: TODO()
+
+      return currentPageComposable.pageTransitionSet.getTransitionTo  (targetPage ::class)
+         ?:  targetPageComposable .pageTransitionSet.getTransitionFrom(currentPage::class)
+         ?:  defaultPageTransitionSpec
+   }
+
+   override fun getExitingTransitionSpec(
+      currentPage: Page,
+      targetPage: Page
+   ): PageTransitionSpec {
+      val currentPageComposable = pageComposableSwitcher[currentPage] ?: TODO()
+      val targetPageComposable  = pageComposableSwitcher[targetPage ] ?: TODO()
+
+      return targetPageComposable .pageTransitionSet.getTransitionTo  (currentPage::class)
+         ?:  currentPageComposable.pageTransitionSet.getTransitionFrom(targetPage ::class)
+         ?:  defaultPageTransitionSpec
+   }
+}
+
 @Composable
 internal fun PageTransition(
    pageStackState: PageStackState,
@@ -417,7 +443,7 @@ internal fun PageTransition(
    windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
 ) {
    val transitionState = remember(pageComposableSwitcher) {
-      PageTransitionState(pageComposableSwitcher)
+      PageTransitionStateImpl(pageComposableSwitcher)
    }
 
    PageTransition(
@@ -439,7 +465,7 @@ internal fun PageTransitionPreview(
    windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
 ) {
    val transitionState = remember(pageComposableSwitcher) {
-      PageTransitionState(pageComposableSwitcher)
+      PageTransitionStateImpl(pageComposableSwitcher)
    }
 
    PageTransition(
