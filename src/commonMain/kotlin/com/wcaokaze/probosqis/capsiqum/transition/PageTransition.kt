@@ -201,7 +201,7 @@ private typealias PageComposableArguments
 
 @Stable
 internal abstract class PageTransitionState {
-   private val layoutInfoMap = mutableMapOf<PageStack.PageId, PageLayoutInfoImpl>()
+   private val layoutInfoMap = mutableMapOf<Any, PageLayoutInfoImpl>()
 
    private var currentState: IndexedValue<PageStack.SavedPageState>? = null
    private var targetState:  IndexedValue<PageStack.SavedPageState>? = null
@@ -211,6 +211,8 @@ internal abstract class PageTransitionState {
 
    private val emptyPageTransitionAnimSet: PageTransitionElementAnimSet
          = persistentMapOf()
+
+   protected abstract fun getKey(state: PageStack.SavedPageState): Any
 
    /**
     * 2つの状態の画面上での階層の深さを比較する。
@@ -256,7 +258,7 @@ internal abstract class PageTransitionState {
        */
 
       val targetState = pageStack.indexedHead
-      val isTargetFirstComposition = getLayoutInfo(targetState.value.id).isEmpty()
+      val isTargetFirstComposition = getLayoutInfo(targetState.value).isEmpty()
 
       val transitionTargetState = if (isTargetFirstComposition) {
          this.targetState ?: targetState
@@ -284,7 +286,7 @@ internal abstract class PageTransitionState {
 
       @OptIn(ExperimentalTransitionApi::class)
       return transition.createChildTransition(label = "PageTransition") {
-         getLayoutInfo(it.value.id)
+         getLayoutInfo(it.value)
       }
    }
 
@@ -293,7 +295,7 @@ internal abstract class PageTransitionState {
       baseTransition: Transition<IndexedValue<PageStack.SavedPageState>>
    ): Transition<PageLayoutInfo> {
       val targetState = baseTransition.targetState
-      val isTargetFirstComposition = getLayoutInfo(targetState.value.id).isEmpty()
+      val isTargetFirstComposition = getLayoutInfo(targetState.value).isEmpty()
 
       @OptIn(ExperimentalTransitionApi::class)
       val transition = baseTransition.createChildTransition(
@@ -342,13 +344,16 @@ internal abstract class PageTransitionState {
 
       @OptIn(ExperimentalTransitionApi::class)
       return transition.createChildTransition(label = "PageTransition") {
-         getLayoutInfo(it.value.id)
+         getLayoutInfo(it.value)
       }
    }
 
-   private fun getLayoutInfo(pageId: PageStack.PageId): PageLayoutInfoImpl {
-      return layoutInfoMap.getOrPut(pageId) {
-         PageLayoutInfoImpl(pageId)
+   private fun getLayoutInfo(state: PageStack.SavedPageState)
+         = getLayoutInfo(getKey(state))
+
+   private fun getLayoutInfo(key: Any): PageLayoutInfoImpl {
+      return layoutInfoMap.getOrPut(key) {
+         PageLayoutInfoImpl(key)
       }
    }
 
@@ -368,13 +373,13 @@ internal abstract class PageTransitionState {
 
             if (isTargetFirstComposition) {
                listOf(
-                  Triple(targetPage,  getLayoutInfo(targetPage .id), emptyPageTransitionAnimSet),
-                  Triple(currentPage, getLayoutInfo(currentPage.id), emptyPageTransitionAnimSet)
+                  Triple(targetPage,  getLayoutInfo(targetPage),  emptyPageTransitionAnimSet),
+                  Triple(currentPage, getLayoutInfo(currentPage), emptyPageTransitionAnimSet)
                )
             } else {
                listOf(
-                  Triple(currentPage, getLayoutInfo(currentPage.id), transitionSpec.enteringCurrentPageElementAnimations),
-                  Triple(targetPage,  getLayoutInfo(targetPage .id), transitionSpec.enteringTargetPageElementAnimations)
+                  Triple(currentPage, getLayoutInfo(currentPage), transitionSpec.enteringCurrentPageElementAnimations),
+                  Triple(targetPage,  getLayoutInfo(targetPage),  transitionSpec.enteringTargetPageElementAnimations)
                )
             }
          }
@@ -383,28 +388,28 @@ internal abstract class PageTransitionState {
 
             if (isTargetFirstComposition) {
                listOf(
-                  Triple(targetPage,  getLayoutInfo(targetPage .id), emptyPageTransitionAnimSet),
-                  Triple(currentPage, getLayoutInfo(currentPage.id), emptyPageTransitionAnimSet)
+                  Triple(targetPage,  getLayoutInfo(targetPage),  emptyPageTransitionAnimSet),
+                  Triple(currentPage, getLayoutInfo(currentPage), emptyPageTransitionAnimSet)
                )
             } else {
                listOf(
-                  Triple(targetPage,  getLayoutInfo(targetPage .id), transitionSpec.exitingTargetPageElementAnimations),
-                  Triple(currentPage, getLayoutInfo(currentPage.id), transitionSpec.exitingCurrentPageElementAnimations)
+                  Triple(targetPage,  getLayoutInfo(targetPage),  transitionSpec.exitingTargetPageElementAnimations),
+                  Triple(currentPage, getLayoutInfo(currentPage), transitionSpec.exitingCurrentPageElementAnimations)
                )
             }
          }
          else -> {
             listOf(
-               Triple(targetPage, getLayoutInfo(targetPage.id), emptyPageTransitionAnimSet)
+               Triple(targetPage, getLayoutInfo(targetPage), emptyPageTransitionAnimSet)
             )
          }
       }
 
       val iter = layoutInfoMap.keys.iterator()
       while (iter.hasNext()) {
-         val pageId = iter.next()
+         val key = iter.next()
 
-         if (visiblePageStates.none { it.first.id == pageId }) {
+         if (visiblePageStates.none { getKey(it.first) == key }) {
             iter.remove()
          }
       }
@@ -415,6 +420,8 @@ internal abstract class PageTransitionState {
 internal class PageTransitionStateImpl(
    private val pageComposableSwitcher: PageComposableSwitcher
 ) : PageTransitionState() {
+   override fun getKey(state: PageStack.SavedPageState) = state.id
+
    override fun IndexedValue<PageStack.SavedPageState>.compareTransitionTo(
       other: IndexedValue<PageStack.SavedPageState>
    ): Int {
@@ -505,7 +512,7 @@ private fun PageTransition(
       for ((savedPageState, layoutInfo, transitionAnimations)
          in transitionState.visiblePageStates)
       {
-         key(savedPageState.id) {
+         key(layoutInfo.key) {
             CompositionLocalProvider(
                LocalPageLayoutInfo provides layoutInfo,
                LocalPageTransitionAnimations provides transitionAnimations,

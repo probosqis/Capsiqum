@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,9 +62,9 @@ sealed class PageTransitionElementAnimScope {
    abstract val transition: Transition<PageLayoutInfo>
 
    val PageLayoutInfo.isCurrentPage: Boolean
-      get() = pageId != transition.targetState.pageId
+      get() = key != transition.targetState.key
    val PageLayoutInfo.isTargetPage: Boolean
-      get() = pageId == transition.targetState.pageId
+      get() = key == transition.targetState.key
 }
 
 class CurrentPageTransitionElementAnimScope(
