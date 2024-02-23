@@ -28,11 +28,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.add
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.surfaceColorAtElevation
@@ -206,15 +203,28 @@ private typealias PageComposableArguments
 internal abstract class PageTransitionState {
    private val layoutInfoMap = mutableMapOf<PageStack.PageId, PageLayoutInfoImpl>()
 
-   private var currentPageIndex = -1
-   private var targetPageIndex  = -1
+   private var currentState: IndexedValue<PageStack.SavedPageState>? = null
+   private var targetState:  IndexedValue<PageStack.SavedPageState>? = null
    private var isTargetFirstComposition = false
-   private var targetPageState: IndexedValue<PageStack.SavedPageState>? = null
 
    var visiblePageStates by mutableStateOf(emptyList<PageComposableArguments>())
 
    private val emptyPageTransitionAnimSet: PageTransitionElementAnimSet
          = persistentMapOf()
+
+   /**
+    * 2つの状態の画面上での階層の深さを比較する。
+    *
+    * レシーバーインスタンスがotherより前面に表示されるとき負の値、
+    * レシーバーインスタンスがotherより奥に表示されるとき正の値、
+    * レシーバーインスタンスがotherと同一の場合0を返却する。
+    * これは画面遷移をStack構造と考えるとき、一般的に
+    * `this.size.compareTo(other.size)` で実装できる。
+    */
+   protected abstract infix fun
+         IndexedValue<PageStack.SavedPageState>.compareTransitionTo(
+            other: IndexedValue<PageStack.SavedPageState>
+         ): Int
 
    protected abstract fun getEnteringTransitionSpec(
       currentPage: Page,
@@ -245,33 +255,30 @@ internal abstract class PageTransitionState {
        *
        */
 
-      val targetPageState = pageStack.indexedHead
-      val isTargetFirstComposition = getLayoutInfo(targetPageState.value.id).isEmpty()
+      val targetState = pageStack.indexedHead
+      val isTargetFirstComposition = getLayoutInfo(targetState.value.id).isEmpty()
 
-      val transitionTargetPageState = if (isTargetFirstComposition) {
-         this.targetPageState ?: targetPageState
+      val transitionTargetState = if (isTargetFirstComposition) {
+         this.targetState ?: targetState
       } else {
-         targetPageState
+         targetState
       }
 
       val transition = updateTransition(
-         transitionTargetPageState,
+         transitionTargetState,
          label = "PageStackContentTransition"
       )
 
-      val currentPageState = transition.currentState
+      val currentState = transition.currentState
 
-      this.targetPageState = transitionTargetPageState
-
-      if (currentPageState.index   != currentPageIndex ||
-          targetPageState .index   != targetPageIndex  ||
+      if (currentState             != this.currentState ||
+          targetState              != this.targetState  ||
           isTargetFirstComposition != this.isTargetFirstComposition)
       {
-         updateVisiblePageStates(
-            currentPageState, targetPageState, isTargetFirstComposition)
+         updateVisiblePageStates(currentState, targetState, isTargetFirstComposition)
 
-         currentPageIndex = currentPageState.index
-         targetPageIndex  = targetPageState .index
+         this.currentState = currentState
+         this.targetState  = targetState
          this.isTargetFirstComposition = isTargetFirstComposition
       }
 
@@ -285,20 +292,20 @@ internal abstract class PageTransitionState {
    internal fun createChildTransitionForPreview(
       baseTransition: Transition<IndexedValue<PageStack.SavedPageState>>
    ): Transition<PageLayoutInfo> {
-      val targetPageState = baseTransition.targetState
-      val isTargetFirstComposition = getLayoutInfo(targetPageState.value.id).isEmpty()
+      val targetState = baseTransition.targetState
+      val isTargetFirstComposition = getLayoutInfo(targetState.value.id).isEmpty()
 
       @OptIn(ExperimentalTransitionApi::class)
       val transition = baseTransition.createChildTransition(
          label = "PageStackContentTransition"
       ) {
-         if (it != targetPageState) {
+         if (it != targetState) {
             it
          } else {
             if (isTargetFirstComposition) {
-               this.targetPageState ?: targetPageState
+               this.targetState ?: targetState
             } else {
-               targetPageState
+               targetState
             }
          }
       }
@@ -320,20 +327,16 @@ internal abstract class PageTransitionState {
          }
       }
 
-      val currentPageState = transition.currentState
-      val transitionTargetPageState = transition.targetState
+      val currentState = transition.currentState
 
-      this.targetPageState = transitionTargetPageState
-
-      if (currentPageState.index   != currentPageIndex ||
-          targetPageState .index   != targetPageIndex  ||
+      if (currentState             != this.currentState ||
+          targetState              != this.targetState  ||
           isTargetFirstComposition != this.isTargetFirstComposition)
       {
-         updateVisiblePageStates(
-            currentPageState, targetPageState, isTargetFirstComposition)
+         updateVisiblePageStates(currentState, targetState, isTargetFirstComposition)
 
-         currentPageIndex = currentPageState.index
-         targetPageIndex  = targetPageState .index
+         this.currentState = currentState
+         this.targetState  = targetState
          this.isTargetFirstComposition = isTargetFirstComposition
       }
 
@@ -354,11 +357,13 @@ internal abstract class PageTransitionState {
       targetState:  IndexedValue<PageStack.SavedPageState>,
       isTargetFirstComposition: Boolean
    ) {
-      val (currentIndex, currentPage) = currentState
-      val (targetIndex,  targetPage ) = targetState
+      val (_, currentPage) = currentState
+      val (_, targetPage ) = targetState
+
+      val ord = currentState compareTransitionTo targetState
 
       visiblePageStates = when {
-         currentIndex < targetIndex -> {
+         ord < 0 -> {
             val transitionSpec = getEnteringTransitionSpec(currentPage.page, targetPage.page)
 
             if (isTargetFirstComposition) {
@@ -373,7 +378,7 @@ internal abstract class PageTransitionState {
                )
             }
          }
-         currentIndex > targetIndex -> {
+         ord > 0 -> {
             val transitionSpec = getExitingTransitionSpec(currentPage.page, targetPage.page)
 
             if (isTargetFirstComposition) {
@@ -410,6 +415,12 @@ internal abstract class PageTransitionState {
 internal class PageTransitionStateImpl(
    private val pageComposableSwitcher: PageComposableSwitcher
 ) : PageTransitionState() {
+   override fun IndexedValue<PageStack.SavedPageState>.compareTransitionTo(
+      other: IndexedValue<PageStack.SavedPageState>
+   ): Int {
+      return this.index.compareTo(other.index)
+   }
+
    override fun getEnteringTransitionSpec(
       currentPage: Page,
       targetPage: Page
