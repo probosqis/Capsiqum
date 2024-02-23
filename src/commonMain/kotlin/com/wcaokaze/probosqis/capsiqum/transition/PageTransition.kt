@@ -16,8 +16,6 @@
 
 package com.wcaokaze.probosqis.capsiqum.transition
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.ExperimentalTransitionApi
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.animateFloat
@@ -49,7 +47,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.capsiqum.Page
 import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
 import com.wcaokaze.probosqis.capsiqum.PageContent
 import com.wcaokaze.probosqis.capsiqum.PageFooter
@@ -198,23 +195,24 @@ internal val defaultPageTransitionSpec = pageTransitionSpec(
    }
 )
 
-private typealias PageComposableArguments
-      = Triple<PageStack.SavedPageState, MutablePageLayoutInfo, PageTransitionElementAnimSet>
+private typealias PageComposableArguments<S>
+      = Triple<S, MutablePageLayoutInfo, PageTransitionElementAnimSet>
 
 @Stable
-internal abstract class PageTransitionState {
+internal abstract class PageTransitionState<S> {
    private val layoutInfoMap = mutableMapOf<Any, PageLayoutInfoImpl>()
 
-   private var currentState: IndexedValue<PageStack.SavedPageState>? = null
-   private var targetState:  IndexedValue<PageStack.SavedPageState>? = null
+   private val NULL = Any()
+   private var currentState: Any? = NULL
+   private var targetState:  Any? = NULL
    private var isTargetFirstComposition = false
 
-   var visiblePageStates by mutableStateOf(emptyList<PageComposableArguments>())
+   var visiblePageStates by mutableStateOf(emptyList<PageComposableArguments<S>>())
 
    private val emptyPageTransitionAnimSet: PageTransitionElementAnimSet
          = persistentMapOf()
 
-   protected abstract fun getKey(state: PageStack.SavedPageState): Any
+   protected abstract fun getKey(state: S): Any
 
    /**
     * 2つの状態の画面上での階層の深さを比較する。
@@ -225,30 +223,27 @@ internal abstract class PageTransitionState {
     * これは画面遷移をStack構造と考えるとき、一般的に
     * `this.size.compareTo(other.size)` で実装できる。
     */
-   protected abstract infix fun
-         IndexedValue<PageStack.SavedPageState>.compareTransitionTo(
-            other: IndexedValue<PageStack.SavedPageState>
-         ): Int
+   protected abstract infix fun S.compareTransitionTo(other: S): Int
 
    protected abstract fun getEnteringTransitionSpec(
-      currentPage: Page,
-      targetPage: Page
+      currentState: S,
+      targetState:  S
    ): PageTransitionSpec
 
    protected abstract fun getExitingTransitionSpec(
-      currentPage: Page,
-      targetPage: Page
+      currentState: S,
+      targetState:  S
    ): PageTransitionSpec
 
    @Composable
-   fun updateTransition(pageStack: PageStack): Transition<PageLayoutInfo> {
+   fun updateTransition(targetState: S): Transition<PageLayoutInfo> {
       /*
-       * pageStack.headが変化した際、直前に表示されていたPageを
-       * 表示したまま一度裏で遷移先のPageをコンポーズし、PageLayoutInfoが
-       * 収集できてから遷移先のPageを表にして遷移アニメーションを開始する。
-       * そのため、pageが変化した直後のリコンポジションではTransitionには
-       * まだ遷移後のPageは渡さず、PageLayoutInfoが収集できてからTransitionに
-       * 遷移後のPageを渡すことになる。
+       * targetStateが変化した際、直前に表示されていたstateを
+       * 表示したまま一度裏で遷移先のstateをコンポーズし、PageLayoutInfoが
+       * 収集できてから遷移先のstateを表にして遷移アニメーションを開始する。
+       * そのため、targetStateが変化した直後のリコンポジションではTransitionには
+       * まだ遷移後のstateは渡さず、PageLayoutInfoが収集できてからTransitionに
+       * 遷移後のstateを渡すことになる。
        *
        * | current | target | transitionTarget | isTargetFirstComposition | visiblePages |
        * |---------|--------|------------------|--------------------------|--------------|
@@ -259,11 +254,16 @@ internal abstract class PageTransitionState {
        *
        */
 
-      val targetState = pageStack.indexedHead
-      val isTargetFirstComposition = getLayoutInfo(targetState.value).isEmpty()
+      val isTargetFirstComposition = getLayoutInfo(targetState).isEmpty()
 
       val transitionTargetState = if (isTargetFirstComposition) {
-         this.targetState ?: targetState
+         val prevTargetState = this.targetState
+         if (prevTargetState !== NULL) {
+            @Suppress("UNCHECKED_CAST")
+            prevTargetState as S
+         } else {
+            targetState
+         }
       } else {
          targetState
       }
@@ -288,16 +288,16 @@ internal abstract class PageTransitionState {
 
       @OptIn(ExperimentalTransitionApi::class)
       return transition.createChildTransition(label = "PageTransition") {
-         getLayoutInfo(it.value)
+         getLayoutInfo(it)
       }
    }
 
    @Composable
    internal fun createChildTransitionForPreview(
-      baseTransition: Transition<IndexedValue<PageStack.SavedPageState>>
+      baseTransition: Transition<S>
    ): Transition<PageLayoutInfo> {
       val targetState = baseTransition.targetState
-      val isTargetFirstComposition = getLayoutInfo(targetState.value).isEmpty()
+      val isTargetFirstComposition = getLayoutInfo(targetState).isEmpty()
 
       @OptIn(ExperimentalTransitionApi::class)
       val transition = baseTransition.createChildTransition(
@@ -307,7 +307,13 @@ internal abstract class PageTransitionState {
             it
          } else {
             if (isTargetFirstComposition) {
-               this.targetState ?: targetState
+               val prevTargetState = this.targetState
+               if (prevTargetState !== NULL) {
+                  @Suppress("UNCHECKED_CAST")
+                  prevTargetState as S
+               } else {
+                  targetState
+               }
             } else {
                targetState
             }
@@ -346,13 +352,13 @@ internal abstract class PageTransitionState {
 
       @OptIn(ExperimentalTransitionApi::class)
       return transition.createChildTransition(label = "PageTransition") {
-         getLayoutInfo(it.value)
+         getLayoutInfo(it)
       }
    }
 
-   private fun getLayoutInfo(state: PageStack.SavedPageState)
-         = getLayoutInfo(getKey(state))
+   private fun getLayoutInfo(state: S) = getLayoutInfo(getKey(state))
 
+   @JvmName("getLayoutInfoByKey")
    private fun getLayoutInfo(key: Any): PageLayoutInfoImpl {
       return layoutInfoMap.getOrPut(key) {
          PageLayoutInfoImpl(key)
@@ -360,49 +366,46 @@ internal abstract class PageTransitionState {
    }
 
    private fun updateVisiblePageStates(
-      currentState: IndexedValue<PageStack.SavedPageState>,
-      targetState:  IndexedValue<PageStack.SavedPageState>,
+      currentState: S,
+      targetState:  S,
       isTargetFirstComposition: Boolean
    ) {
-      val (_, currentPage) = currentState
-      val (_, targetPage ) = targetState
-
       val ord = currentState compareTransitionTo targetState
 
       visiblePageStates = when {
          ord < 0 -> {
-            val transitionSpec = getEnteringTransitionSpec(currentPage.page, targetPage.page)
+            val transitionSpec = getEnteringTransitionSpec(currentState, targetState)
 
             if (isTargetFirstComposition) {
                listOf(
-                  Triple(targetPage,  getLayoutInfo(targetPage),  emptyPageTransitionAnimSet),
-                  Triple(currentPage, getLayoutInfo(currentPage), emptyPageTransitionAnimSet)
+                  Triple(targetState,  getLayoutInfo(targetState),  emptyPageTransitionAnimSet),
+                  Triple(currentState, getLayoutInfo(currentState), emptyPageTransitionAnimSet)
                )
             } else {
                listOf(
-                  Triple(currentPage, getLayoutInfo(currentPage), transitionSpec.enteringCurrentPageElementAnimations),
-                  Triple(targetPage,  getLayoutInfo(targetPage),  transitionSpec.enteringTargetPageElementAnimations)
+                  Triple(currentState, getLayoutInfo(currentState), transitionSpec.enteringCurrentPageElementAnimations),
+                  Triple(targetState,  getLayoutInfo(targetState),  transitionSpec.enteringTargetPageElementAnimations)
                )
             }
          }
          ord > 0 -> {
-            val transitionSpec = getExitingTransitionSpec(currentPage.page, targetPage.page)
+            val transitionSpec = getExitingTransitionSpec(currentState, targetState)
 
             if (isTargetFirstComposition) {
                listOf(
-                  Triple(targetPage,  getLayoutInfo(targetPage),  emptyPageTransitionAnimSet),
-                  Triple(currentPage, getLayoutInfo(currentPage), emptyPageTransitionAnimSet)
+                  Triple(targetState,  getLayoutInfo(targetState),  emptyPageTransitionAnimSet),
+                  Triple(currentState, getLayoutInfo(currentState), emptyPageTransitionAnimSet)
                )
             } else {
                listOf(
-                  Triple(targetPage,  getLayoutInfo(targetPage),  transitionSpec.exitingTargetPageElementAnimations),
-                  Triple(currentPage, getLayoutInfo(currentPage), transitionSpec.exitingCurrentPageElementAnimations)
+                  Triple(targetState,  getLayoutInfo(targetState),  transitionSpec.exitingTargetPageElementAnimations),
+                  Triple(currentState, getLayoutInfo(currentState), transitionSpec.exitingCurrentPageElementAnimations)
                )
             }
          }
          else -> {
             listOf(
-               Triple(targetPage, getLayoutInfo(targetPage), emptyPageTransitionAnimSet)
+               Triple(targetState, getLayoutInfo(targetState), emptyPageTransitionAnimSet)
             )
          }
       }
@@ -421,19 +424,20 @@ internal abstract class PageTransitionState {
 @Stable
 internal class PageTransitionStateImpl(
    private val pageComposableSwitcher: PageComposableSwitcher
-) : PageTransitionState() {
-   override fun getKey(state: PageStack.SavedPageState) = state.id
+) : PageTransitionState<PageStack>() {
+   override fun getKey(state: PageStack) = state.head.id
 
-   override fun IndexedValue<PageStack.SavedPageState>.compareTransitionTo(
-      other: IndexedValue<PageStack.SavedPageState>
-   ): Int {
-      return this.index.compareTo(other.index)
+   override fun PageStack.compareTransitionTo(other: PageStack): Int {
+      return this.indexedHead.index.compareTo(other.indexedHead.index)
    }
 
    override fun getEnteringTransitionSpec(
-      currentPage: Page,
-      targetPage: Page
+      currentState: PageStack,
+      targetState: PageStack
    ): PageTransitionSpec {
+      val currentPage = currentState.head.page
+      val targetPage  = targetState .head.page
+
       val currentPageComposable = pageComposableSwitcher[currentPage] ?: TODO()
       val targetPageComposable  = pageComposableSwitcher[targetPage ] ?: TODO()
 
@@ -443,9 +447,12 @@ internal class PageTransitionStateImpl(
    }
 
    override fun getExitingTransitionSpec(
-      currentPage: Page,
-      targetPage: Page
+      currentState: PageStack,
+      targetState: PageStack
    ): PageTransitionSpec {
+      val currentPage = currentState.head.page
+      val targetPage  = targetState .head.page
+
       val currentPageComposable = pageComposableSwitcher[currentPage] ?: TODO()
       val targetPageComposable  = pageComposableSwitcher[targetPage ] ?: TODO()
 
@@ -469,17 +476,17 @@ internal fun PageTransition(
    PageTransition(
       transitionState,
       pageStackState.pageStack
-   ) { savedPageState ->
-      PageTransitionContent(savedPageState, pageStackState,
+   ) { pageStack ->
+      PageTransitionContent(pageStack.head, pageStackState,
          pageComposableSwitcher, pageStateStore, windowInsets)
    }
 }
 
 @Composable
-internal fun PageTransition(
-   transitionState: PageTransitionState,
-   targetState: PageStack,
-   content: @Composable (PageStack.SavedPageState) -> Unit
+internal fun <S> PageTransition(
+   transitionState: PageTransitionState<S>,
+   targetState: S,
+   content: @Composable (S) -> Unit
 ) {
    PageTransition(
       transitionState,
@@ -493,7 +500,7 @@ internal fun PageTransitionPreview(
    pageStackState: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
    pageStateStore: PageStateStore,
-   baseTransition: Transition<IndexedValue<PageStack.SavedPageState>>,
+   baseTransition: Transition<PageStack>,
    windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
 ) {
    val transitionState = remember(pageComposableSwitcher) {
@@ -503,17 +510,17 @@ internal fun PageTransitionPreview(
    PageTransitionPreview(
       transitionState,
       baseTransition,
-   ) { savedPageState ->
-      PageTransitionContent(savedPageState, pageStackState,
+   ) { pageStack ->
+      PageTransitionContent(pageStack.head, pageStackState,
          pageComposableSwitcher, pageStateStore, windowInsets)
    }
 }
 
 @Composable
-internal fun PageTransitionPreview(
-   transitionState: PageTransitionState,
-   baseTransition: Transition<IndexedValue<PageStack.SavedPageState>>,
-   content: @Composable (PageStack.SavedPageState) -> Unit
+internal fun <S> PageTransitionPreview(
+   transitionState: PageTransitionState<S>,
+   baseTransition: Transition<S>,
+   content: @Composable (S) -> Unit
 ) {
    PageTransition(
       transitionState,
@@ -523,10 +530,10 @@ internal fun PageTransitionPreview(
 }
 
 @Composable
-private fun PageTransition(
-   transitionState: PageTransitionState,
+private fun <S> PageTransition(
+   transitionState: PageTransitionState<S>,
    transition: Transition<PageLayoutInfo>,
-   content: @Composable (PageStack.SavedPageState) -> Unit
+   content: @Composable (S) -> Unit
 ) {
    Box {
       val backgroundColor = MaterialTheme.colorScheme
