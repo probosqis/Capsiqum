@@ -16,6 +16,8 @@
 
 package com.wcaokaze.probosqis.capsiqum.transition
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.ExperimentalTransitionApi
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.animateFloat
@@ -466,11 +468,23 @@ internal fun PageTransition(
 
    PageTransition(
       transitionState,
-      pageStackState,
-      pageComposableSwitcher,
-      pageStateStore,
-      transition = transitionState.updateTransition(pageStackState.pageStack),
-      windowInsets
+      pageStackState.pageStack
+   ) { savedPageState ->
+      PageTransitionContent(savedPageState, pageStackState,
+         pageComposableSwitcher, pageStateStore, windowInsets)
+   }
+}
+
+@Composable
+internal fun PageTransition(
+   transitionState: PageTransitionState,
+   targetState: PageStack,
+   content: @Composable (PageStack.SavedPageState) -> Unit
+) {
+   PageTransition(
+      transitionState,
+      transition = transitionState.updateTransition(targetState),
+      content
    )
 }
 
@@ -486,24 +500,33 @@ internal fun PageTransitionPreview(
       PageTransitionStateImpl(pageComposableSwitcher)
    }
 
+   PageTransitionPreview(
+      transitionState,
+      baseTransition,
+   ) { savedPageState ->
+      PageTransitionContent(savedPageState, pageStackState,
+         pageComposableSwitcher, pageStateStore, windowInsets)
+   }
+}
+
+@Composable
+internal fun PageTransitionPreview(
+   transitionState: PageTransitionState,
+   baseTransition: Transition<IndexedValue<PageStack.SavedPageState>>,
+   content: @Composable (PageStack.SavedPageState) -> Unit
+) {
    PageTransition(
       transitionState,
-      pageStackState,
-      pageComposableSwitcher,
-      pageStateStore,
       transition = transitionState.createChildTransitionForPreview(baseTransition),
-      windowInsets
+      content
    )
 }
 
 @Composable
 private fun PageTransition(
    transitionState: PageTransitionState,
-   pageStackState: PageStackState,
-   pageComposableSwitcher: PageComposableSwitcher,
-   pageStateStore: PageStateStore,
    transition: Transition<PageLayoutInfo>,
-   windowInsets: WindowInsets
+   content: @Composable (PageStack.SavedPageState) -> Unit
 ) {
    Box {
       val backgroundColor = MaterialTheme.colorScheme
@@ -526,54 +549,67 @@ private fun PageTransition(
                         .background(backgroundColor)
                   )
 
-                  val page = savedPageState.page
-                  val pageComposable = pageComposableSwitcher[page] ?: TODO()
-
-                  val pageState = remember(savedPageState.id) {
-                     pageStateStore.get(savedPageState)
-                  }
-
-                  val footerComposable = pageComposable.footerComposable
-
-                  Box(
-                     modifier = Modifier
-                        .transitionElement(PageLayoutIds.content)
-                  ) {
-                     val contentWindowInsets = if (footerComposable != null) {
-                        windowInsets
-                           .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
-                           .add(WindowInsets(bottom = pageFooterHeight))
-                     } else {
-                        windowInsets
-                     }
-
-                     PageContent(
-                        pageComposable.contentComposable,
-                        page,
-                        pageState,
-                        pageStackState,
-                        contentWindowInsets
-                     )
-                  }
-
-                  if (footerComposable != null) {
-                     Box(
-                        Modifier
-                           .align(Alignment.BottomCenter)
-                           .transitionElement(PageLayoutIds.footer)
-                     ) {
-                        PageFooter(
-                           footerComposable,
-                           page,
-                           pageState,
-                           pageStackState,
-                           windowInsets.only(
-                              WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
-                        )
-                     }
-                  }
+                  content(savedPageState)
                }
             }
+         }
+      }
+   }
+}
+
+@Composable
+private fun PageTransitionContent(
+   savedPageState: PageStack.SavedPageState,
+   pageStackState: PageStackState,
+   pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
+   windowInsets: WindowInsets
+) {
+   Box {
+      val page = savedPageState.page
+      val pageComposable = pageComposableSwitcher[page] ?: TODO()
+
+      val pageState = remember(savedPageState.id) {
+         pageStateStore.get(savedPageState)
+      }
+
+      val footerComposable = pageComposable.footerComposable
+
+      Box(
+         modifier = Modifier
+            .transitionElement(PageLayoutIds.content)
+      ) {
+         val contentWindowInsets = if (footerComposable != null) {
+            windowInsets
+               .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
+               .add(WindowInsets(bottom = pageFooterHeight))
+         } else {
+            windowInsets
+         }
+
+         PageContent(
+            pageComposable.contentComposable,
+            page,
+            pageState,
+            pageStackState,
+            contentWindowInsets
+         )
+      }
+
+      if (footerComposable != null) {
+         Box(
+            Modifier
+               .align(Alignment.BottomCenter)
+               .transitionElement(PageLayoutIds.footer)
+         ) {
+            PageFooter(
+               footerComposable,
+               page,
+               pageState,
+               pageStackState,
+               windowInsets.only(
+                  WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
+            )
          }
       }
    }
