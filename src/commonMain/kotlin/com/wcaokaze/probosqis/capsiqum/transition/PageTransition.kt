@@ -195,8 +195,11 @@ internal val defaultPageTransitionSpec = pageTransitionSpec(
    }
 )
 
-private typealias PageComposableArguments<S>
-      = Triple<S, MutablePageLayoutInfo, PageTransitionElementAnimSet>
+internal data class PageComposableArguments<S>(
+   val state: S,
+   val layoutInfo: MutablePageLayoutInfo,
+   val transitionElementAnimSet: PageTransitionElementAnimSet
+)
 
 @Stable
 abstract class PageTransitionState<S> {
@@ -378,13 +381,13 @@ abstract class PageTransitionState<S> {
 
             if (isTargetFirstComposition) {
                listOf(
-                  Triple(targetState,  getLayoutInfo(targetState),  emptyPageTransitionAnimSet),
-                  Triple(currentState, getLayoutInfo(currentState), emptyPageTransitionAnimSet)
+                  PageComposableArguments(targetState,  getLayoutInfo(targetState),  emptyPageTransitionAnimSet),
+                  PageComposableArguments(currentState, getLayoutInfo(currentState), emptyPageTransitionAnimSet)
                )
             } else {
                listOf(
-                  Triple(currentState, getLayoutInfo(currentState), transitionSpec.enteringCurrentPageElementAnimations),
-                  Triple(targetState,  getLayoutInfo(targetState),  transitionSpec.enteringTargetPageElementAnimations)
+                  PageComposableArguments(currentState, getLayoutInfo(currentState), transitionSpec.enteringCurrentPageElementAnimations),
+                  PageComposableArguments(targetState,  getLayoutInfo(targetState),  transitionSpec.enteringTargetPageElementAnimations)
                )
             }
          }
@@ -393,19 +396,19 @@ abstract class PageTransitionState<S> {
 
             if (isTargetFirstComposition) {
                listOf(
-                  Triple(targetState,  getLayoutInfo(targetState),  emptyPageTransitionAnimSet),
-                  Triple(currentState, getLayoutInfo(currentState), emptyPageTransitionAnimSet)
+                  PageComposableArguments(targetState,  getLayoutInfo(targetState),  emptyPageTransitionAnimSet),
+                  PageComposableArguments(currentState, getLayoutInfo(currentState), emptyPageTransitionAnimSet)
                )
             } else {
                listOf(
-                  Triple(targetState,  getLayoutInfo(targetState),  transitionSpec.exitingTargetPageElementAnimations),
-                  Triple(currentState, getLayoutInfo(currentState), transitionSpec.exitingCurrentPageElementAnimations)
+                  PageComposableArguments(targetState,  getLayoutInfo(targetState),  transitionSpec.exitingTargetPageElementAnimations),
+                  PageComposableArguments(currentState, getLayoutInfo(currentState), transitionSpec.exitingCurrentPageElementAnimations)
                )
             }
          }
          else -> {
             listOf(
-               Triple(targetState, getLayoutInfo(targetState), emptyPageTransitionAnimSet)
+               PageComposableArguments(targetState, getLayoutInfo(targetState), emptyPageTransitionAnimSet)
             )
          }
       }
@@ -414,7 +417,7 @@ abstract class PageTransitionState<S> {
       while (iter.hasNext()) {
          val key = iter.next()
 
-         if (visiblePageStates.none { getKey(it.first) == key }) {
+         if (visiblePageStates.none { getKey(it.state) == key }) {
             iter.remove()
          }
       }
