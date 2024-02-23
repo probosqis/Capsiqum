@@ -431,7 +431,7 @@ class PageTransitionStateImpl(
    override fun getKey(state: PageStack) = state.head.id
 
    override fun PageStack.compareTransitionTo(other: PageStack): Int {
-      return this.indexedHead.index.compareTo(other.indexedHead.index)
+      return this.pageCount.compareTo(other.pageCount)
    }
 
    override fun getEnteringTransitionSpec(

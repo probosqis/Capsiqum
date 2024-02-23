@@ -88,11 +88,7 @@ class PageStack private constructor(
    /** このPageStackの一番上の[SavedPageState] */
    val head: SavedPageState get() = savedPageStates.last()
 
-   internal val indexedHead: IndexedValue<SavedPageState> get() {
-      val list = savedPageStates
-      val idx = list.lastIndex
-      return IndexedValue(idx, list[idx])
-   }
+   val pageCount: Int get() = savedPageStates.size
 
    /**
     * @return
