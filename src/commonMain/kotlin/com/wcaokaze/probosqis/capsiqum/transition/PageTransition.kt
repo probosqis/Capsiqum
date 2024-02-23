@@ -199,7 +199,7 @@ private typealias PageComposableArguments<S>
       = Triple<S, MutablePageLayoutInfo, PageTransitionElementAnimSet>
 
 @Stable
-internal abstract class PageTransitionState<S> {
+abstract class PageTransitionState<S> {
    private val layoutInfoMap = mutableMapOf<Any, PageLayoutInfoImpl>()
 
    private val NULL = Any()
@@ -207,7 +207,7 @@ internal abstract class PageTransitionState<S> {
    private var targetState:  Any? = NULL
    private var isTargetFirstComposition = false
 
-   var visiblePageStates by mutableStateOf(emptyList<PageComposableArguments<S>>())
+   internal var visiblePageStates by mutableStateOf(emptyList<PageComposableArguments<S>>())
 
    private val emptyPageTransitionAnimSet: PageTransitionElementAnimSet
          = persistentMapOf()
@@ -236,7 +236,7 @@ internal abstract class PageTransitionState<S> {
    ): PageTransitionSpec
 
    @Composable
-   fun updateTransition(targetState: S): Transition<PageLayoutInfo> {
+   internal fun updateTransition(targetState: S): Transition<PageLayoutInfo> {
       /*
        * targetStateが変化した際、直前に表示されていたstateを
        * 表示したまま一度裏で遷移先のstateをコンポーズし、PageLayoutInfoが
@@ -422,7 +422,7 @@ internal abstract class PageTransitionState<S> {
 }
 
 @Stable
-internal class PageTransitionStateImpl(
+class PageTransitionStateImpl(
    private val pageComposableSwitcher: PageComposableSwitcher
 ) : PageTransitionState<PageStack>() {
    override fun getKey(state: PageStack) = state.head.id
@@ -463,7 +463,7 @@ internal class PageTransitionStateImpl(
 }
 
 @Composable
-internal fun PageTransition(
+fun PageTransition(
    pageStackState: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
    pageStateStore: PageStateStore,
@@ -483,7 +483,7 @@ internal fun PageTransition(
 }
 
 @Composable
-internal fun <S> PageTransition(
+fun <S> PageTransition(
    transitionState: PageTransitionState<S>,
    targetState: S,
    content: @Composable (S) -> Unit
@@ -496,7 +496,7 @@ internal fun <S> PageTransition(
 }
 
 @Composable
-internal fun PageTransitionPreview(
+fun PageTransitionPreview(
    pageStackState: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
    pageStateStore: PageStateStore,
@@ -517,7 +517,7 @@ internal fun PageTransitionPreview(
 }
 
 @Composable
-internal fun <S> PageTransitionPreview(
+fun <S> PageTransitionPreview(
    transitionState: PageTransitionState<S>,
    baseTransition: Transition<S>,
    content: @Composable (S) -> Unit
