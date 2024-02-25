@@ -228,14 +228,9 @@ abstract class PageTransitionState<S> {
     */
    protected abstract infix fun S.compareTransitionTo(other: S): Int
 
-   protected abstract fun getEnteringTransitionSpec(
-      currentState: S,
-      targetState:  S
-   ): PageTransitionSpec
-
-   protected abstract fun getExitingTransitionSpec(
-      currentState: S,
-      targetState:  S
+   protected abstract fun getTransitionSpec(
+      frontState: S,
+      backState:  S
    ): PageTransitionSpec
 
    @Composable
@@ -377,7 +372,8 @@ abstract class PageTransitionState<S> {
 
       visiblePageStates = when {
          ord < 0 -> {
-            val transitionSpec = getEnteringTransitionSpec(currentState, targetState)
+            val transitionSpec = getTransitionSpec(
+               frontState = targetState, backState = currentState)
 
             if (isTargetFirstComposition) {
                listOf(
@@ -392,7 +388,8 @@ abstract class PageTransitionState<S> {
             }
          }
          ord > 0 -> {
-            val transitionSpec = getExitingTransitionSpec(currentState, targetState)
+            val transitionSpec = getTransitionSpec(
+               frontState = currentState, backState = targetState)
 
             if (isTargetFirstComposition) {
                listOf(
@@ -434,33 +431,18 @@ class PageTransitionStateImpl(
       return this.pageCount.compareTo(other.pageCount)
    }
 
-   override fun getEnteringTransitionSpec(
-      currentState: PageStack,
-      targetState: PageStack
+   override fun getTransitionSpec(
+      frontState: PageStack,
+      backState: PageStack
    ): PageTransitionSpec {
-      val currentPage = currentState.head.page
-      val targetPage  = targetState .head.page
+      val frontPage = frontState.head.page
+      val backPage  = backState .head.page
 
-      val currentPageComposable = pageComposableSwitcher[currentPage] ?: TODO()
-      val targetPageComposable  = pageComposableSwitcher[targetPage ] ?: TODO()
+      val frontPageComposable = pageComposableSwitcher[frontPage] ?: TODO()
+      val backPageComposable  = pageComposableSwitcher[backPage ] ?: TODO()
 
-      return currentPageComposable.pageTransitionSet.getTransitionTo  (targetPage ::class)
-         ?:  targetPageComposable .pageTransitionSet.getTransitionFrom(currentPage::class)
-         ?:  defaultPageTransitionSpec
-   }
-
-   override fun getExitingTransitionSpec(
-      currentState: PageStack,
-      targetState: PageStack
-   ): PageTransitionSpec {
-      val currentPage = currentState.head.page
-      val targetPage  = targetState .head.page
-
-      val currentPageComposable = pageComposableSwitcher[currentPage] ?: TODO()
-      val targetPageComposable  = pageComposableSwitcher[targetPage ] ?: TODO()
-
-      return targetPageComposable .pageTransitionSet.getTransitionTo  (currentPage::class)
-         ?:  currentPageComposable.pageTransitionSet.getTransitionFrom(targetPage ::class)
+      return backPageComposable .pageTransitionSet.getTransitionTo  (frontPage::class)
+         ?:  frontPageComposable.pageTransitionSet.getTransitionFrom(backPage ::class)
          ?:  defaultPageTransitionSpec
    }
 }
