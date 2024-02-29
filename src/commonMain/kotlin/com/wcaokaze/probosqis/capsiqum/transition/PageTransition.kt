@@ -521,9 +521,6 @@ private fun <S> PageTransition(
    content: @Composable (S) -> Unit
 ) {
    Box {
-      val backgroundColor = MaterialTheme.colorScheme
-         .surfaceColorAtElevation(LocalAbsoluteTonalElevation.current)
-
       for ((savedPageState, layoutInfo, transitionAnimations)
          in transitionState.visiblePageStates)
       {
@@ -533,16 +530,7 @@ private fun <S> PageTransition(
                LocalPageTransitionAnimations provides transitionAnimations,
                LocalPageTransition provides transition,
             ) {
-               Box(Modifier.transitionElement(PageLayoutIds.root)) {
-                  Box(
-                     Modifier
-                        .transitionElement(PageLayoutIds.background)
-                        .fillMaxSize()
-                        .background(backgroundColor)
-                  )
-
-                  content(savedPageState)
-               }
+               content(savedPageState)
             }
          }
       }
@@ -557,7 +545,17 @@ private fun PageTransitionContent(
    pageStateStore: PageStateStore,
    windowInsets: WindowInsets
 ) {
-   Box {
+   Box(Modifier.transitionElement(PageLayoutIds.root)) {
+      val backgroundColor = MaterialTheme.colorScheme
+         .surfaceColorAtElevation(LocalAbsoluteTonalElevation.current)
+
+      Box(
+         Modifier
+            .transitionElement(PageLayoutIds.background)
+            .fillMaxSize()
+            .background(backgroundColor)
+      )
+
       val page = savedPageState.page
       val pageComposable = pageComposableSwitcher[page] ?: TODO()
 
