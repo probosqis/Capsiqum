@@ -26,8 +26,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.TransformOrigin
@@ -40,20 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.sp
 import com.github.takahirom.roborazzi.captureRoboImage
-import com.wcaokaze.probosqis.capsiqum.MultiColumnPageStackBoardState
-import com.wcaokaze.probosqis.capsiqum.Page
-import com.wcaokaze.probosqis.capsiqum.PageComposable
-import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
-import com.wcaokaze.probosqis.capsiqum.PageStack
-import com.wcaokaze.probosqis.capsiqum.PageStackBoard
-import com.wcaokaze.probosqis.capsiqum.PageStackState
-import com.wcaokaze.probosqis.capsiqum.PageState
-import com.wcaokaze.probosqis.capsiqum.PageStateStore
-import com.wcaokaze.probosqis.capsiqum.PageTransitionSet
-import com.wcaokaze.probosqis.capsiqum.pageStateFactory
-import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import io.mockk.mockk
-import kotlinx.coroutines.CoroutineScope
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -68,39 +54,14 @@ class PageTransitionElementAnimationsTest {
 
    // ==== Test Utils ==========================================================
 
-   private class PageA : Page()
-   private class PageB : Page()
-   private class PageAState : PageState()
-   private class PageBState : PageState()
+   private class PageTransitionStateImpl(
+      private val transitionSpec: PageTransitionSpec
+   ) : PageTransitionState<Boolean>() {
+      override fun Boolean.compareTransitionTo(other: Boolean) = this.compareTo(other)
+      override fun getKey(state: Boolean) = state
 
-   private fun createPageStackState(
-      initialPage: Page,
-      vararg initialPages: Page
-   ): PageStackState {
-      val pageStackCache = WritableCache(
-         PageStack(
-            PageStack.Id(0L),
-            PageStack.SavedPageState(
-               PageStack.PageId(0L),
-               initialPage
-            )
-         )
-      )
-
-      for ((i, p) in initialPages.withIndex()) {
-         pageStackCache.value = pageStackCache.value.added(
-            PageStack.SavedPageState(
-               PageStack.PageId(i.toLong()),
-               p
-            )
-         )
-      }
-
-      return PageStackState(
-         PageStackBoard.PageStackId(0L),
-         pageStackCache,
-         pageStackBoardState = mockk<MultiColumnPageStackBoardState>()
-      )
+      override fun getTransitionSpec(frontState: Boolean, backState: Boolean)
+            = transitionSpec
    }
 
    private fun PageTransitionSpec.Builder.hideBackground() {
@@ -157,88 +118,35 @@ class PageTransitionElementAnimationsTest {
       exitTransitions:  PageTransitionSpec.Builder.() -> Unit = {},
       verifyEnterAnim: Boolean
    ) {
-      val transitions = PageTransitionSet.Builder()
-         .apply {
-            transitionTo<PageB>(
-               enter = {
-                  hideBackground()
-                  enterTransitions()
-               },
-               exit = {
-                  hideBackground()
-                  exitTransitions()
-               }
-            )
+      val transitionSpec = pageTransitionSpec(
+         enter = {
+            hideBackground()
+            enterTransitions()
+         },
+         exit = {
+            hideBackground()
+            exitTransitions()
          }
-         .build()
-
-      val pageAComposables = PageComposable(
-         PageA::class,
-         pageStateFactory { _, _ -> PageAState() },
-         contentComposable = { _, _, _, _ ->
-            pageAComposable()
-         },
-         headerComposable = { _, _, _ -> },
-         headerActionsComposable = { _, _, _ -> },
-         footerComposable = null,
-         pageTransitionSet = transitions
       )
+      val transitionState = PageTransitionStateImpl(transitionSpec)
 
-      val pageBComposables = PageComposable(
-         PageB::class,
-         pageStateFactory { _, _ -> PageBState() },
-         contentComposable = { _, _, _, _ ->
-            pageBComposable()
-         },
-         headerComposable = { _, _, _ -> },
-         headerActionsComposable = { _, _, _ -> },
-         footerComposable = null,
-         pageTransitionSet = PageTransitionSet.Builder().build()
-      )
-
-      val pageStackState = if (verifyEnterAnim) {
-         createPageStackState(PageA())
-      } else {
-         createPageStackState(PageA(), PageB())
-      }
-
-      lateinit var coroutineScope: CoroutineScope
+      var targetState by mutableStateOf(!verifyEnterAnim)
 
       rule.setContent {
-         coroutineScope = rememberCoroutineScope()
-
-         val pageComposableSwitcher = remember {
-            PageComposableSwitcher(
-               listOf(
-                  pageAComposables,
-                  pageBComposables,
-               )
-            )
-         }
-
-         val pageStateStore = remember {
-            PageStateStore(
-               listOf(
-                  pageAComposables.pageStateFactory,
-                  pageBComposables.pageStateFactory,
-               ),
-               coroutineScope
-            )
-         }
-
          Box(Modifier.size(300.dp, 600.dp)) {
-            PageTransition(pageStackState, pageComposableSwitcher, pageStateStore)
+            PageTransition(transitionState, targetState) {
+               if (it) {
+                  pageBComposable()
+               } else {
+                  pageAComposable()
+               }
+            }
          }
       }
 
       rule.mainClock.autoAdvance = false
 
-      if (verifyEnterAnim) {
-         pageStackState.startPage(PageB())
-      } else {
-         pageStackState.finishPage()
-      }
-
+      targetState = !targetState
       rule.waitForIdle()
 
       repeat (20) { i ->
