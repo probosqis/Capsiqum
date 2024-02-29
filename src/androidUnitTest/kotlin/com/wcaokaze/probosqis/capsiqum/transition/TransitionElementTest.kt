@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,8 +57,7 @@ class TransitionElementTest {
       val box1 = PageLayoutInfo.LayoutId()
       val box2 = PageLayoutInfo.LayoutId()
 
-      val layoutInfo = PageLayoutInfoImpl(
-         PageStackBoard.PageStackId(0L), PageStack.PageId(0L))
+      val layoutInfo = PageLayoutInfoImpl(PageStack.PageId(0L))
 
       rule.setContent {
          CompositionLocalProvider(
@@ -119,8 +118,7 @@ class TransitionElementTest {
    fun updateAfterRecomposition() {
       val id = PageLayoutInfo.LayoutId()
 
-      val layoutInfo = PageLayoutInfoImpl(
-         PageStackBoard.PageStackId(0L), PageStack.PageId(0L))
+      val layoutInfo = PageLayoutInfoImpl(PageStack.PageId(0L))
 
       var padding by mutableStateOf(PaddingValues(0.dp))
       var size by mutableStateOf(DpSize(32.dp, 32.dp))
@@ -203,11 +201,8 @@ class TransitionElementTest {
    fun applyAnimationModifier() {
       val id = PageLayoutInfo.LayoutId()
 
-      val layoutInfo = PageLayoutInfoImpl(
-         PageStackBoard.PageStackId(0L), PageStack.PageId(0L))
-
-      val transitionLayoutInfo = PageLayoutInfoImpl(
-         PageStackBoard.PageStackId(1L), PageStack.PageId(1L))
+      val layoutInfo = PageLayoutInfoImpl(PageStack.PageId(0L))
+      val transitionLayoutInfo = PageLayoutInfoImpl(PageStack.PageId(1L))
 
       val animations = persistentMapOf(
          id to CurrentPageTransitionElementAnim {

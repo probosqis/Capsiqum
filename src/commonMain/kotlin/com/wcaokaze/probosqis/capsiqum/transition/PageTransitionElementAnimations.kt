@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,14 @@
 
 package com.wcaokaze.probosqis.capsiqum.transition
 
+import androidx.compose.animation.core.ExperimentalTransitionApi
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateOffset
 import androidx.compose.animation.core.animateValue
+import androidx.compose.animation.core.createChildTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
@@ -34,7 +36,6 @@ import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ScaleFactor
 import androidx.compose.ui.layout.positionInRoot
-import com.wcaokaze.probosqis.capsiqum.PageStackBoard
 
 enum class SharedElementAnimatorElement {
    Current,
@@ -99,6 +100,56 @@ fun PageTransitionSpec.Builder.sharedElement(
    }
 }
 
+@Composable
+fun CurrentPageTransitionElementAnimScope.animateScale(
+   currentPageLayoutElementId: PageLayoutInfo.LayoutId,
+   targetPageLayoutElementId:  PageLayoutInfo.LayoutId,
+   label: String,
+   transitionSpec: @Composable Transition.Segment<PageLayoutInfo>.() -> FiniteAnimationSpec<ScaleFactor>
+         = { spring() }
+): State<ScaleFactor> {
+   return animateScale(transition, currentPageLayoutElementId,
+      targetPageLayoutElementId, label, transitionSpec)
+}
+
+@Composable
+fun TargetPageTransitionElementAnimScope.animateScale(
+   currentPageLayoutElementId: PageLayoutInfo.LayoutId,
+   targetPageLayoutElementId:  PageLayoutInfo.LayoutId,
+   label: String,
+   transitionSpec: @Composable Transition.Segment<PageLayoutInfo>.() -> FiniteAnimationSpec<ScaleFactor>
+         = { spring() }
+): State<ScaleFactor> {
+   return animateScale(transition, currentPageLayoutElementId,
+      targetPageLayoutElementId, label, transitionSpec)
+}
+
+@Composable
+fun CurrentPageTransitionElementAnimScope.animatePosition(
+   currentPageLayoutElementId: PageLayoutInfo.LayoutId,
+   targetPageLayoutElementId:  PageLayoutInfo.LayoutId,
+   label: String,
+   transitionSpec: @Composable Transition.Segment<PageLayoutInfo>.() -> FiniteAnimationSpec<Offset>
+         = { spring() }
+): State<Offset> {
+   return animatePosition(transition, currentPageLayoutElementId,
+      targetPageLayoutElementId, label, transitionSpec)
+}
+
+@Composable
+fun TargetPageTransitionElementAnimScope.animatePosition(
+   currentPageLayoutElementId: PageLayoutInfo.LayoutId,
+   targetPageLayoutElementId:  PageLayoutInfo.LayoutId,
+   label: String,
+   transitionSpec: @Composable Transition.Segment<PageLayoutInfo>.() -> FiniteAnimationSpec<Offset>
+         = { spring() }
+): State<Offset> {
+   return animatePosition(transition, currentPageLayoutElementId,
+      targetPageLayoutElementId, label, transitionSpec)
+}
+
+// =============================================================================
+
 private fun PageTransitionSpec.Builder.sharedElementAnimateCurrent(
    currentPageLayoutElementId: PageLayoutInfo.LayoutId,
    targetPageLayoutElementId:  PageLayoutInfo.LayoutId,
@@ -106,21 +157,21 @@ private fun PageTransitionSpec.Builder.sharedElementAnimateCurrent(
    animations: SharedElementAnimations
 ) {
    val runningTransitions
-         = mutableStateMapOf<PageStackBoard.PageStackId, Transition<PageLayoutInfo>>()
+         = mutableStateMapOf<Transition<PageLayoutInfo>, Transition<PageLayoutInfo>>()
 
    currentPageElement(currentPageLayoutElementId) {
-      val pageStackId = transition.currentState.pageStackId
+      @OptIn(ExperimentalTransitionApi::class)
+      val childTransition = transition
+         .createChildTransition(label = "transitionElement") { it }
 
-      DisposableEffect(transition, pageStackId) {
-         runningTransitions[pageStackId] = transition
-
-         onDispose {
-            runningTransitions.remove(pageStackId)
-         }
+      DisposableEffect(transition) {
+         runningTransitions[transition] = childTransition
+         onDispose { runningTransitions.remove(transition) }
       }
 
       val offsetState = if (animations.offsetTransitionSpec != null) {
          animatePosition(
+            childTransition,
             currentPageLayoutElementId,
             targetPageLayoutElementId,
             "$label-Position",
@@ -132,6 +183,7 @@ private fun PageTransitionSpec.Builder.sharedElementAnimateCurrent(
 
       val scaleState = if (animations.scaleTransitionSpec != null) {
          animateScale(
+            childTransition,
             currentPageLayoutElementId,
             targetPageLayoutElementId,
             "$label-Scale",
@@ -155,11 +207,10 @@ private fun PageTransitionSpec.Builder.sharedElementAnimateCurrent(
    }
 
    targetPageElement(targetPageLayoutElementId) {
-      val pageStackId = transition.currentState.pageStackId
-      val transition = runningTransitions[pageStackId]
+      val childTransition = runningTransitions[transition]
 
       Modifier.graphicsLayer {
-         alpha = if (transition == null || transition.isRunning) {
+         alpha = if (childTransition == null || childTransition.isRunning) {
             0.0f
          } else {
             1.0f
@@ -175,21 +226,21 @@ private fun PageTransitionSpec.Builder.sharedElementAnimateTarget(
    animations: SharedElementAnimations
 ) {
    val runningTransitions
-         = mutableStateMapOf<PageStackBoard.PageStackId, Transition<PageLayoutInfo>>()
+         = mutableStateMapOf<Transition<PageLayoutInfo>, Transition<PageLayoutInfo>>()
 
    targetPageElement(targetPageLayoutElementId) {
-      val pageStackId = transition.currentState.pageStackId
+      @OptIn(ExperimentalTransitionApi::class)
+      val childTransition = transition
+         .createChildTransition(label = "transitionElement") { it }
 
-      DisposableEffect(transition, pageStackId) {
-         runningTransitions[pageStackId] = transition
-
-         onDispose {
-            runningTransitions.remove(pageStackId)
-         }
+      DisposableEffect(transition) {
+         runningTransitions[transition] = childTransition
+         onDispose { runningTransitions.remove(transition) }
       }
 
       val offsetState = if (animations.offsetTransitionSpec != null) {
          animatePosition(
+            childTransition,
             currentPageLayoutElementId,
             targetPageLayoutElementId,
             "$label-Position",
@@ -201,6 +252,7 @@ private fun PageTransitionSpec.Builder.sharedElementAnimateTarget(
 
       val scaleState = if (animations.scaleTransitionSpec != null) {
          animateScale(
+            childTransition,
             currentPageLayoutElementId,
             targetPageLayoutElementId,
             "$label-Scale",
@@ -224,11 +276,10 @@ private fun PageTransitionSpec.Builder.sharedElementAnimateTarget(
    }
 
    currentPageElement(currentPageLayoutElementId) {
-      val pageStackId = transition.currentState.pageStackId
-      val transition = runningTransitions[pageStackId]
+      val childTransition = runningTransitions[transition]
 
       Modifier.graphicsLayer {
-         alpha = if (transition == null || transition.isRunning) {
+         alpha = if (childTransition == null || childTransition.isRunning) {
             0.0f
          } else {
             1.0f
@@ -341,12 +392,12 @@ private fun PageTransitionSpec.Builder.sharedElementCrossFade(
 // =============================================================================
 
 @Composable
-fun CurrentPageTransitionElementAnimScope.animateScale(
+private fun CurrentPageTransitionElementAnimScope.animateScale(
+   transition: Transition<PageLayoutInfo>,
    currentPageLayoutElementId: PageLayoutInfo.LayoutId,
    targetPageLayoutElementId:  PageLayoutInfo.LayoutId,
    label: String,
    transitionSpec: @Composable Transition.Segment<PageLayoutInfo>.() -> FiniteAnimationSpec<ScaleFactor>
-         = { spring() }
 ): State<ScaleFactor> {
    return transition.animateValue(ScaleFactor.VectorConverter, transitionSpec, label) {
       if (it.isCurrentPage) {
@@ -371,12 +422,12 @@ fun CurrentPageTransitionElementAnimScope.animateScale(
 }
 
 @Composable
-fun TargetPageTransitionElementAnimScope.animateScale(
+private fun TargetPageTransitionElementAnimScope.animateScale(
+   transition: Transition<PageLayoutInfo>,
    currentPageLayoutElementId: PageLayoutInfo.LayoutId,
    targetPageLayoutElementId:  PageLayoutInfo.LayoutId,
    label: String,
    transitionSpec: @Composable Transition.Segment<PageLayoutInfo>.() -> FiniteAnimationSpec<ScaleFactor>
-      = { spring() }
 ): State<ScaleFactor> {
    return transition.animateValue(ScaleFactor.VectorConverter, transitionSpec, label) {
       if (it.isTargetPage) {
@@ -401,12 +452,12 @@ fun TargetPageTransitionElementAnimScope.animateScale(
 }
 
 @Composable
-fun CurrentPageTransitionElementAnimScope.animatePosition(
+private fun CurrentPageTransitionElementAnimScope.animatePosition(
+   transition: Transition<PageLayoutInfo>,
    currentPageLayoutElementId: PageLayoutInfo.LayoutId,
    targetPageLayoutElementId:  PageLayoutInfo.LayoutId,
    label: String,
    transitionSpec: @Composable Transition.Segment<PageLayoutInfo>.() -> FiniteAnimationSpec<Offset>
-         = { spring() }
 ): State<Offset> {
    return transition.animateOffset(transitionSpec, label) {
       if (it.isCurrentPage) {
@@ -426,12 +477,12 @@ fun CurrentPageTransitionElementAnimScope.animatePosition(
 }
 
 @Composable
-fun TargetPageTransitionElementAnimScope.animatePosition(
+private fun TargetPageTransitionElementAnimScope.animatePosition(
+   transition: Transition<PageLayoutInfo>,
    currentPageLayoutElementId: PageLayoutInfo.LayoutId,
    targetPageLayoutElementId:  PageLayoutInfo.LayoutId,
    label: String,
    transitionSpec: @Composable Transition.Segment<PageLayoutInfo>.() -> FiniteAnimationSpec<Offset>
-      = { spring() }
 ): State<Offset> {
    return transition.animateOffset(transitionSpec, label) {
       if (it.isTargetPage) {

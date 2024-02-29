@@ -28,11 +28,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.add
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.surfaceColorAtElevation
@@ -198,35 +195,53 @@ internal val defaultPageTransitionSpec = pageTransitionSpec(
    }
 )
 
-private typealias PageComposableArguments
-      = Triple<PageStack.SavedPageState, MutablePageLayoutInfo, PageTransitionElementAnimSet>
+internal data class PageComposableArguments<S>(
+   val state: S,
+   val layoutInfo: MutablePageLayoutInfo,
+   val transitionElementAnimSet: PageTransitionElementAnimSet
+)
 
 @Stable
-internal class PageTransitionState(
-   private val pageStackState: PageStackState,
-   private val pageComposableSwitcher: PageComposableSwitcher
-) {
-   private val layoutInfoMap = mutableMapOf<PageStack.PageId, PageLayoutInfoImpl>()
+abstract class PageTransitionState<S> {
+   private val layoutInfoMap = mutableMapOf<Any, PageLayoutInfoImpl>()
 
-   private var currentPageIndex = -1
-   private var targetPageIndex  = -1
+   private val NULL = Any()
+   private var currentState: Any? = NULL
+   private var targetState:  Any? = NULL
    private var isTargetFirstComposition = false
-   private var targetPageState: IndexedValue<PageStack.SavedPageState>? = null
 
-   var visiblePageStates by mutableStateOf(emptyList<PageComposableArguments>())
+   internal var visiblePageStates by mutableStateOf(emptyList<PageComposableArguments<S>>())
 
    private val emptyPageTransitionAnimSet: PageTransitionElementAnimSet
          = persistentMapOf()
 
+   protected abstract fun getKey(state: S): Any
+
+   /**
+    * 2つの状態の画面上での階層の深さを比較する。
+    *
+    * レシーバーインスタンスがotherより前面に表示されるとき負の値、
+    * レシーバーインスタンスがotherより奥に表示されるとき正の値、
+    * レシーバーインスタンスがotherと同一の場合0を返却する。
+    * これは画面遷移をStack構造と考えるとき、一般的に
+    * `this.size.compareTo(other.size)` で実装できる。
+    */
+   protected abstract infix fun S.compareTransitionTo(other: S): Int
+
+   protected abstract fun getTransitionSpec(
+      frontState: S,
+      backState:  S
+   ): PageTransitionSpec
+
    @Composable
-   fun updateTransition(): Transition<PageLayoutInfo> {
+   internal fun updateTransition(targetState: S): Transition<PageLayoutInfo> {
       /*
-       * pageStackState.pageStack.headが変化した際、直前に表示されていたPageを
-       * 表示したまま一度裏で遷移先のPageをコンポーズし、PageLayoutInfoが
-       * 収集できてから遷移先のPageを表にして遷移アニメーションを開始する。
-       * そのため、pageが変化した直後のリコンポジションではTransitionには
-       * まだ遷移後のPageは渡さず、PageLayoutInfoが収集できてからTransitionに
-       * 遷移後のPageを渡すことになる。
+       * targetStateが変化した際、直前に表示されていたstateを
+       * 表示したまま一度裏で遷移先のstateをコンポーズし、PageLayoutInfoが
+       * 収集できてから遷移先のstateを表にして遷移アニメーションを開始する。
+       * そのため、targetStateが変化した直後のリコンポジションではTransitionには
+       * まだ遷移後のstateは渡さず、PageLayoutInfoが収集できてからTransitionに
+       * 遷移後のstateを渡すことになる。
        *
        * | current | target | transitionTarget | isTargetFirstComposition | visiblePages |
        * |---------|--------|------------------|--------------------------|--------------|
@@ -237,61 +252,68 @@ internal class PageTransitionState(
        *
        */
 
-      val pageStack = pageStackState.pageStack
-      val targetPageState = pageStack.indexedHead
-      val isTargetFirstComposition = getLayoutInfo(targetPageState.value.id).isEmpty()
+      val isTargetFirstComposition = getLayoutInfo(targetState).isEmpty()
 
-      val transitionTargetPageState = if (isTargetFirstComposition) {
-         this.targetPageState ?: targetPageState
+      val transitionTargetState = if (isTargetFirstComposition) {
+         val prevTargetState = this.targetState
+         if (prevTargetState !== NULL) {
+            @Suppress("UNCHECKED_CAST")
+            prevTargetState as S
+         } else {
+            targetState
+         }
       } else {
-         targetPageState
+         targetState
       }
 
       val transition = updateTransition(
-         transitionTargetPageState,
+         transitionTargetState,
          label = "PageStackContentTransition"
       )
 
-      val currentPageState = transition.currentState
+      val currentState = transition.currentState
 
-      this.targetPageState = transitionTargetPageState
-
-      if (currentPageState.index   != currentPageIndex ||
-          targetPageState .index   != targetPageIndex  ||
+      if (currentState             != this.currentState ||
+          targetState              != this.targetState  ||
           isTargetFirstComposition != this.isTargetFirstComposition)
       {
-         updateVisiblePageStates(
-            currentPageState, targetPageState, isTargetFirstComposition)
+         updateVisiblePageStates(currentState, targetState, isTargetFirstComposition)
 
-         currentPageIndex = currentPageState.index
-         targetPageIndex  = targetPageState .index
+         this.currentState = currentState
+         this.targetState  = targetState
          this.isTargetFirstComposition = isTargetFirstComposition
       }
 
       @OptIn(ExperimentalTransitionApi::class)
       return transition.createChildTransition(label = "PageTransition") {
-         getLayoutInfo(it.value.id)
+         getLayoutInfo(it)
       }
    }
 
    @Composable
    internal fun createChildTransitionForPreview(
-      baseTransition: Transition<IndexedValue<PageStack.SavedPageState>>
+      baseTransition: Transition<S>
    ): Transition<PageLayoutInfo> {
-      val targetPageState = baseTransition.targetState
-      val isTargetFirstComposition = getLayoutInfo(targetPageState.value.id).isEmpty()
+      val targetState = baseTransition.targetState
+      val isTargetFirstComposition = getLayoutInfo(targetState).isEmpty()
 
       @OptIn(ExperimentalTransitionApi::class)
       val transition = baseTransition.createChildTransition(
          label = "PageStackContentTransition"
       ) {
-         if (it != targetPageState) {
+         if (it != targetState) {
             it
          } else {
             if (isTargetFirstComposition) {
-               this.targetPageState ?: targetPageState
+               val prevTargetState = this.targetState
+               if (prevTargetState !== NULL) {
+                  @Suppress("UNCHECKED_CAST")
+                  prevTargetState as S
+               } else {
+                  targetState
+               }
             } else {
-               targetPageState
+               targetState
             }
          }
       }
@@ -313,225 +335,271 @@ internal class PageTransitionState(
          }
       }
 
-      val currentPageState = transition.currentState
-      val transitionTargetPageState = transition.targetState
+      val currentState = transition.currentState
 
-      this.targetPageState = transitionTargetPageState
-
-      if (currentPageState.index   != currentPageIndex ||
-          targetPageState .index   != targetPageIndex  ||
+      if (currentState             != this.currentState ||
+          targetState              != this.targetState  ||
           isTargetFirstComposition != this.isTargetFirstComposition)
       {
-         updateVisiblePageStates(
-            currentPageState, targetPageState, isTargetFirstComposition)
+         updateVisiblePageStates(currentState, targetState, isTargetFirstComposition)
 
-         currentPageIndex = currentPageState.index
-         targetPageIndex  = targetPageState .index
+         this.currentState = currentState
+         this.targetState  = targetState
          this.isTargetFirstComposition = isTargetFirstComposition
       }
 
       @OptIn(ExperimentalTransitionApi::class)
       return transition.createChildTransition(label = "PageTransition") {
-         getLayoutInfo(it.value.id)
+         getLayoutInfo(it)
       }
    }
 
-   private fun getLayoutInfo(pageId: PageStack.PageId): PageLayoutInfoImpl {
-      return layoutInfoMap.getOrPut(pageId) {
-         PageLayoutInfoImpl(pageStackState.pageStackId, pageId)
+   private fun getLayoutInfo(state: S) = getLayoutInfo(getKey(state))
+
+   @JvmName("getLayoutInfoByKey")
+   private fun getLayoutInfo(key: Any): PageLayoutInfoImpl {
+      return layoutInfoMap.getOrPut(key) {
+         PageLayoutInfoImpl(key)
       }
    }
 
    private fun updateVisiblePageStates(
-      currentState: IndexedValue<PageStack.SavedPageState>,
-      targetState:  IndexedValue<PageStack.SavedPageState>,
+      currentState: S,
+      targetState:  S,
       isTargetFirstComposition: Boolean
    ) {
-      val (currentIndex, currentPage) = currentState
-      val (targetIndex,  targetPage ) = targetState
+      val ord = currentState compareTransitionTo targetState
 
       visiblePageStates = when {
-         currentIndex < targetIndex -> {
-            val currentPageComposable = pageComposableSwitcher[currentPage.page] ?: TODO()
-            val targetPageComposable  = pageComposableSwitcher[targetPage .page] ?: TODO()
-
-            val transitionSpec
-                  =  currentPageComposable.pageTransitionSet.getTransitionTo  (targetPage .page::class)
-                  ?: targetPageComposable .pageTransitionSet.getTransitionFrom(currentPage.page::class)
-                  ?: defaultPageTransitionSpec
+         ord < 0 -> {
+            val transitionSpec = getTransitionSpec(
+               frontState = targetState, backState = currentState)
 
             if (isTargetFirstComposition) {
                listOf(
-                  Triple(targetPage,  getLayoutInfo(targetPage .id), emptyPageTransitionAnimSet),
-                  Triple(currentPage, getLayoutInfo(currentPage.id), emptyPageTransitionAnimSet)
+                  PageComposableArguments(targetState,  getLayoutInfo(targetState),  emptyPageTransitionAnimSet),
+                  PageComposableArguments(currentState, getLayoutInfo(currentState), emptyPageTransitionAnimSet)
                )
             } else {
                listOf(
-                  Triple(currentPage, getLayoutInfo(currentPage.id), transitionSpec.enteringCurrentPageElementAnimations),
-                  Triple(targetPage,  getLayoutInfo(targetPage .id), transitionSpec.enteringTargetPageElementAnimations)
+                  PageComposableArguments(currentState, getLayoutInfo(currentState), transitionSpec.enteringCurrentPageElementAnimations),
+                  PageComposableArguments(targetState,  getLayoutInfo(targetState),  transitionSpec.enteringTargetPageElementAnimations)
                )
             }
          }
-         currentIndex > targetIndex -> {
-            val currentPageComposable = pageComposableSwitcher[currentPage.page] ?: TODO()
-            val targetPageComposable  = pageComposableSwitcher[targetPage .page] ?: TODO()
-
-            val transitionSpec
-                  =  targetPageComposable .pageTransitionSet.getTransitionTo  (currentPage.page::class)
-                  ?: currentPageComposable.pageTransitionSet.getTransitionFrom(targetPage .page::class)
-                  ?: defaultPageTransitionSpec
+         ord > 0 -> {
+            val transitionSpec = getTransitionSpec(
+               frontState = currentState, backState = targetState)
 
             if (isTargetFirstComposition) {
                listOf(
-                  Triple(targetPage,  getLayoutInfo(targetPage .id), emptyPageTransitionAnimSet),
-                  Triple(currentPage, getLayoutInfo(currentPage.id), emptyPageTransitionAnimSet)
+                  PageComposableArguments(targetState,  getLayoutInfo(targetState),  emptyPageTransitionAnimSet),
+                  PageComposableArguments(currentState, getLayoutInfo(currentState), emptyPageTransitionAnimSet)
                )
             } else {
                listOf(
-                  Triple(targetPage,  getLayoutInfo(targetPage .id), transitionSpec.exitingTargetPageElementAnimations),
-                  Triple(currentPage, getLayoutInfo(currentPage.id), transitionSpec.exitingCurrentPageElementAnimations)
+                  PageComposableArguments(targetState,  getLayoutInfo(targetState),  transitionSpec.exitingTargetPageElementAnimations),
+                  PageComposableArguments(currentState, getLayoutInfo(currentState), transitionSpec.exitingCurrentPageElementAnimations)
                )
             }
          }
          else -> {
             listOf(
-               Triple(targetPage, getLayoutInfo(targetPage.id), emptyPageTransitionAnimSet)
+               PageComposableArguments(targetState, getLayoutInfo(targetState), emptyPageTransitionAnimSet)
             )
          }
       }
 
       val iter = layoutInfoMap.keys.iterator()
       while (iter.hasNext()) {
-         val pageId = iter.next()
+         val key = iter.next()
 
-         if (visiblePageStates.none { it.first.id == pageId }) {
+         if (visiblePageStates.none { getKey(it.state) == key }) {
             iter.remove()
          }
       }
    }
 }
 
+@Stable
+class PageTransitionStateImpl(
+   private val pageComposableSwitcher: PageComposableSwitcher
+) : PageTransitionState<PageStack>() {
+   override fun getKey(state: PageStack) = state.head.id
+
+   override fun PageStack.compareTransitionTo(other: PageStack): Int {
+      return this.pageCount.compareTo(other.pageCount)
+   }
+
+   override fun getTransitionSpec(
+      frontState: PageStack,
+      backState: PageStack
+   ): PageTransitionSpec {
+      val frontPage = frontState.head.page
+      val backPage  = backState .head.page
+
+      val frontPageComposable = pageComposableSwitcher[frontPage] ?: TODO()
+      val backPageComposable  = pageComposableSwitcher[backPage ] ?: TODO()
+
+      return backPageComposable .pageTransitionSet.getTransitionTo  (frontPage::class)
+         ?:  frontPageComposable.pageTransitionSet.getTransitionFrom(backPage ::class)
+         ?:  defaultPageTransitionSpec
+   }
+}
+
 @Composable
-internal fun PageTransition(
+fun PageTransition(
    pageStackState: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
    pageStateStore: PageStateStore,
    windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
 ) {
-   val transitionState = remember(pageStackState, pageComposableSwitcher) {
-      PageTransitionState(pageStackState, pageComposableSwitcher)
+   val transitionState = remember(pageComposableSwitcher) {
+      PageTransitionStateImpl(pageComposableSwitcher)
    }
 
    PageTransition(
       transitionState,
-      pageStackState,
-      pageComposableSwitcher,
-      pageStateStore,
-      transition = transitionState.updateTransition(),
-      windowInsets
+      pageStackState.pageStack
+   ) { pageStack ->
+      PageTransitionContent(pageStack.head, pageStackState,
+         pageComposableSwitcher, pageStateStore, windowInsets)
+   }
+}
+
+@Composable
+fun <S> PageTransition(
+   transitionState: PageTransitionState<S>,
+   targetState: S,
+   content: @Composable (S) -> Unit
+) {
+   PageTransition(
+      transitionState,
+      transition = transitionState.updateTransition(targetState),
+      content
    )
 }
 
 @Composable
-internal fun PageTransitionPreview(
+fun PageTransitionPreview(
    pageStackState: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
    pageStateStore: PageStateStore,
-   baseTransition: Transition<IndexedValue<PageStack.SavedPageState>>,
+   baseTransition: Transition<PageStack>,
    windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
 ) {
-   val transitionState = remember(pageStackState, pageComposableSwitcher) {
-      PageTransitionState(pageStackState, pageComposableSwitcher)
+   val transitionState = remember(pageComposableSwitcher) {
+      PageTransitionStateImpl(pageComposableSwitcher)
    }
 
+   PageTransitionPreview(
+      transitionState,
+      baseTransition,
+   ) { pageStack ->
+      PageTransitionContent(pageStack.head, pageStackState,
+         pageComposableSwitcher, pageStateStore, windowInsets)
+   }
+}
+
+@Composable
+fun <S> PageTransitionPreview(
+   transitionState: PageTransitionState<S>,
+   baseTransition: Transition<S>,
+   content: @Composable (S) -> Unit
+) {
    PageTransition(
       transitionState,
-      pageStackState,
-      pageComposableSwitcher,
-      pageStateStore,
       transition = transitionState.createChildTransitionForPreview(baseTransition),
-      windowInsets
+      content
    )
 }
 
 @Composable
-private fun PageTransition(
-   transitionState: PageTransitionState,
-   pageStackState: PageStackState,
-   pageComposableSwitcher: PageComposableSwitcher,
-   pageStateStore: PageStateStore,
+private fun <S> PageTransition(
+   transitionState: PageTransitionState<S>,
    transition: Transition<PageLayoutInfo>,
-   windowInsets: WindowInsets
+   content: @Composable (S) -> Unit
 ) {
    Box {
-      val backgroundColor = MaterialTheme.colorScheme
-         .surfaceColorAtElevation(LocalAbsoluteTonalElevation.current)
-
       for ((savedPageState, layoutInfo, transitionAnimations)
          in transitionState.visiblePageStates)
       {
-         key(savedPageState.id) {
+         key(layoutInfo.key) {
             CompositionLocalProvider(
                LocalPageLayoutInfo provides layoutInfo,
                LocalPageTransitionAnimations provides transitionAnimations,
                LocalPageTransition provides transition,
             ) {
-               Box(Modifier.transitionElement(PageLayoutIds.root)) {
-                  Box(
-                     Modifier
-                        .transitionElement(PageLayoutIds.background)
-                        .fillMaxSize()
-                        .background(backgroundColor)
-                  )
-
-                  val page = savedPageState.page
-                  val pageComposable = pageComposableSwitcher[page] ?: TODO()
-
-                  val pageState = remember(savedPageState.id) {
-                     pageStateStore.get(savedPageState)
-                  }
-
-                  val footerComposable = pageComposable.footerComposable
-
-                  Box(
-                     modifier = Modifier
-                        .transitionElement(PageLayoutIds.content)
-                  ) {
-                     val contentWindowInsets = if (footerComposable != null) {
-                        windowInsets
-                           .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
-                           .add(WindowInsets(bottom = pageFooterHeight))
-                     } else {
-                        windowInsets
-                     }
-
-                     PageContent(
-                        pageComposable.contentComposable,
-                        page,
-                        pageState,
-                        pageStackState,
-                        contentWindowInsets
-                     )
-                  }
-
-                  if (footerComposable != null) {
-                     Box(
-                        Modifier
-                           .align(Alignment.BottomCenter)
-                           .transitionElement(PageLayoutIds.footer)
-                     ) {
-                        PageFooter(
-                           footerComposable,
-                           page,
-                           pageState,
-                           pageStackState,
-                           windowInsets.only(
-                              WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
-                        )
-                     }
-                  }
-               }
+               content(savedPageState)
             }
+         }
+      }
+   }
+}
+
+@Composable
+private fun PageTransitionContent(
+   savedPageState: PageStack.SavedPageState,
+   pageStackState: PageStackState,
+   pageComposableSwitcher: PageComposableSwitcher,
+   pageStateStore: PageStateStore,
+   windowInsets: WindowInsets
+) {
+   Box(Modifier.transitionElement(PageLayoutIds.root)) {
+      val backgroundColor = MaterialTheme.colorScheme
+         .surfaceColorAtElevation(LocalAbsoluteTonalElevation.current)
+
+      Box(
+         Modifier
+            .transitionElement(PageLayoutIds.background)
+            .fillMaxSize()
+            .background(backgroundColor)
+      )
+
+      val page = savedPageState.page
+      val pageComposable = pageComposableSwitcher[page] ?: TODO()
+
+      val pageState = remember(savedPageState.id) {
+         pageStateStore.get(savedPageState)
+      }
+
+      val footerComposable = pageComposable.footerComposable
+
+      Box(
+         modifier = Modifier
+            .transitionElement(PageLayoutIds.content)
+      ) {
+         val contentWindowInsets = if (footerComposable != null) {
+            windowInsets
+               .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
+               .add(WindowInsets(bottom = pageFooterHeight))
+         } else {
+            windowInsets
+         }
+
+         PageContent(
+            pageComposable.contentComposable,
+            page,
+            pageState,
+            pageStackState,
+            contentWindowInsets
+         )
+      }
+
+      if (footerComposable != null) {
+         Box(
+            Modifier
+               .align(Alignment.BottomCenter)
+               .transitionElement(PageLayoutIds.footer)
+         ) {
+            PageFooter(
+               footerComposable,
+               page,
+               pageState,
+               pageStackState,
+               windowInsets.only(
+                  WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
+            )
          }
       }
    }

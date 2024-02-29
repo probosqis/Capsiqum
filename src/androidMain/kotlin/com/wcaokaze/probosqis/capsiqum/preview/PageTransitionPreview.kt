@@ -60,13 +60,10 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
       PageStack.SavedPageState(PageStack.PageId(1L), childPage)
    }
 
-   val indexedParentPageState = remember { IndexedValue(0, parentSavedPageState) }
-   val indexedChildPageState  = remember { IndexedValue(1, childSavedPageState)  }
+   val parentPageStack = remember { PageStack(PageStack.Id(0L), parentSavedPageState) }
+   val childPageStack = remember { parentPageStack.added(childSavedPageState) }
 
-   val pageStackCache = remember {
-      val pageStack = PageStack(PageStack.Id(0L), parentSavedPageState)
-      WritableCache(pageStack)
-   }
+   val pageStackCache = remember { WritableCache(childPageStack) }
 
    val pageStackLayoutElement = remember {
       PageStackBoard.PageStack(
@@ -142,8 +139,8 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
    @OptIn(ExperimentalTransitionApi::class)
    val pageStateTransition = transition.createChildTransition {
       when (it) {
-         PageTransitionPreviewValue.Parent -> indexedParentPageState
-         PageTransitionPreviewValue.Child  -> indexedChildPageState
+         PageTransitionPreviewValue.Parent -> parentPageStack
+         PageTransitionPreviewValue.Child  -> childPageStack
       }
    }
 
