@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.capsiqum.typeswitcher
+package com.wcaokaze.probosqis.capsiqum.page
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
