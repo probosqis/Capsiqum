@@ -35,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
@@ -467,6 +468,7 @@ fun PageTransition(
    }
 }
 
+@NonRestartableComposable
 @Composable
 fun <S> PageTransition(
    transitionState: PageTransitionState<S>,
@@ -501,6 +503,7 @@ fun PageTransitionPreview(
    }
 }
 
+@NonRestartableComposable
 @Composable
 fun <S> PageTransitionPreview(
    transitionState: PageTransitionState<S>,
