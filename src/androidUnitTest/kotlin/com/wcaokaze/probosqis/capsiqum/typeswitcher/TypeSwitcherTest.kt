@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
+import com.wcaokaze.probosqis.capsiqum.Page
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -31,77 +32,76 @@ import kotlin.test.assertNull
 import kotlin.test.assertSame
 
 @RunWith(RobolectricTestRunner::class)
-class TypeSwitcherTest {
+class PageSwitcherTest {
    @get:Rule
    val rule = createComposeRule()
 
-   private abstract class State
-   private class StateA : State()
-   private class StateB : State()
-   private class StateC : State()
+   private class PageA : Page()
+   private class PageB : Page()
+   private class PageC : Page()
 
    @Test
    fun state_getChild() {
-      val switcherState = TypeSwitcherState(
+      val switcherState = PageSwitcherState(
          listOf(
-            typeSwitcherChild<StateA> {},
-            typeSwitcherChild<StateB> {},
+            pageComposable<PageA> {},
+            pageComposable<PageB> {},
          )
       )
 
-      val stateA = StateA()
-      val childA = switcherState.getChildFor(stateA)
-      assertNotNull(childA)
-      assertEquals(childA.type, StateA::class)
+      val pageA = PageA()
+      val composableA = switcherState.getComposableFor(pageA)
+      assertNotNull(composableA)
+      assertEquals(composableA.pageClass, PageA::class)
 
-      val stateB = StateB()
-      val childB = switcherState.getChildFor(stateB)
-      assertNotNull(childB)
-      assertEquals(childB.type, StateB::class)
+      val pageB = PageB()
+      val composableB = switcherState.getComposableFor(pageB)
+      assertNotNull(composableB)
+      assertEquals(composableB.pageClass, PageB::class)
 
-      val stateC = StateC()
-      val childC = switcherState.getChildFor(stateC)
-      assertNull(childC)
+      val pageC = PageC()
+      val composableC = switcherState.getComposableFor(pageC)
+      assertNull(composableC)
    }
 
    @Test
-   fun childComposable_argument() {
-      var stateAArgument: StateA? = null
-      var stateBArgument: StateB? = null
+   fun pageComposable_argument() {
+      var pageAArgument: PageA? = null
+      var pageBArgument: PageB? = null
 
-      val switcherState = TypeSwitcherState(
+      val switcherState = PageSwitcherState(
          listOf(
-            typeSwitcherChild<StateA> { state ->
+            pageComposable<PageA> { page ->
                DisposableEffect(Unit) {
-                  stateAArgument = state
-                  onDispose { stateAArgument = null }
+                  pageAArgument = page
+                  onDispose { pageAArgument = null }
                }
             },
-            typeSwitcherChild<StateB> { state ->
+            pageComposable<PageB> { page ->
                DisposableEffect(Unit) {
-                  stateBArgument = state
-                  onDispose { stateBArgument = null }
+                  pageBArgument = page
+                  onDispose { pageBArgument = null }
                }
             },
          )
       )
 
-      var value: State by mutableStateOf(StateA())
+      var page: Page by mutableStateOf(PageA())
 
       rule.setContent {
-         TypeSwitcher(switcherState, value)
+         PageSwitcher(switcherState, page)
       }
 
       rule.runOnIdle {
-         assertSame(value as State?, stateAArgument)
-         assertNull(stateBArgument)
+         assertSame(page, assertNotNull(pageAArgument))
+         assertNull(pageBArgument)
       }
 
-      value = StateB()
+      page = PageB()
 
       rule.runOnIdle {
-         assertNull(stateAArgument)
-         assertSame(value as State?, stateBArgument)
+         assertNull(pageAArgument)
+         assertSame(page, assertNotNull(pageBArgument))
       }
    }
 }

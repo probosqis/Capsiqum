@@ -19,62 +19,60 @@ package com.wcaokaze.probosqis.capsiqum.typeswitcher
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import com.wcaokaze.probosqis.capsiqum.Page
 import kotlin.reflect.KClass
 
-inline fun <reified T : Any> typeSwitcherChild(
-   noinline composable: @Composable (T) -> Unit
-) = TypeSwitcherChildComposable(T::class, composable)
+inline fun <reified P : Page> pageComposable(
+   noinline composable: @Composable (P) -> Unit
+) = PageComposable(P::class, composable)
 
 @Immutable
-class TypeSwitcherChildComposable<T : Any>(
-   val type: KClass<T>,
-   val composable: @Composable (T) -> Unit
+class PageComposable<P : Page>(
+   val pageClass: KClass<P>,
+   val composable: @Composable (P) -> Unit
 )
 
 @Stable
-class TypeSwitcherState<T : Any>(
-   childComposables: List<TypeSwitcherChildComposable<out T>>
+class PageSwitcherState(
+   pageComposables: List<PageComposable<*>>
 ) {
-   private val childComposables = buildMap {
-      for (c in childComposables) {
-         put(c.type, c)
+   private val pageComposables = buildMap {
+      for (c in pageComposables) {
+         put(c.pageClass, c)
       }
    }
 
    @Stable
-   internal fun <C : T> getChildFor(value: C): TypeSwitcherChildComposable<C>? {
+   internal fun <P : Page> getComposableFor(page: P): PageComposable<P>? {
       @Suppress("UNCHECKED_CAST")
-      return childComposables[value::class] as TypeSwitcherChildComposable<C>?
+      return pageComposables[page::class] as PageComposable<P>?
    }
 }
 
 /**
- * [value]の型によって表示するComposableを変えるComposable。
- *
  * ```kotlin
- * abstract class Page
  * class PageA : Page()
  * class PageB : Page()
  * class PageC : Page()
  *
- * val pageAComposable = typeSwitcherChild<PageA> {
+ * val pageAComposable = pageComposable<PageA> { page ->
  *    ....
  * }
- * val pageBComposable = typeSwitcherChild<PageB> {
+ * val pageBComposable = pageComposable<PageB> { page ->
  *    ....
  * }
- * val pageCComposable = typeSwitcherChild<PageC> {
+ * val pageCComposable = pageComposable<PageC> { page ->
  *    ....
  * }
  *
- * val typeSwitcherState = remember {
- *    TypeSwitcherState(listOf(pageAComposable, pageBComposable, pageCComposable))
+ * val pageSwitcherState = remember {
+ *    PageSwitcherState(listOf(pageAComposable, pageBComposable, pageCComposable))
  * }
  *
  * val page: Page = ...
  *
- * TypeSwitcher(
- *    typeSwitcherState,
+ * PageSwitcher(
+ *    pageSwitcherState,
  *    page
  * )
  * ```
@@ -83,20 +81,15 @@ class TypeSwitcherState<T : Any>(
  * サブタイプがモジュール外にもあるときとかに使えるよ
  */
 @Composable
-fun <T : Any> TypeSwitcher(
-   state: TypeSwitcherState<T>,
-   value: T
-) {
-   val c = state.getChildFor(value)
-   if (c != null) {
-      TypeSwitcherChild(c.composable, value)
-   }
+fun PageSwitcher(state: PageSwitcherState, page: Page) {
+   val c = state.getComposableFor(page) ?: TODO()
+   Page(c.composable, page)
 }
 
 @Composable
-private inline fun <T : Any> TypeSwitcherChild(
-   childComposable: @Composable (T) -> Unit,
-   value: T
+private inline fun <P : Page> Page(
+   composable: @Composable (P) -> Unit,
+   page: P
 ) {
-   childComposable(value)
+   composable(page)
 }
