@@ -49,12 +49,12 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
-import com.wcaokaze.probosqis.capsiqum.PageContent
-import com.wcaokaze.probosqis.capsiqum.PageFooter
-import com.wcaokaze.probosqis.capsiqum.PageStack
-import com.wcaokaze.probosqis.capsiqum.PageStackState
-import com.wcaokaze.probosqis.capsiqum.PageStateStore
-import com.wcaokaze.probosqis.capsiqum.pageFooterHeight
+import com.wcaokaze.probosqis.capsiqum.page.PageContent
+import com.wcaokaze.probosqis.capsiqum.page.PageFooter
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.PageStackState
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
+import com.wcaokaze.probosqis.capsiqum.page.pageFooterHeight
 import kotlinx.collections.immutable.persistentMapOf
 
 internal val LocalPageTransitionAnimations

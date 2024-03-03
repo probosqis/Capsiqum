@@ -36,8 +36,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.capsiqum.PageStack
-import com.wcaokaze.probosqis.capsiqum.PageStackBoard
 import kotlinx.collections.immutable.persistentMapOf
 import org.junit.Rule
 import org.junit.runner.RunWith
@@ -57,7 +55,7 @@ class TransitionElementTest {
       val box1 = PageLayoutInfo.LayoutId()
       val box2 = PageLayoutInfo.LayoutId()
 
-      val layoutInfo = PageLayoutInfoImpl(PageStack.PageId(0L))
+      val layoutInfo = PageLayoutInfoImpl(key = Unit)
 
       rule.setContent {
          CompositionLocalProvider(
@@ -118,7 +116,7 @@ class TransitionElementTest {
    fun updateAfterRecomposition() {
       val id = PageLayoutInfo.LayoutId()
 
-      val layoutInfo = PageLayoutInfoImpl(PageStack.PageId(0L))
+      val layoutInfo = PageLayoutInfoImpl(key = Unit)
 
       var padding by mutableStateOf(PaddingValues(0.dp))
       var size by mutableStateOf(DpSize(32.dp, 32.dp))
@@ -201,8 +199,8 @@ class TransitionElementTest {
    fun applyAnimationModifier() {
       val id = PageLayoutInfo.LayoutId()
 
-      val layoutInfo = PageLayoutInfoImpl(PageStack.PageId(0L))
-      val transitionLayoutInfo = PageLayoutInfoImpl(PageStack.PageId(1L))
+      val layoutInfo = PageLayoutInfoImpl(key = Unit)
+      val transitionLayoutInfo = PageLayoutInfoImpl(key = Unit)
 
       val animations = persistentMapOf(
          id to CurrentPageTransitionElementAnim {

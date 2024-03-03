@@ -16,6 +16,9 @@
 
 package com.wcaokaze.probosqis.capsiqum
 
+import com.wcaokaze.probosqis.capsiqum.page.Page
+import com.wcaokaze.probosqis.capsiqum.page.PageState
+import com.wcaokaze.probosqis.capsiqum.page.pageStateFactory
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

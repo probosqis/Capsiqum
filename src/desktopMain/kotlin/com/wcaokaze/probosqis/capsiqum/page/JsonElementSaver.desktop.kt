@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.capsiqum
+package com.wcaokaze.probosqis.capsiqum.page
 
-import android.os.Bundle
-import android.util.Base64
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.ui.geometry.Size
@@ -26,7 +24,6 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.intOrNull
@@ -34,6 +31,7 @@ import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
+import java.util.Base64
 
 private const val TYPE_NULL                 =  0
 private const val TYPE_BOOLEAN              =  1
@@ -65,12 +63,9 @@ private const val TYPE_PAIR                 = 26
 private const val TYPE_TRIPLE               = 27
 private const val TYPE_INT_SIZE             = 28
 private const val TYPE_SIZE                 = 29
-private const val TYPE_ANDROID_SIZE         = 30
-private const val TYPE_ANDROID_SIZE_F       = 31
 private const val TYPE_LIST                 = 32
 private const val TYPE_SET                  = 33
 private const val TYPE_MAP                  = 34
-private const val TYPE_BUNDLE               = 35
 private const val TYPE_SERIALIZABLE         = 36
 
 internal actual class JsonElementSaver<T>
@@ -100,18 +95,12 @@ internal actual class JsonElementSaver<T>
             is Pair<*, *>, is Triple<*, *, *> -> true
 
             is IntSize, is Size -> true
-            is android.util.Size, is android.util.SizeF -> true
 
             is Array<*>  -> value.all(::canBeSavedImpl)
             is List<*>   -> value.all(::canBeSavedImpl)
             is Set<*>    -> value.all(::canBeSavedImpl)
             is Map<*, *> -> value.all { (key, value) ->
                canBeSavedImpl(key) && canBeSavedImpl(value)
-            }
-
-            is Bundle -> value.keySet().all { key ->
-               @Suppress("DEPRECATION")
-               canBeSavedImpl(value[key])
             }
 
             is Serializable -> true
@@ -175,8 +164,6 @@ internal actual class JsonElementSaver<T>
 
          is IntSize            -> typedElement(TYPE_INT_SIZE,       pair(JsonPrimitive(value.width), JsonPrimitive(value.height)))
          is Size               -> typedElement(TYPE_SIZE,           pair(JsonPrimitive(value.width), JsonPrimitive(value.height)))
-         is android.util.Size  -> typedElement(TYPE_ANDROID_SIZE,   pair(JsonPrimitive(value.width), JsonPrimitive(value.height)))
-         is android.util.SizeF -> typedElement(TYPE_ANDROID_SIZE_F, pair(JsonPrimitive(value.width), JsonPrimitive(value.height)))
 
          is List<*>   -> typedElement(TYPE_LIST,  JsonArray(value.map(::toJsonElement)))
          is Set<*>    -> typedElement(TYPE_SET,   JsonArray(value.map(::toJsonElement)))
@@ -187,23 +174,13 @@ internal actual class JsonElementSaver<T>
             )
          )
 
-         is Bundle -> typedElement(
-            TYPE_BUNDLE,
-            JsonObject(
-               value.keySet().associateWith { key ->
-                  @Suppress("DEPRECATION")
-                  toJsonElement(value[key])
-               }
-            )
-         )
-
          is Serializable -> {
             val outputStream = ByteArrayOutputStream()
             ObjectOutputStream(outputStream).use {
                it.writeObject(value)
             }
-            val serializedStr = Base64.encodeToString(
-               outputStream.toByteArray(), Base64.DEFAULT)
+            val serializedStr = Base64.getEncoder()
+               .encodeToString(outputStream.toByteArray())
 
             typedElement(TYPE_SERIALIZABLE, JsonPrimitive(serializedStr))
          }
@@ -429,26 +406,6 @@ internal actual class JsonElementSaver<T>
             val height = secondElement.content.toFloatOrNull() ?: throw SerializationException()
             Size(width, height)
          }
-         TYPE_ANDROID_SIZE -> {
-            if (contentElement !is JsonArray) { throw SerializationException() }
-            if (contentElement.size != 2) { throw SerializationException() }
-            val (firstElement, secondElement) = contentElement
-            if (firstElement  !is JsonPrimitive) { throw SerializationException() }
-            if (secondElement !is JsonPrimitive) { throw SerializationException() }
-            val width  = firstElement .content.toIntOrNull() ?: throw SerializationException()
-            val height = secondElement.content.toIntOrNull() ?: throw SerializationException()
-            android.util.Size(width, height)
-         }
-         TYPE_ANDROID_SIZE_F -> {
-            if (contentElement !is JsonArray) { throw SerializationException() }
-            if (contentElement.size != 2) { throw SerializationException() }
-            val (firstElement, secondElement) = contentElement
-            if (firstElement  !is JsonPrimitive) { throw SerializationException() }
-            if (secondElement !is JsonPrimitive) { throw SerializationException() }
-            val width  = firstElement .content.toFloatOrNull() ?: throw SerializationException()
-            val height = secondElement.content.toFloatOrNull() ?: throw SerializationException()
-            android.util.SizeF(width, height)
-         }
          TYPE_LIST -> {
             if (contentElement !is JsonArray) { throw SerializationException() }
             contentElement.map(::fromJsonElement)
@@ -466,65 +423,10 @@ internal actual class JsonElementSaver<T>
                Pair(fromJsonElement(firstElement), fromJsonElement(secondElement))
             }
          }
-         TYPE_BUNDLE -> {
-            if (contentElement !is JsonObject) { throw SerializationException() }
-            val bundle = Bundle()
-            for ((key, v) in contentElement) {
-               when (val value = fromJsonElement(v)) {
-                  is Boolean            -> bundle.putBoolean     (key, value)
-                  is BooleanArray       -> bundle.putBooleanArray(key, value)
-                  is Char               -> bundle.putChar        (key, value)
-                  is CharArray          -> bundle.putCharArray   (key, value)
-                  is Byte               -> bundle.putByte        (key, value)
-                  is ByteArray          -> bundle.putByteArray   (key, value)
-                  is Short              -> bundle.putShort       (key, value)
-                  is ShortArray         -> bundle.putShortArray  (key, value)
-                  is Int                -> bundle.putInt         (key, value)
-                  is IntArray           -> bundle.putIntArray    (key, value)
-                  is Long               -> bundle.putLong        (key, value)
-                  is LongArray          -> bundle.putLongArray   (key, value)
-                  is Float              -> bundle.putFloat       (key, value)
-                  is FloatArray         -> bundle.putFloatArray  (key, value)
-                  is Double             -> bundle.putDouble      (key, value)
-                  is DoubleArray        -> bundle.putDoubleArray (key, value)
-                  is String             -> bundle.putString      (key, value)
-                  is android.util.Size  -> bundle.putSize        (key, value)
-                  is android.util.SizeF -> bundle.putSizeF       (key, value)
-                  is Array<*> -> {
-                     if (value.all { it is String }) {
-                        @Suppress("UNCHECKED_CAST")
-                        bundle.putStringArray(key, value as Array<String>)
-                     } else {
-                        bundle.putSerializable(key, value)
-                     }
-                  }
-                  is List<*> -> {
-                     when {
-                        value.all { it is Int } -> {
-                           @Suppress("UNCHECKED_CAST")
-                           bundle.putIntegerArrayList(key, ArrayList(value as List<Int>))
-                        }
-                        value.all { it is String } -> {
-                           @Suppress("UNCHECKED_CAST")
-                           bundle.putStringArrayList(key, ArrayList(value as List<String>))
-                        }
-                        value is Serializable -> {
-                           bundle.putSerializable(key, value)
-                        }
-                        else -> throw SerializationException()
-                     }
-                  }
-                  is Bundle       -> bundle.putBundle      (key, value)
-                  is Serializable -> bundle.putSerializable(key, value)
-                  else -> throw SerializationException()
-               }
-            }
-            bundle
-         }
          TYPE_SERIALIZABLE -> {
             if (contentElement !is JsonPrimitive) { throw SerializationException() }
             if (!contentElement.isString) { throw SerializationException() }
-            val serialized = Base64.decode(contentElement.content, Base64.DEFAULT)
+            val serialized = Base64.getDecoder().decode(contentElement.content)
             ObjectInputStream(serialized.inputStream()).use {
                it.readObject()
             }

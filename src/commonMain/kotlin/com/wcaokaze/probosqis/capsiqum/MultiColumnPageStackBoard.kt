@@ -54,6 +54,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.PageStackAppBar
+import com.wcaokaze.probosqis.capsiqum.page.PageStackRepository
+import com.wcaokaze.probosqis.capsiqum.page.PageStackState
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransition
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.coroutines.CoroutineScope

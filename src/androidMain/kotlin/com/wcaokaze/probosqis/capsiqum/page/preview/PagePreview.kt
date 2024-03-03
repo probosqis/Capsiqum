@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.capsiqum.preview
+package com.wcaokaze.probosqis.capsiqum.page.preview
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,17 +32,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.MultiColumnPageStackBoardState
-import com.wcaokaze.probosqis.capsiqum.Page
+import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.PageComposable
 import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
-import com.wcaokaze.probosqis.capsiqum.PageContent
-import com.wcaokaze.probosqis.capsiqum.PageFooter
-import com.wcaokaze.probosqis.capsiqum.PageStack
-import com.wcaokaze.probosqis.capsiqum.PageStackAppBar
+import com.wcaokaze.probosqis.capsiqum.page.PageContent
+import com.wcaokaze.probosqis.capsiqum.page.PageFooter
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.PageStackAppBar
 import com.wcaokaze.probosqis.capsiqum.PageStackBoard
-import com.wcaokaze.probosqis.capsiqum.PageStackRepository
-import com.wcaokaze.probosqis.capsiqum.PageStackState
-import com.wcaokaze.probosqis.capsiqum.PageStateStore
+import com.wcaokaze.probosqis.capsiqum.page.PageStackRepository
+import com.wcaokaze.probosqis.capsiqum.page.PageStackState
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 
 @Composable

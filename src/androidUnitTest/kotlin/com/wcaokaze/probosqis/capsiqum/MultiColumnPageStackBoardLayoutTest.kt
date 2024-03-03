@@ -31,6 +31,12 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.capsiqum.page.Page
+import com.wcaokaze.probosqis.capsiqum.page.PageStackRepository
+import com.wcaokaze.probosqis.capsiqum.page.PageStackState
+import com.wcaokaze.probosqis.capsiqum.page.PageState
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
+import com.wcaokaze.probosqis.capsiqum.page.pageStateFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.junit.Rule

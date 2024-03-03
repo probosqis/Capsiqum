@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.capsiqum
+package com.wcaokaze.probosqis.capsiqum.page
 
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
@@ -30,6 +30,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
+import com.wcaokaze.probosqis.capsiqum.PageStackBoard
+import com.wcaokaze.probosqis.capsiqum.PageStackBoardState
+import com.wcaokaze.probosqis.capsiqum.sequence
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asState
 import com.wcaokaze.probosqis.panoptiqon.update

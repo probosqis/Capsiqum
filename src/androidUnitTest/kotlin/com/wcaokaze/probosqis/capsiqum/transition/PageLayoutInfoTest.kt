@@ -18,7 +18,6 @@ package com.wcaokaze.probosqis.capsiqum.transition
 
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.test.junit4.createComposeRule
-import com.wcaokaze.probosqis.capsiqum.PageStack
 import io.mockk.mockk
 import org.junit.Rule
 import org.junit.runner.RunWith
@@ -55,7 +54,7 @@ class PageLayoutInfoTest {
 
    @Test
    fun getAndSet() {
-      val pageLayoutInfo = PageLayoutInfoImpl(PageStack.PageId(0L))
+      val pageLayoutInfo = PageLayoutInfoImpl(key = Unit)
       val layoutId1 = PageLayoutInfo.LayoutId()
       val layoutId2 = PageLayoutInfo.LayoutId()
 
@@ -68,7 +67,7 @@ class PageLayoutInfoTest {
 
    @Test
    fun isEmpty() {
-      val pageLayoutInfo = PageLayoutInfoImpl(PageStack.PageId(0L))
+      val pageLayoutInfo = PageLayoutInfoImpl(key = Unit)
 
       assertTrue(pageLayoutInfo.isEmpty())
 

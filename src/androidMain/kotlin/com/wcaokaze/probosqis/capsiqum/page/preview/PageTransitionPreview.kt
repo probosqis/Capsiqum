@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.capsiqum.preview
+package com.wcaokaze.probosqis.capsiqum.page.preview
 
 import androidx.compose.animation.core.ExperimentalTransitionApi
 import androidx.compose.animation.core.createChildTransition
@@ -23,15 +23,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import com.wcaokaze.probosqis.capsiqum.MultiColumnPageStackBoardState
-import com.wcaokaze.probosqis.capsiqum.Page
+import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.PageComposable
 import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
-import com.wcaokaze.probosqis.capsiqum.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.PageStackBoard
-import com.wcaokaze.probosqis.capsiqum.PageStackRepository
-import com.wcaokaze.probosqis.capsiqum.PageStackState
-import com.wcaokaze.probosqis.capsiqum.PageState
-import com.wcaokaze.probosqis.capsiqum.PageStateStore
+import com.wcaokaze.probosqis.capsiqum.page.PageStackState
+import com.wcaokaze.probosqis.capsiqum.page.PageState
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransitionPreview
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 

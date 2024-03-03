@@ -19,7 +19,6 @@ package com.wcaokaze.probosqis.capsiqum.page
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import com.wcaokaze.probosqis.capsiqum.Page
 import kotlin.reflect.KClass
 
 inline fun <reified P : Page> pageComposable(

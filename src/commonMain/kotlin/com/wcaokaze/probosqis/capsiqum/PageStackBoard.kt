@@ -24,7 +24,6 @@ import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.animateScrollBy
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,8 +31,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.PageStackRepository
+import com.wcaokaze.probosqis.capsiqum.page.PageStackState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
 import kotlinx.collections.immutable.ImmutableList
@@ -88,7 +89,7 @@ class PageStackBoard(val rootRow: Row) {
    class PageStack(
       val id: PageStackId,
       @Contextual
-      val pageStackCache: WritableCache<com.wcaokaze.probosqis.capsiqum.PageStack>
+      val pageStackCache: WritableCache<com.wcaokaze.probosqis.capsiqum.page.PageStack>
    ) : LayoutElement()
 
    @Serializable

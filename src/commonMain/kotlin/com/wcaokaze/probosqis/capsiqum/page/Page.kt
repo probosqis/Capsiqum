@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.capsiqum
+package com.wcaokaze.probosqis.capsiqum.page
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
