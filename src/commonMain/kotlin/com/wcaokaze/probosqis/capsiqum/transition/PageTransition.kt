@@ -29,31 +29,43 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.LocalAbsoluteTonalElevation
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
-import com.wcaokaze.probosqis.capsiqum.page.PageContent
-import com.wcaokaze.probosqis.capsiqum.page.PageFooter
+import com.wcaokaze.probosqis.capsiqum.page.Page
+import com.wcaokaze.probosqis.capsiqum.page.PageComposable
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageStackState
+import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
+import com.wcaokaze.probosqis.capsiqum.page.PageSwitcher
+import com.wcaokaze.probosqis.capsiqum.page.PageSwitcherState
+import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.page.pageFooterHeight
 import kotlinx.collections.immutable.persistentMapOf
 
@@ -540,6 +552,66 @@ private fun <S> PageTransition(
    }
 }
 
+private fun <P : Page, S : PageState> extractContentComposable(
+   combined: com.wcaokaze.probosqis.capsiqum.PageComposable<P, S>,
+   pageStackState: State<PageStackState>,
+   windowInsets: State<WindowInsets>
+): PageComposable<P, S> {
+   return PageComposable(
+      combined.pageClass,
+      combined.pageStateClass,
+      composable = { page, pageState ->
+         val contentWindowInsets = if (combined.footerComposable != null) {
+            windowInsets.value
+               .add(WindowInsets(bottom = pageFooterHeight))
+         } else {
+            windowInsets.value
+         }
+
+         combined.contentComposable(
+            page, pageState, pageStackState.value, contentWindowInsets)
+      }
+   )
+}
+
+private fun <P : Page, S : PageState> extractFooterComposable(
+   combined: com.wcaokaze.probosqis.capsiqum.PageComposable<P, S>,
+   pageStackState: State<PageStackState>,
+   windowInsets: State<WindowInsets>
+): PageComposable<P, S>? {
+   val footerComposable = combined.footerComposable ?: return null
+
+   return PageComposable(
+      combined.pageClass,
+      combined.pageStateClass,
+      composable = { page, pageState ->
+         val absoluteElevation = LocalAbsoluteTonalElevation.current
+         val background = MaterialTheme.colorScheme
+            .surfaceColorAtElevation(absoluteElevation + 4.dp)
+
+         val footerWindowInsets = windowInsets.value
+            .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
+
+         Box(
+            modifier = Modifier
+               .transitionElement(PageLayoutIds.footer)
+               .shadow(4.dp)
+               .background(background)
+               .pointerInput(Unit) {}
+               .windowInsetsPadding(footerWindowInsets)
+               .fillMaxWidth()
+               .requiredHeight(pageFooterHeight)
+         ) {
+            CompositionLocalProvider(
+               LocalContentColor provides MaterialTheme.colorScheme.onSurface,
+            ) {
+               footerComposable(page, pageState, pageStackState.value)
+            }
+         }
+      }
+   )
+}
+
 @Composable
 private fun PageTransitionContent(
    savedPageState: SavedPageState,
@@ -559,51 +631,36 @@ private fun PageTransitionContent(
             .background(backgroundColor)
       )
 
-      val page = savedPageState.page
-      val pageComposable = pageComposableSwitcher[page] ?: TODO()
-
-      val pageState = remember(savedPageState.id) {
-         pageStateStore.get(savedPageState)
-      }
-
-      val footerComposable = pageComposable.footerComposable
+      val updatedPageStackState = rememberUpdatedState(pageStackState)
+      val updatedWindowInsets = rememberUpdatedState(windowInsets)
 
       Box(
          modifier = Modifier
             .transitionElement(PageLayoutIds.content)
       ) {
-         val contentWindowInsets = if (footerComposable != null) {
-            windowInsets
-               .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
-               .add(WindowInsets(bottom = pageFooterHeight))
-         } else {
-            windowInsets
-         }
-
-         PageContent(
-            pageComposable.contentComposable,
-            page,
-            pageState,
-            pageStackState,
-            contentWindowInsets
-         )
-      }
-
-      if (footerComposable != null) {
-         Box(
-            Modifier
-               .align(Alignment.BottomCenter)
-               .transitionElement(PageLayoutIds.footer)
-         ) {
-            PageFooter(
-               footerComposable,
-               page,
-               pageState,
-               pageStackState,
-               windowInsets.only(
-                  WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal)
+         val contentSwitcher = remember(pageComposableSwitcher, pageStateStore) {
+            PageSwitcherState(
+               pageComposables = pageComposableSwitcher.allPageComposables.map { combined ->
+                  extractContentComposable(combined, updatedPageStackState, updatedWindowInsets)
+               },
+               pageStateStore
             )
          }
+
+         PageSwitcher(contentSwitcher, savedPageState)
+      }
+
+      Box(Modifier.align(Alignment.BottomCenter)) {
+         val footerSwitcher = remember(pageComposableSwitcher, pageStateStore) {
+            PageSwitcherState(
+               pageComposables = pageComposableSwitcher.allPageComposables.mapNotNull { combined ->
+                  extractFooterComposable(combined, updatedPageStackState, updatedWindowInsets)
+               },
+               pageStateStore
+            )
+         }
+
+         PageSwitcher(footerSwitcher, savedPageState)
       }
    }
 }

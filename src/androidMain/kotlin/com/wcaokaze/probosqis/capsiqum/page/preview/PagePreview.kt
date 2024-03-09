@@ -40,9 +40,11 @@ import com.wcaokaze.probosqis.capsiqum.page.PageFooter
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageStackAppBar
 import com.wcaokaze.probosqis.capsiqum.PageStackBoard
+import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStackRepository
 import com.wcaokaze.probosqis.capsiqum.page.PageStackState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
+import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 
 @Composable

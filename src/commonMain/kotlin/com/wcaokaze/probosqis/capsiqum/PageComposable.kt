@@ -31,7 +31,7 @@ import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toImmutableMap
 import kotlin.reflect.KClass
 
-inline fun <reified P : Page, S : PageState> pageComposable(
+inline fun <reified P : Page, reified S : PageState> pageComposable(
    pageStateFactory: PageStateFactory<P, S>,
    noinline content: @Composable (P, S, PageStackState, WindowInsets) -> Unit,
    noinline header: @Composable (P, S, PageStackState) -> Unit,
@@ -42,6 +42,7 @@ inline fun <reified P : Page, S : PageState> pageComposable(
    pageTransitions: PageTransitionSet.Builder.() -> Unit
 ) = PageComposable(
    P::class,
+   S::class,
    pageStateFactory,
    content,
    header,
@@ -53,6 +54,7 @@ inline fun <reified P : Page, S : PageState> pageComposable(
 @Stable
 data class PageComposable<P : Page, S : PageState>(
    val pageClass: KClass<P>,
+   val pageStateClass: KClass<S>,
    val pageStateFactory: PageStateFactory<P, S>,
    val contentComposable: @Composable (P, S, PageStackState, WindowInsets) -> Unit,
    val headerComposable: @Composable (P, S, PageStackState) -> Unit,

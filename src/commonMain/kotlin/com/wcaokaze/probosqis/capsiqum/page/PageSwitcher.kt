@@ -149,13 +149,17 @@ class PageSwitcherState
  * ```
  */
 @Composable
-fun PageSwitcher(state: PageSwitcherState, savedPageState: SavedPageState) {
+fun PageSwitcher(
+   state: PageSwitcherState,
+   savedPageState: SavedPageState,
+   fallback: @Composable (Page, PageState) -> Unit = { _, _ -> }
+) {
    val page = savedPageState.page
    val pageState = remember(savedPageState.id) {
       state.pageStateStore.get(savedPageState)
    }
-   val c = state.getComposableFor(page) ?: TODO()
-   Page(c.composable, page, pageState)
+   val composable = state.getComposableFor(page)?.composable ?: fallback
+   Page(composable, page, pageState)
 }
 
 @Composable
