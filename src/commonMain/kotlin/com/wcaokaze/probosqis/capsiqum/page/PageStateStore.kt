@@ -34,10 +34,10 @@ class PageStateStore(
             }
          }
 
-   private val pageState = mutableMapOf<PageStack.PageId, PageState>()
+   private val pageState = mutableMapOf<PageId, PageState>()
 
    @Stable
-   fun get(savedPageState: PageStack.SavedPageState): PageState {
+   fun get(savedPageState: SavedPageState): PageState {
       return pageState.getOrPut(savedPageState.id) {
          val page = savedPageState.page
          val factory = getStateFactory(page) ?: throw IllegalArgumentException(

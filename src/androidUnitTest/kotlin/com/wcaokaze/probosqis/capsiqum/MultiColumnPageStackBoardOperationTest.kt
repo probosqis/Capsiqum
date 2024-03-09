@@ -509,8 +509,8 @@ class MultiColumnPageStackBoardOperationTest : MultiColumnPageStackBoardComposeT
                            val newPage = TestPage(page.i + 100)
                            val newPageStack = PageStack(
                               PageStack.Id(pageStackState.pageStack.id.value + 100L),
-                              PageStack.SavedPageState(
-                                 PageStack.PageId(newPage.i.toLong()),
+                              SavedPageState(
+                                 PageId(newPage.i.toLong()),
                                  newPage
                               )
                            )

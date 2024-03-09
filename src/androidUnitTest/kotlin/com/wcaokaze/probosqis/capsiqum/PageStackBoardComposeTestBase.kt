@@ -109,8 +109,8 @@ abstract class PageStackBoardComposeTestBase {
                      val newPage = TestPage(page.i + 100)
                      val newPageStack = PageStack(
                         PageStack.Id(pageStackState.pageStack.id.value + 100L),
-                        PageStack.SavedPageState(
-                           PageStack.PageId(newPage.i.toLong()),
+                        SavedPageState(
+                           PageId(newPage.i.toLong()),
                            newPage
                         )
                      )
@@ -163,8 +163,8 @@ abstract class PageStackBoardComposeTestBase {
    protected fun createPageStack(id: Int, page: Page): PageStackBoard.PageStack {
       val pageStack = PageStack(
          PageStack.Id(id.toLong()),
-         PageStack.SavedPageState(
-            PageStack.PageId(id.toLong()),
+         SavedPageState(
+            PageId(id.toLong()),
             page
          )
       )

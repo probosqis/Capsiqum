@@ -113,7 +113,7 @@ class PageSwitcherState
 }
 
 /**
- * [PageStack.SavedPageState]から[PageState]を復元し、対応する[]PageComposable]を
+ * [SavedPageState]から[PageState]を復元し、対応する[]PageComposable]を
  * コンポーズする。
  *
  * ```kotlin
@@ -149,7 +149,7 @@ class PageSwitcherState
  * ```
  */
 @Composable
-fun PageSwitcher(state: PageSwitcherState, savedPageState: PageStack.SavedPageState) {
+fun PageSwitcher(state: PageSwitcherState, savedPageState: SavedPageState) {
    val page = savedPageState.page
    val pageState = remember(savedPageState.id) {
       state.pageStateStore.get(savedPageState)

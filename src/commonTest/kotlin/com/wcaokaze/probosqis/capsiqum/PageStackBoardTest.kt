@@ -17,7 +17,9 @@
 package com.wcaokaze.probosqis.capsiqum
 
 import com.wcaokaze.probosqis.capsiqum.page.Page
+import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.Serializable
@@ -39,8 +41,8 @@ class PageStackBoardTest {
       val page = PageImpl(i)
       val pageStack = PageStack(
          PageStack.Id(i.toLong()),
-         PageStack.SavedPageState(
-            PageStack.PageId(i.toLong()),
+         SavedPageState(
+            PageId(i.toLong()),
             page
          )
       )
@@ -638,8 +640,8 @@ class PageStackBoardTest {
    private fun PageStack(id: Long): PageStackBoard.PageStack {
       val pageStack = PageStack(
          PageStack.Id(id),
-         PageStack.SavedPageState(
-            PageStack.PageId(id),
+         SavedPageState(
+            PageId(id),
             PageImpl(0)
          )
       )

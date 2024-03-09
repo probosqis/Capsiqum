@@ -54,6 +54,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.datetime.Clock
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -66,6 +67,18 @@ import kotlin.time.Duration.Companion.seconds
 
 @Serializable
 abstract class Page
+
+fun PageId(clock: Clock = Clock.System) = PageId(
+   clock.now().toEpochMilliseconds()
+)
+
+/**
+ * その名の通り[Page]のIDだが、[PageStack]に挿入されるときに[SavedPageState]が
+ * 生成されるのと同時にIDが発行されるため、[Page]自身はIDを知らない
+ */
+@Serializable
+@JvmInline
+value class PageId(val value: Long)
 
 internal expect class JsonElementSaver<T>(saver: Saver<T, *>) : Saver<T, JsonElement>
 

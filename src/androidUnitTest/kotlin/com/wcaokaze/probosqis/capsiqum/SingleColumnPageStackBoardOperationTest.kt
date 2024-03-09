@@ -24,8 +24,10 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Density
+import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageStackRepository
+import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.junit.Rule
@@ -305,8 +307,8 @@ class SingleColumnPageStackBoardOperationTest : SingleColumnPageStackBoardCompos
                            val newPage = TestPage(page.i + 100)
                            val newPageStack = PageStack(
                               PageStack.Id(pageStackState.pageStack.id.value + 100L),
-                              PageStack.SavedPageState(
-                                 PageStack.PageId(newPage.i.toLong()),
+                              SavedPageState(
+                                 PageId(newPage.i.toLong()),
                                  newPage
                               )
                            )

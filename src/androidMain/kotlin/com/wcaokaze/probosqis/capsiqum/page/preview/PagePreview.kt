@@ -52,7 +52,7 @@ fun <P : Page> PagePreview(
    windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
 ) {
    val savedPageState = remember {
-      PageStack.SavedPageState(PageStack.PageId(0L), page)
+      SavedPageState(PageId(0L), page)
    }
 
    val pageStackCache = remember {

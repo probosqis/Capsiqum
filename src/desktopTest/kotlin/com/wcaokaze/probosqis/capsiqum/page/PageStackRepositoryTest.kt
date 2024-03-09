@@ -90,14 +90,14 @@ class PageStackRepositoryTest {
       val stringPage = StringPage("wcaokaze")
       var pageStack = PageStack(
          PageStack.Id(0L),
-         PageStack.SavedPageState(
-            PageStack.PageId(42L),
+         SavedPageState(
+            PageId(42L),
             intPage
          )
       )
       pageStack = pageStack.added(
-         PageStack.SavedPageState(
-            PageStack.PageId(43L),
+         SavedPageState(
+            PageId(43L),
             stringPage
          )
       )
@@ -108,7 +108,7 @@ class PageStackRepositoryTest {
 
       val pageId1 = loadedCache.value.head.id
       val page1 = loadedCache.value.head.page
-      assertEquals(PageStack.PageId(43L), pageId1)
+      assertEquals(PageId(43L), pageId1)
       assertIs<StringPage>(page1)
       assertEquals(stringPage.s, page1.s)
 
@@ -116,7 +116,7 @@ class PageStackRepositoryTest {
       assertNotNull(tail)
       val pageId2 = tail.head.id
       val page2 = tail.head.page
-      assertEquals(PageStack.PageId(42L), pageId2)
+      assertEquals(PageId(42L), pageId2)
       assertIs<IntPage>(page2)
       assertEquals(intPage.i, page2.i)
 
@@ -128,16 +128,16 @@ class PageStackRepositoryTest {
    fun identifyFiles() {
       val pageStack1 = PageStack(
          PageStack.Id(1L),
-         PageStack.SavedPageState(
-            PageStack.PageId(42L),
+         SavedPageState(
+            PageId(42L),
             IntPage(42)
          )
       )
 
       val pageStack2 = PageStack(
          PageStack.Id(2L),
-         PageStack.SavedPageState(
-            PageStack.PageId(43L),
+         SavedPageState(
+            PageId(43L),
             IntPage(43)
          )
       )

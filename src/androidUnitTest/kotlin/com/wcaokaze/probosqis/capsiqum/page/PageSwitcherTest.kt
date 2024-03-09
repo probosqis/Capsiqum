@@ -131,7 +131,7 @@ class PageSwitcherTest {
       lateinit var switcherState: PageSwitcherState
 
       var savedPageState by mutableStateOf(
-         PageStack.SavedPageState(PageStack.PageId(0L), PageA()))
+         SavedPageState(PageId(0L), PageA()))
 
       rule.setContent {
          val coroutineScope = rememberCoroutineScope()
@@ -170,7 +170,7 @@ class PageSwitcherTest {
          assertNull(pageBArgument)
       }
 
-      savedPageState = PageStack.SavedPageState(PageStack.PageId(1L), PageB())
+      savedPageState = SavedPageState(PageId(1L), PageB())
 
       rule.runOnIdle {
          assertNull(pageAArgument)

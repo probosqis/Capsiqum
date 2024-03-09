@@ -17,8 +17,10 @@
 package com.wcaokaze.probosqis.capsiqum
 
 import com.wcaokaze.probosqis.capsiqum.page.Page
+import com.wcaokaze.probosqis.capsiqum.page.PageId
 import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.page.PageStackRepository
+import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.capsiqum.page.createPageStackBoardRepository
 import com.wcaokaze.probosqis.capsiqum.page.createPageStackRepository
 import com.wcaokaze.probosqis.capsiqum.page.deleteRepositories
@@ -71,14 +73,14 @@ class PageStackBoardRepositoryTest {
       val stringPage = StringPage("wcaokaze")
       var pageStack = PageStack(
          PageStack.Id(0L),
-         PageStack.SavedPageState(
-            PageStack.PageId(0L),
+         SavedPageState(
+            PageId(0L),
             intPage
          )
       )
       pageStack = pageStack.added(
-         PageStack.SavedPageState(
-            PageStack.PageId(1L),
+         SavedPageState(
+            PageId(1L),
             stringPage
          )
       )
@@ -105,7 +107,7 @@ class PageStackBoardRepositoryTest {
 
       val pageId1 = loadedPageStack.head.id
       val page1 = loadedPageStack.head.page
-      assertEquals(PageStack.PageId(1L), pageId1)
+      assertEquals(PageId(1L), pageId1)
       assertIs<StringPage>(page1)
       assertEquals(stringPage.s, page1.s)
 
@@ -113,7 +115,7 @@ class PageStackBoardRepositoryTest {
       assertNotNull(tail)
       val pageId2 = tail.head.id
       val page2 = tail.head.page
-      assertEquals(PageStack.PageId(0L), pageId2)
+      assertEquals(PageId(0L), pageId2)
       assertIs<IntPage>(page2)
       assertEquals(intPage.i, page2.i)
 

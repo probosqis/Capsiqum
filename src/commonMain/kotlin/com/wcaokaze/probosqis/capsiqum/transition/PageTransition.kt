@@ -542,7 +542,7 @@ private fun <S> PageTransition(
 
 @Composable
 private fun PageTransitionContent(
-   savedPageState: PageStack.SavedPageState,
+   savedPageState: SavedPageState,
    pageStackState: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,
    pageStateStore: PageStateStore,

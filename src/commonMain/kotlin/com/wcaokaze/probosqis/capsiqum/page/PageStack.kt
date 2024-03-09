@@ -42,7 +42,7 @@ import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 
 fun PageStack(
-   savedPageState: PageStack.SavedPageState,
+   savedPageState: SavedPageState,
    clock: Clock = Clock.System
 ) = PageStack(
    PageStack.Id(clock.now()),
@@ -66,23 +66,6 @@ class PageStack private constructor(
    @JvmInline
    value class Id(val value: Long) {
       constructor(createdTime: Instant) : this(createdTime.toEpochMilliseconds())
-   }
-
-   @Stable
-   @Serializable
-   class SavedPageState(
-      val id: PageId,
-      val page: Page
-   )
-
-   @Serializable
-   @JvmInline
-   value class PageId(val value: Long) {
-      companion object {
-         operator fun invoke(clock: Clock = Clock.System) = PageId(
-            clock.now().toEpochMilliseconds()
-         )
-      }
    }
 
    constructor(id: Id, savedPageState: SavedPageState) : this(
@@ -124,8 +107,8 @@ class PageStackState internal constructor(
    fun startPage(page: Page) {
       pageStackCache.update {
          it.added(
-            PageStack.SavedPageState(
-               PageStack.PageId(),
+            SavedPageState(
+               PageId(),
                page
             )
          )

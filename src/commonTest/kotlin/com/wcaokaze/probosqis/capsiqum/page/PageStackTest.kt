@@ -38,33 +38,33 @@ class PageStackTest {
    fun add_pop() {
       var pageStack = PageStack(
          PageStack.Id(0L),
-         PageStack.SavedPageState(
-            PageStack.PageId(0L),
+         SavedPageState(
+            PageId(0L),
             IntPage(0)
          )
       )
       pageStack = pageStack.added(
-         PageStack.SavedPageState(
-            PageStack.PageId(1L),
+         SavedPageState(
+            PageId(1L),
             StringPage("1")
          )
       )
       pageStack = pageStack.added(
-         PageStack.SavedPageState(
-            PageStack.PageId(2L),
+         SavedPageState(
+            PageId(2L),
             StringPage("2")
          )
       )
       pageStack = pageStack.added(
-         PageStack.SavedPageState(
-            PageStack.PageId(3L),
+         SavedPageState(
+            PageId(3L),
             IntPage(3)
          )
       )
 
       var headId = pageStack.head.id
       var headPage = pageStack.head.page
-      assertEquals(PageStack.PageId(3L), headId)
+      assertEquals(PageId(3L), headId)
       assertIs<IntPage>(headPage)
       assertEquals(3, headPage.i)
 
@@ -72,21 +72,21 @@ class PageStackTest {
       assertNotNull(tail)
       headId = tail.head.id
       headPage = tail.head.page
-      assertEquals(PageStack.PageId(2L), headId)
+      assertEquals(PageId(2L), headId)
       assertIs<StringPage>(headPage)
       assertEquals("2", headPage.s)
 
       tail = tail.tailOrNull() ?: fail()
       headId = tail.head.id
       headPage = tail.head.page
-      assertEquals(PageStack.PageId(1L), headId)
+      assertEquals(PageId(1L), headId)
       assertIs<StringPage>(headPage)
       assertEquals("1", headPage.s)
 
       tail = tail.tailOrNull() ?: fail()
       headId = tail.head.id
       headPage = tail.head.page
-      assertEquals(PageStack.PageId(0L), headId)
+      assertEquals(PageId(0L), headId)
       assertIs<IntPage>(headPage)
       assertEquals(0, headPage.i)
 
@@ -97,14 +97,14 @@ class PageStackTest {
    fun immutability() {
       var pageStack = PageStack(
          PageStack.Id(0L),
-         PageStack.SavedPageState(
-            PageStack.PageId(0L),
+         SavedPageState(
+            PageId(0L),
             IntPage(0)
          )
       )
       pageStack = pageStack.added(
-         PageStack.SavedPageState(
-            PageStack.PageId(1L),
+         SavedPageState(
+            PageId(1L),
             StringPage("1")
          )
       )

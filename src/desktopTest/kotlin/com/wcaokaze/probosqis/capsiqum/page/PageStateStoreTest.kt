@@ -41,16 +41,16 @@ class PageStateStoreTest {
       )
 
       val pageAState = pageStateStore.get(
-         PageStack.SavedPageState(
-            PageStack.PageId(0L), PageA()
+         SavedPageState(
+            PageId(0L), PageA()
          )
       )
 
       assertIs<PageAState>(pageAState)
 
       val pageBState = pageStateStore.get(
-         PageStack.SavedPageState(
-            PageStack.PageId(1L), PageB()
+         SavedPageState(
+            PageId(1L), PageB()
          )
       )
 
@@ -58,8 +58,8 @@ class PageStateStoreTest {
 
       assertFails {
          pageStateStore.get(
-            PageStack.SavedPageState(
-               PageStack.PageId(2L), PageC()
+            SavedPageState(
+               PageId(2L), PageC()
             )
          )
       }
@@ -78,22 +78,22 @@ class PageStateStoreTest {
       val pageA = PageA()
 
       val pageState1 = pageStateStore.get(
-         PageStack.SavedPageState(
-            PageStack.PageId(0L), pageA
+         SavedPageState(
+            PageId(0L), pageA
          )
       )
 
       val pageState2 = pageStateStore.get(
-         PageStack.SavedPageState(
-            PageStack.PageId(0L), pageA
+         SavedPageState(
+            PageId(0L), pageA
          )
       )
 
       assertSame(pageState1, pageState2)
 
       val pageState3 = pageStateStore.get(
-         PageStack.SavedPageState(
-            PageStack.PageId(1L), pageA
+         SavedPageState(
+            PageId(1L), pageA
          )
       )
 
