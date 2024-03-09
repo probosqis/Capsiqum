@@ -19,13 +19,18 @@ package com.wcaokaze.probosqis.capsiqum.page
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
+import kotlinx.coroutines.CoroutineScope
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
@@ -38,14 +43,26 @@ class PageSwitcherTest {
    private class PageA : Page()
    private class PageB : Page()
    private class PageC : Page()
+   private class PageAState : PageState()
+   private class PageBState : PageState()
+// private class PageCState : PageState()
 
    @Test
    fun state_getChild() {
       val switcherState = PageSwitcherState(
          listOf(
-            pageComposable<PageA> {},
-            pageComposable<PageB> {},
-         )
+            PageComposable<PageA, PageAState>(
+               stateFactory = { _, _ -> PageAState() },
+               composable = { _, _ -> }
+            ),
+            PageComposable<PageB, PageBState>(
+               stateFactory = { _, _ -> PageBState() },
+               composable = { _, _ -> }
+            ),
+         ),
+         object : CoroutineScope {
+            override val coroutineContext = EmptyCoroutineContext
+         }
       )
 
       val pageA = PageA()
@@ -64,43 +81,100 @@ class PageSwitcherTest {
    }
 
    @Test
+   fun illegalArgument_noPageStateFactory() {
+      val pageStateStore = PageStateStore(
+         listOf(
+            pageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+         ),
+         object : CoroutineScope {
+            override val coroutineContext = EmptyCoroutineContext
+         }
+      )
+
+      assertFails { 
+         PageSwitcherState(
+            listOf(
+               PageComposable<PageA, PageAState> { _, _ -> },
+               PageComposable<PageB, PageBState> { _, _ -> },
+            ),
+            pageStateStore
+         )
+      }
+   }
+
+   @Test
+   fun illegalArgument_pageStateTypeUnmatched() {
+      val pageStateStore = PageStateStore(
+         listOf(
+            pageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+         ),
+         object : CoroutineScope {
+            override val coroutineContext = EmptyCoroutineContext
+         }
+      )
+
+      assertFails {
+         PageSwitcherState(
+            listOf(
+               PageComposable<PageA, PageBState> { _, _ -> },
+            ),
+            pageStateStore
+         )
+      }
+   }
+
+   @Test
    fun pageComposable_argument() {
       var pageAArgument: PageA? = null
       var pageBArgument: PageB? = null
 
-      val switcherState = PageSwitcherState(
-         listOf(
-            pageComposable<PageA> { page ->
-               DisposableEffect(Unit) {
-                  pageAArgument = page
-                  onDispose { pageAArgument = null }
-               }
-            },
-            pageComposable<PageB> { page ->
-               DisposableEffect(Unit) {
-                  pageBArgument = page
-                  onDispose { pageBArgument = null }
-               }
-            },
-         )
-      )
+      lateinit var switcherState: PageSwitcherState
 
-      var page: Page by mutableStateOf(PageA())
+      var savedPageState by mutableStateOf(
+         PageStack.SavedPageState(PageStack.PageId(0L), PageA()))
 
       rule.setContent {
-         PageSwitcher(switcherState, page)
+         val coroutineScope = rememberCoroutineScope()
+
+         switcherState = remember {
+            PageSwitcherState(
+               listOf(
+                  PageComposable<PageA, PageAState>(
+                     stateFactory = { _, _ -> PageAState() },
+                     composable = { page, _ ->
+                        DisposableEffect(Unit) {
+                           pageAArgument = page
+                           onDispose { pageAArgument = null }
+                        }
+                     }
+                  ),
+                  PageComposable<PageB, PageBState>(
+                     stateFactory = { _, _ -> PageBState() },
+                     composable = { page, _ ->
+                        DisposableEffect(Unit) {
+                           pageBArgument = page
+                           onDispose { pageBArgument = null }
+                        }
+                     }
+                  ),
+               ),
+               coroutineScope
+            )
+         }
+
+         PageSwitcher(switcherState, savedPageState)
       }
 
       rule.runOnIdle {
-         assertSame(page, assertNotNull(pageAArgument))
+         assertSame(savedPageState.page, assertNotNull(pageAArgument))
          assertNull(pageBArgument)
       }
 
-      page = PageB()
+      savedPageState = PageStack.SavedPageState(PageStack.PageId(1L), PageB())
 
       rule.runOnIdle {
          assertNull(pageAArgument)
-         assertSame(page, assertNotNull(pageBArgument))
+         assertSame(savedPageState.page, assertNotNull(pageBArgument))
       }
    }
 }

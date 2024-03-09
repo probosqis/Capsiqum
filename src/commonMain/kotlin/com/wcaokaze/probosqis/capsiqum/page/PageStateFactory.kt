@@ -22,11 +22,12 @@ import kotlin.reflect.KClass
 @Stable
 data class PageStateFactory<P : Page, S : PageState>(
    val pageClass: KClass<P>,
+   val pageStateClass: KClass<S>,
    val pageStateFactory: (P, PageState.StateSaver) -> S
 )
 
 inline fun <reified P : Page, reified S : PageState> pageStateFactory(
    noinline factory: (P, PageState.StateSaver) -> S
 ): PageStateFactory<P, S> {
-   return PageStateFactory(P::class, factory)
+   return PageStateFactory(P::class, S::class, factory)
 }

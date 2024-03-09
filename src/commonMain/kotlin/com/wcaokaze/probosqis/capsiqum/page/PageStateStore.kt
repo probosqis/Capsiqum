@@ -20,17 +20,19 @@ import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.JsonObject
+import kotlin.reflect.KClass
 
 @Stable
 class PageStateStore(
    allPageStateFactories: List<PageStateFactory<*, *>>,
    private val appCoroutineScope: CoroutineScope
 ) {
-   private val factories = buildMap {
-      for (f in allPageStateFactories) {
-         put(f.pageClass, f)
-      }
-   }
+   internal val pageStateFactories: Map<KClass<out Page>, PageStateFactory<*, *>>
+         = buildMap {
+            for (f in allPageStateFactories) {
+               put(f.pageClass, f)
+            }
+         }
 
    private val pageState = mutableMapOf<PageStack.PageId, PageState>()
 
@@ -53,6 +55,6 @@ class PageStateStore(
 
    private fun <P : Page> getStateFactory(page: P): PageStateFactory<P, *>? {
       @Suppress("UNCHECKED_CAST")
-      return factories[page::class] as PageStateFactory<P, *>?
+      return pageStateFactories[page::class] as PageStateFactory<P, *>?
    }
 }
