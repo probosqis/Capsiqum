@@ -39,7 +39,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStackRepository
 import com.wcaokaze.probosqis.capsiqum.page.PageStackState
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
-import com.wcaokaze.probosqis.capsiqum.page.pageStateFactory
+import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import io.mockk.every
 import io.mockk.mockk
@@ -70,7 +70,7 @@ abstract class PageStackBoardComposeTestBase {
 
       return remember {
          val testPageComposable = pageComposable(
-            pageStateFactory(pageStateFactory),
+            PageStateFactory(pageStateFactory),
             content = { page, pageState, pageStackState, _ ->
                pageComposable(page, pageState, pageStackState)
             },

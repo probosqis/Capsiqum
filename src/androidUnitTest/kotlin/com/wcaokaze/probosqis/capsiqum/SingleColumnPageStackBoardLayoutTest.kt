@@ -35,7 +35,7 @@ import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.page.PageStackRepository
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
-import com.wcaokaze.probosqis.capsiqum.page.pageStateFactory
+import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import io.mockk.every
 import io.mockk.mockk
@@ -457,7 +457,7 @@ class SingleColumnPageStackBoardLayoutTest : SingleColumnPageStackBoardComposeTe
       var pageBFooterComposed = false
 
       val pageAComposable = pageComposable<PageA, PageAState>(
-         pageStateFactory { _, _ -> PageAState() },
+         PageStateFactory { _, _ -> PageAState() },
          content = { _, _, _, _ ->
             DisposableEffect(Unit) {
                pageAContentComposed = true
@@ -494,7 +494,7 @@ class SingleColumnPageStackBoardLayoutTest : SingleColumnPageStackBoardComposeTe
       )
 
       val pageBComposable = pageComposable<PageB, PageBState>(
-         pageStateFactory { _, _ -> PageBState() },
+         PageStateFactory { _, _ -> PageBState() },
          content = { _, _, _, _ ->
             DisposableEffect(Unit) {
                pageBContentComposed = true

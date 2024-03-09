@@ -26,7 +26,7 @@ data class PageStateFactory<P : Page, S : PageState>(
    val pageStateFactory: (P, PageState.StateSaver) -> S
 )
 
-inline fun <reified P : Page, reified S : PageState> pageStateFactory(
+inline fun <reified P : Page, reified S : PageState> PageStateFactory(
    noinline factory: (P, PageState.StateSaver) -> S
 ): PageStateFactory<P, S> {
    return PageStateFactory(P::class, S::class, factory)

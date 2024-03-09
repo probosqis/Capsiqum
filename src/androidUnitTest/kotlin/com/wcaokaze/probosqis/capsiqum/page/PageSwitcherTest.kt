@@ -84,7 +84,7 @@ class PageSwitcherTest {
    fun illegalArgument_noPageStateFactory() {
       val pageStateStore = PageStateStore(
          listOf(
-            pageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+            PageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
          ),
          object : CoroutineScope {
             override val coroutineContext = EmptyCoroutineContext
@@ -106,7 +106,7 @@ class PageSwitcherTest {
    fun illegalArgument_pageStateTypeUnmatched() {
       val pageStateStore = PageStateStore(
          listOf(
-            pageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+            PageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
          ),
          object : CoroutineScope {
             override val coroutineContext = EmptyCoroutineContext
