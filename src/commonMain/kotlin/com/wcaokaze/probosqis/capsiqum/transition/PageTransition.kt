@@ -460,26 +460,6 @@ class PageTransitionStateImpl(
    }
 }
 
-@Composable
-fun PageTransition(
-   pageStackState: PageStackState,
-   pageComposableSwitcher: PageComposableSwitcher,
-   pageStateStore: PageStateStore,
-   windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
-) {
-   val transitionState = remember(pageComposableSwitcher) {
-      PageTransitionStateImpl(pageComposableSwitcher)
-   }
-
-   PageTransition(
-      transitionState,
-      pageStackState.pageStack
-   ) { pageStack ->
-      PageTransitionContent(pageStack.head, pageStackState,
-         pageComposableSwitcher, pageStateStore, windowInsets)
-   }
-}
-
 @NonRestartableComposable
 @Composable
 fun <S> PageTransition(
@@ -492,27 +472,6 @@ fun <S> PageTransition(
       transition = transitionState.updateTransition(targetState),
       content
    )
-}
-
-@Composable
-fun PageTransitionPreview(
-   pageStackState: PageStackState,
-   pageComposableSwitcher: PageComposableSwitcher,
-   pageStateStore: PageStateStore,
-   baseTransition: Transition<PageStack>,
-   windowInsets: WindowInsets = WindowInsets(0, 0, 0, 0)
-) {
-   val transitionState = remember(pageComposableSwitcher) {
-      PageTransitionStateImpl(pageComposableSwitcher)
-   }
-
-   PageTransitionPreview(
-      transitionState,
-      baseTransition,
-   ) { pageStack ->
-      PageTransitionContent(pageStack.head, pageStackState,
-         pageComposableSwitcher, pageStateStore, windowInsets)
-   }
 }
 
 @NonRestartableComposable
@@ -613,7 +572,7 @@ private fun <P : Page, S : PageState> extractFooterComposable(
 }
 
 @Composable
-private fun PageTransitionContent(
+fun PageContentFooter(
    savedPageState: SavedPageState,
    pageStackState: PageStackState,
    pageComposableSwitcher: PageComposableSwitcher,

@@ -19,6 +19,7 @@ package com.wcaokaze.probosqis.capsiqum.page.preview
 import androidx.compose.animation.core.ExperimentalTransitionApi
 import androidx.compose.animation.core.createChildTransition
 import androidx.compose.animation.core.updateTransition
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -33,7 +34,9 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStackState
 import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
 import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
+import com.wcaokaze.probosqis.capsiqum.transition.PageContentFooter
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransitionPreview
+import com.wcaokaze.probosqis.capsiqum.transition.PageTransitionStateImpl
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 
 enum class PageTransitionPreviewValue {
@@ -145,10 +148,16 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
       }
    }
 
+   val transitionState = remember(pageComposableSwitcher) {
+      PageTransitionStateImpl(pageComposableSwitcher)
+   }
+
    PageTransitionPreview(
-      pageStackState,
-      pageComposableSwitcher,
-      pageStateStore,
+      transitionState,
       pageStateTransition
-   )
+   ) { pageStack ->
+      PageContentFooter(pageStack.head, pageStackState,
+         pageComposableSwitcher, pageStateStore, WindowInsets(0, 0, 0, 0)
+      )
+   }
 }
