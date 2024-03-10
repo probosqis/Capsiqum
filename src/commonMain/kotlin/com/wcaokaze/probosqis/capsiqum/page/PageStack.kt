@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.capsiqum.page
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
@@ -28,7 +29,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
 import com.wcaokaze.probosqis.capsiqum.PageStackBoard
@@ -155,6 +158,23 @@ class PageStackState internal constructor(
 }
 
 @ExperimentalMaterial3Api
+private fun <P : Page, S : PageState> extractPageComposable(
+   combined: com.wcaokaze.probosqis.capsiqum.PageComposable<P, S>,
+   pageStackState: State<PageStackState>,
+   colors: State<TopAppBarColors>,
+   windowInsets: State<WindowInsets>
+): PageComposable<P, S> {
+   return PageComposable(
+      combined.pageClass,
+      combined.pageStateClass,
+      composable = { page, pageState ->
+         PageStackAppBar(combined, page, pageState,
+            pageStackState.value, colors.value, windowInsets.value)
+      }
+   )
+}
+
+@ExperimentalMaterial3Api
 @Composable
 internal fun PageStackAppBar(
    pageStackState: PageStackState,
@@ -164,17 +184,40 @@ internal fun PageStackAppBar(
    colors: TopAppBarColors,
    modifier: Modifier = Modifier
 ) {
-   val savedPageState = pageStackState.pageStack.head
-   val page = savedPageState.page
-   val pageComposable = pageComposableSwitcher[page] ?: TODO()
-   val pageState = remember(savedPageState.id) {
-      pageStateStore.get(savedPageState)
+   val updatedPageStackState = rememberUpdatedState(pageStackState)
+   val updatedWindowInsets = rememberUpdatedState(windowInsets)
+   val updatedColors = rememberUpdatedState(colors)
+
+   val switcherState = remember(pageComposableSwitcher, pageStateStore) {
+      PageSwitcherState(
+         pageComposableSwitcher.allPageComposables.map {
+            extractPageComposable(
+               it, updatedPageStackState, updatedColors, updatedWindowInsets)
+         },
+         pageStateStore
+      )
    }
 
+   Box(modifier) {
+      val savedPageState = pageStackState.pageStack.head
+      PageSwitcher(switcherState, savedPageState)
+   }
+}
+
+@ExperimentalMaterial3Api
+@Composable
+private fun <P : Page, S : PageState> PageStackAppBar(
+   combined: com.wcaokaze.probosqis.capsiqum.PageComposable<P, S>,
+   page: P,
+   pageState: S,
+   pageStackState: PageStackState,
+   colors: TopAppBarColors,
+   windowInsets: WindowInsets,
+   modifier: Modifier = Modifier
+) {
    TopAppBar(
       title = {
-         PageHeader(
-            pageComposable.headerComposable,
+         combined.headerComposable(
             page,
             pageState,
             pageStackState
@@ -194,10 +237,9 @@ internal fun PageStackAppBar(
          }
       },
       actions = {
-         val headerActionsComposable = pageComposable.headerActionsComposable
+         val headerActionsComposable = combined.headerActionsComposable
          if (headerActionsComposable != null) {
-            PageHeaderActions(
-               headerActionsComposable,
+            headerActionsComposable(
                page,
                pageState,
                pageStackState
@@ -207,35 +249,5 @@ internal fun PageStackAppBar(
       windowInsets = windowInsets,
       colors = colors,
       modifier = modifier
-   )
-}
-
-@Composable
-private inline fun <P : Page, S : PageState> PageHeader(
-   headerComposable: @Composable (P, S, PageStackState) -> Unit,
-   page: P,
-   pageState: PageState,
-   pageStackState: PageStackState
-) {
-   @Suppress("UNCHECKED_CAST")
-   headerComposable(
-      page,
-      pageState as S,
-      pageStackState
-   )
-}
-
-@Composable
-private inline fun <P : Page, S : PageState> RowScope.PageHeaderActions(
-   actionsComposable: @Composable RowScope.(P, S, PageStackState) -> Unit,
-   page: P,
-   pageState: PageState,
-   pageStackState: PageStackState
-) {
-   @Suppress("UNCHECKED_CAST")
-   actionsComposable(
-      page,
-      pageState as S,
-      pageStackState
    )
 }
