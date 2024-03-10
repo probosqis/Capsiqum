@@ -21,8 +21,6 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.layout.LayoutCoordinates
 import com.wcaokaze.probosqis.capsiqum.PageComposable
-import com.wcaokaze.probosqis.capsiqum.PageStack
-import com.wcaokaze.probosqis.capsiqum.PageStackBoard
 
 /**
  * [LayoutId][PageLayoutInfo.LayoutId]をまとめたもの。

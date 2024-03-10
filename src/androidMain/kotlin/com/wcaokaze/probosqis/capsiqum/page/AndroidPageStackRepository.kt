@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.capsiqum
+package com.wcaokaze.probosqis.capsiqum.page
 
+import android.content.Context
 import com.wcaokaze.probosqis.panoptiqon.TemporaryCacheApi
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.loadCache
@@ -23,11 +24,11 @@ import com.wcaokaze.probosqis.panoptiqon.saveCache
 import java.io.File
 import java.io.IOException
 
-class DesktopPageStackRepository(
-   allPageSerializers: List<PageStackRepository.PageSerializer<*>>,
-   directory: File
+class AndroidPageStackRepository(
+   context: Context,
+   allPageSerializers: List<PageStackRepository.PageSerializer<*>>
 ) : AbstractPageStackRepository(allPageSerializers) {
-   private val dir = File(directory, "L9h1Qx3xvfo0M0kX")
+   private val dir = File(context.filesDir, "L9h1Qx3xvfo0M0kX")
       .also { dir ->
          if (dir.exists()) {
             require(dir.isDirectory)

@@ -54,7 +54,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.PageStackAppBar
+import com.wcaokaze.probosqis.capsiqum.page.PageStackRepository
+import com.wcaokaze.probosqis.capsiqum.page.PageStackState
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
+import com.wcaokaze.probosqis.capsiqum.transition.PageContentFooter
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransition
+import com.wcaokaze.probosqis.capsiqum.transition.PageTransitionStateImpl
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.coroutines.CoroutineScope
 import org.jetbrains.annotations.TestOnly
@@ -407,12 +414,17 @@ private fun PageStack(
                }
          )
 
+         val transitionState = remember(pageComposableSwitcher) {
+            PageTransitionStateImpl(pageComposableSwitcher)
+         }
+
          PageTransition(
-            state,
-            pageComposableSwitcher,
-            pageStateStore,
-            windowInsets
-         )
+            transitionState,
+            state.pageStack
+         ) { pageStack ->
+            PageContentFooter(pageStack.head, state, pageComposableSwitcher,
+               pageStateStore, windowInsets)
+         }
       }
    }
 }

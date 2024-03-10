@@ -14,22 +14,20 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.capsiqum
+package com.wcaokaze.probosqis.capsiqum.page
 
 import androidx.compose.runtime.Stable
-import com.wcaokaze.probosqis.capsiqum.page.Page
+import kotlin.reflect.KClass
 
 @Stable
-class PageComposableSwitcher(val allPageComposables: List<PageComposable<*, *>>) {
-   private val map = buildMap {
-      for (m in allPageComposables) {
-         put(m.pageClass, m)
-      }
-   }
+data class PageStateFactory<P : Page, S : PageState>(
+   val pageClass: KClass<P>,
+   val pageStateClass: KClass<S>,
+   val pageStateFactory: (P, PageState.StateSaver) -> S
+)
 
-   @Stable
-   internal operator fun <P : Page> get(page: P): PageComposable<P, *>? {
-      @Suppress("UNCHECKED_CAST")
-      return map[page::class] as PageComposable<P, *>?
-   }
+inline fun <reified P : Page, reified S : PageState> PageStateFactory(
+   noinline factory: (P, PageState.StateSaver) -> S
+): PageStateFactory<P, S> {
+   return PageStateFactory(P::class, S::class, factory)
 }

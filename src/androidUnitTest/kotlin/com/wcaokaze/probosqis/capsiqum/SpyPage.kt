@@ -21,6 +21,9 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.wcaokaze.probosqis.capsiqum.page.Page
+import com.wcaokaze.probosqis.capsiqum.page.PageState
+import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 
 internal class SpyPage : Page() {
    var recompositionCount: Int by mutableStateOf(0)
@@ -36,7 +39,7 @@ private fun SpyPage(page: SpyPage) {
 }
 
 internal val spyPageComposable = pageComposable<SpyPage, SpyPageState>(
-   pageStateFactory { _, _ -> SpyPageState() },
+   PageStateFactory { _, _ -> SpyPageState() },
    content = { page, _, _, _ -> SpyPage(page) },
    header = { _, _, _ -> },
    footer = null,

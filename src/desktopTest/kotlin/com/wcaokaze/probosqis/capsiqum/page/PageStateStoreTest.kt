@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.capsiqum
+package com.wcaokaze.probosqis.capsiqum.page
 
 import io.mockk.mockk
 import kotlin.test.Test
@@ -34,23 +34,23 @@ class PageStateStoreTest {
    fun instantiate() {
       val pageStateStore = PageStateStore(
          listOf(
-            pageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
-            pageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
+            PageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+            PageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
          ),
          appCoroutineScope = mockk()
       )
 
       val pageAState = pageStateStore.get(
-         PageStack.SavedPageState(
-            PageStack.PageId(0L), PageA()
+         SavedPageState(
+            PageId(0L), PageA()
          )
       )
 
       assertIs<PageAState>(pageAState)
 
       val pageBState = pageStateStore.get(
-         PageStack.SavedPageState(
-            PageStack.PageId(1L), PageB()
+         SavedPageState(
+            PageId(1L), PageB()
          )
       )
 
@@ -58,8 +58,8 @@ class PageStateStoreTest {
 
       assertFails {
          pageStateStore.get(
-            PageStack.SavedPageState(
-               PageStack.PageId(2L), PageC()
+            SavedPageState(
+               PageId(2L), PageC()
             )
          )
       }
@@ -69,8 +69,8 @@ class PageStateStoreTest {
    fun cache() {
       val pageStateStore = PageStateStore(
          listOf(
-            pageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
-            pageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
+            PageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+            PageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
          ),
          appCoroutineScope = mockk()
       )
@@ -78,22 +78,22 @@ class PageStateStoreTest {
       val pageA = PageA()
 
       val pageState1 = pageStateStore.get(
-         PageStack.SavedPageState(
-            PageStack.PageId(0L), pageA
+         SavedPageState(
+            PageId(0L), pageA
          )
       )
 
       val pageState2 = pageStateStore.get(
-         PageStack.SavedPageState(
-            PageStack.PageId(0L), pageA
+         SavedPageState(
+            PageId(0L), pageA
          )
       )
 
       assertSame(pageState1, pageState2)
 
       val pageState3 = pageStateStore.get(
-         PageStack.SavedPageState(
-            PageStack.PageId(1L), pageA
+         SavedPageState(
+            PageId(1L), pageA
          )
       )
 

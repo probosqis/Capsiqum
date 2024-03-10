@@ -16,6 +16,9 @@
 
 package com.wcaokaze.probosqis.capsiqum
 
+import com.wcaokaze.probosqis.capsiqum.page.Page
+import com.wcaokaze.probosqis.capsiqum.page.PageState
+import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -33,14 +36,14 @@ class PageComposableSwitcherTest {
       val pageComposableSwitcher = PageComposableSwitcher(
          listOf(
             pageComposable<PageA, PageAState>(
-               pageStateFactory { _, _ -> PageAState() },
+               PageStateFactory { _, _ -> PageAState() },
                content = { _, _, _, _ -> },
                header = { _, _, _ -> },
                footer = null,
                pageTransitions = {}
             ),
             pageComposable<PageB, PageBState>(
-               pageStateFactory { _, _ -> PageBState() },
+               PageStateFactory { _, _ -> PageBState() },
                content = { _, _, _, _ -> },
                header = { _, _, _ -> },
                footer = null,

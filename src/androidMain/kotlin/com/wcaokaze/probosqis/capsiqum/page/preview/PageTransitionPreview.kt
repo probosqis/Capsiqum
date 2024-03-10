@@ -14,25 +14,29 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.capsiqum.preview
+package com.wcaokaze.probosqis.capsiqum.page.preview
 
 import androidx.compose.animation.core.ExperimentalTransitionApi
 import androidx.compose.animation.core.createChildTransition
 import androidx.compose.animation.core.updateTransition
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import com.wcaokaze.probosqis.capsiqum.MultiColumnPageStackBoardState
-import com.wcaokaze.probosqis.capsiqum.Page
+import com.wcaokaze.probosqis.capsiqum.page.Page
 import com.wcaokaze.probosqis.capsiqum.PageComposable
 import com.wcaokaze.probosqis.capsiqum.PageComposableSwitcher
-import com.wcaokaze.probosqis.capsiqum.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
 import com.wcaokaze.probosqis.capsiqum.PageStackBoard
-import com.wcaokaze.probosqis.capsiqum.PageStackRepository
-import com.wcaokaze.probosqis.capsiqum.PageStackState
-import com.wcaokaze.probosqis.capsiqum.PageState
-import com.wcaokaze.probosqis.capsiqum.PageStateStore
+import com.wcaokaze.probosqis.capsiqum.page.PageId
+import com.wcaokaze.probosqis.capsiqum.page.PageStackState
+import com.wcaokaze.probosqis.capsiqum.page.PageState
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
+import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
+import com.wcaokaze.probosqis.capsiqum.transition.PageContentFooter
 import com.wcaokaze.probosqis.capsiqum.transition.PageTransitionPreview
+import com.wcaokaze.probosqis.capsiqum.transition.PageTransitionStateImpl
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 
 enum class PageTransitionPreviewValue {
@@ -54,10 +58,10 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
    childPageStateModification:  CS.() -> Unit = {},
 ) {
    val parentSavedPageState = remember {
-      PageStack.SavedPageState(PageStack.PageId(0L), parentPage)
+      SavedPageState(PageId(0L), parentPage)
    }
    val childSavedPageState = remember {
-      PageStack.SavedPageState(PageStack.PageId(1L), childPage)
+      SavedPageState(PageId(1L), childPage)
    }
 
    val parentPageStack = remember { PageStack(PageStack.Id(0L), parentSavedPageState) }
@@ -144,10 +148,16 @@ fun <P : Page, C : Page, PS : PageState, CS : PageState> PageTransitionPreview(
       }
    }
 
+   val transitionState = remember(pageComposableSwitcher) {
+      PageTransitionStateImpl(pageComposableSwitcher)
+   }
+
    PageTransitionPreview(
-      pageStackState,
-      pageComposableSwitcher,
-      pageStateStore,
+      transitionState,
       pageStateTransition
-   )
+   ) { pageStack ->
+      PageContentFooter(pageStack.head, pageStackState,
+         pageComposableSwitcher, pageStateStore, WindowInsets(0, 0, 0, 0)
+      )
+   }
 }

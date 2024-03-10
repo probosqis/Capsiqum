@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.capsiqum.preview
+package com.wcaokaze.probosqis.capsiqum.page.preview
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
-import com.wcaokaze.probosqis.capsiqum.JsonElementSaver
-import com.wcaokaze.probosqis.capsiqum.PageState
+import com.wcaokaze.probosqis.capsiqum.page.JsonElementSaver
+import com.wcaokaze.probosqis.capsiqum.page.PageState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.KSerializer

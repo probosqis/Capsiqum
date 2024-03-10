@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.capsiqum
+package com.wcaokaze.probosqis.capsiqum.page
 
 import androidx.compose.runtime.Stable
-import kotlin.reflect.KClass
+import kotlinx.serialization.Serializable
 
 @Stable
-data class PageStateFactory<P : Page, S : PageState>(
-   val pageClass: KClass<P>,
-   val pageStateFactory: (P, PageState.StateSaver) -> S
+@Serializable
+class SavedPageState(
+   val id: PageId,
+   val page: Page
 )
-
-inline fun <reified P : Page, reified S : PageState> pageStateFactory(
-   noinline factory: (P, PageState.StateSaver) -> S
-): PageStateFactory<P, S> {
-   return PageStateFactory(P::class, factory)
-}

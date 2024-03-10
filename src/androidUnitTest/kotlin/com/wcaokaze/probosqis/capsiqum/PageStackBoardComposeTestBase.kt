@@ -33,6 +33,15 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.wcaokaze.probosqis.capsiqum.page.Page
+import com.wcaokaze.probosqis.capsiqum.page.PageId
+import com.wcaokaze.probosqis.capsiqum.page.PageStack
+import com.wcaokaze.probosqis.capsiqum.page.PageStackRepository
+import com.wcaokaze.probosqis.capsiqum.page.PageStackState
+import com.wcaokaze.probosqis.capsiqum.page.PageState
+import com.wcaokaze.probosqis.capsiqum.page.PageStateStore
+import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
+import com.wcaokaze.probosqis.capsiqum.page.SavedPageState
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import io.mockk.every
 import io.mockk.mockk
@@ -63,7 +72,7 @@ abstract class PageStackBoardComposeTestBase {
 
       return remember {
          val testPageComposable = pageComposable(
-            pageStateFactory(pageStateFactory),
+            PageStateFactory(pageStateFactory),
             content = { page, pageState, pageStackState, _ ->
                pageComposable(page, pageState, pageStackState)
             },
@@ -102,8 +111,8 @@ abstract class PageStackBoardComposeTestBase {
                      val newPage = TestPage(page.i + 100)
                      val newPageStack = PageStack(
                         PageStack.Id(pageStackState.pageStack.id.value + 100L),
-                        PageStack.SavedPageState(
-                           PageStack.PageId(newPage.i.toLong()),
+                        SavedPageState(
+                           PageId(newPage.i.toLong()),
                            newPage
                         )
                      )
@@ -156,8 +165,8 @@ abstract class PageStackBoardComposeTestBase {
    protected fun createPageStack(id: Int, page: Page): PageStackBoard.PageStack {
       val pageStack = PageStack(
          PageStack.Id(id.toLong()),
-         PageStack.SavedPageState(
-            PageStack.PageId(id.toLong()),
+         SavedPageState(
+            PageId(id.toLong()),
             page
          )
       )

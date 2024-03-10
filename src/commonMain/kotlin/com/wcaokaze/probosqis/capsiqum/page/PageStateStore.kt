@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,28 +14,30 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.capsiqum
+package com.wcaokaze.probosqis.capsiqum.page
 
 import androidx.compose.runtime.Stable
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.JsonObject
+import kotlin.reflect.KClass
 
 @Stable
 class PageStateStore(
    allPageStateFactories: List<PageStateFactory<*, *>>,
    private val appCoroutineScope: CoroutineScope
 ) {
-   private val factories = buildMap {
-      for (f in allPageStateFactories) {
-         put(f.pageClass, f)
-      }
-   }
+   internal val pageStateFactories: Map<KClass<out Page>, PageStateFactory<*, *>>
+         = buildMap {
+            for (f in allPageStateFactories) {
+               put(f.pageClass, f)
+            }
+         }
 
-   private val pageState = mutableMapOf<PageStack.PageId, PageState>()
+   private val pageState = mutableMapOf<PageId, PageState>()
 
    @Stable
-   fun get(savedPageState: PageStack.SavedPageState): PageState {
+   fun get(savedPageState: SavedPageState): PageState {
       return pageState.getOrPut(savedPageState.id) {
          val page = savedPageState.page
          val factory = getStateFactory(page) ?: throw IllegalArgumentException(
@@ -53,6 +55,6 @@ class PageStateStore(
 
    private fun <P : Page> getStateFactory(page: P): PageStateFactory<P, *>? {
       @Suppress("UNCHECKED_CAST")
-      return factories[page::class] as PageStateFactory<P, *>?
+      return pageStateFactories[page::class] as PageStateFactory<P, *>?
    }
 }
