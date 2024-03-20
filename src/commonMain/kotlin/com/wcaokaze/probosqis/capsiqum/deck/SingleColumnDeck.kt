@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.capsiqum.PageStackBoardScrollState
 import kotlinx.coroutines.CoroutineScope
 import org.jetbrains.annotations.TestOnly
 
@@ -132,7 +131,7 @@ internal class SingleColumnLayoutLogic<T>(
       animCoroutineScope: CoroutineScope,
       deckWidth: Int,
       cardPadding: Int,
-      scrollState: PageStackBoardScrollState
+      scrollState: DeckScrollState
    ) {
       val cardWidth = deckWidth
 

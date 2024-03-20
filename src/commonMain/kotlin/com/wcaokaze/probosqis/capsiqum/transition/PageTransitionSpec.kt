@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ package com.wcaokaze.probosqis.capsiqum.transition
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
-import com.wcaokaze.probosqis.capsiqum.PageComposable
-import com.wcaokaze.probosqis.capsiqum.pageComposable
 import kotlinx.collections.immutable.toImmutableMap
 
 /**
@@ -42,12 +40,10 @@ inline fun pageTransitionSpec(
  * Probosqisのページ遷移アニメーションは大きく4つの要素で構成される。
  *
  * ## [Modifier.transitionElement]
- * [PageComposable.contentComposable]内のComposableにIDを付与する。
+ * [PageTransition]内のComposableにIDを付与する。
  * ```kotlin
- * object AccountPageLayoutIds : PageLayoutIds() {
- *    val accountIcon = PageLayoutInfo.LayoutId()
- *    val accountName = PageLayoutInfo.LayoutId()
- * }
+ * val accountIcon = PageLayoutInfo.LayoutId()
+ * val accountName = PageLayoutInfo.LayoutId()
  *
  * @Composable
  * fun AccountPage(state: AccountPageState) {
@@ -55,20 +51,20 @@ inline fun pageTransitionSpec(
  *       Image(
  *          state.account.icon,
  *          Modifier
- *             .transitionElement(AccountPageLayoutIds.accountIcon)
+ *             .transitionElement(accountIcon)
  *       )
  *
  *       Text(
  *          state.account.name,
  *          Modifier
- *             .transitionElement(AccountPageLayoutIds.accountName)
+ *             .transitionElement(accountName)
  *       )
  *    }
  * }
  * ```
  *
  * ## [PageLayoutInfo]
- * [PageComposable.contentComposable]内のComposableの位置やサイズをまとめたもの。
+ * [PageTransition]内のComposableの位置やサイズをまとめたもの。
  * [Modifier.transitionElement]が付与されたComposableはその位置とサイズが
  * 自動的にこのインスタンスに収集される。
  *
@@ -98,58 +94,43 @@ inline fun pageTransitionSpec(
  * [exitingCurrentPageElementAnimations]が適応され、PageAの各Composableに
  * [exitingTargetPageElementAnimations]が適応される。
  *
- * PageTransitionSpec自体は[pageComposable]でPageのComposableと同時に
- * 定義することができる。
+ * PageTransitionSpec自体は[pageTransitionSpec]で定義できる。
  * ```kotlin
- * pageComposable<PostPage, PostPageState>(
- *    pageStateFactory { page, stateSaver -> PostPageState(page, stateSaver) },
- *    content = { page, pageState, pageStackState ->
- *       PostPage(page, pageState, pageStackState)
- *    },
- *    header = { page, pageState, pageStackState ->
- *       PostPageHeader(page, pageState, pageStackState)
- *    },
- *    footer = { page, pageState, pageStackState ->
- *       PostPageFooter(page, pageState, pageStackState)
- *    },
- *    pageTransitions = {
- *       transitionTo<AccountPage>(
- *          enter = {
- *             targetPageElement(AccountPageIds.background) {
- *                val animatedAlpha by transition.animateFloat(label = "background") {
- *                   if (it.isTargetPage) { 1.0f } else { 0.0f }
- *                }
- *                Modifier.alpha(animatedAlpha)
- *             }
- *             sharedElement(
- *                PostPageLayoutIds.accountIcon,
- *                AccountPageIds.accountIcon,
- *                label = "accountIcon"
- *             )
- *             sharedElement(
- *                PostPageLayoutIds.accountName,
- *                AccountPageIds.accountName,
- *                label = "accountIcon"
- *             )
- *          },
- *          exit = {
- *             targetPageElement(AccountPageIds.background) {
- *                val animatedAlpha by transition.animateFloat(label = "background") {
- *                   if (it.isCurrentPage) { 1.0f } else { 0.0f }
- *                }
- *                Modifier.alpha(animatedAlpha)
- *             }
- *             sharedElement(
- *                AccountPageIds.accountIcon,
- *                PostPageLayoutIds.accountIcon,
- *                label = "accountIcon"
- *             )
- *             sharedElement(
- *                AccountPageIds.accountName,
- *                PostPageLayoutIds.accountName,
- *                label = "accountIcon"
- *             )
+ * pageTransitionSpec(
+ *    enter = {
+ *       targetPageElement(background) {
+ *          val animatedAlpha by transition.animateFloat(label = "background") {
+ *             if (it.isTargetPage) { 1.0f } else { 0.0f }
  *          }
+ *          Modifier.alpha(animatedAlpha)
+ *       }
+ *       sharedElement(
+ *          currentPageLayoutElementId = accountIcon,
+ *          targetPageLayoutElementId  = accountIcon,
+ *          label = "accountIcon"
+ *       )
+ *       sharedElement(
+ *          currentPageLayoutElementId = accountName,
+ *          targetPageLayoutElementId  = accountName,
+ *          label = "accountIcon"
+ *       )
+ *    },
+ *    exit = {
+ *       targetPageElement(background) {
+ *          val animatedAlpha by transition.animateFloat(label = "background") {
+ *             if (it.isCurrentPage) { 1.0f } else { 0.0f }
+ *          }
+ *          Modifier.alpha(animatedAlpha)
+ *       }
+ *       sharedElement(
+ *          currentPageLayoutElementId = accountIcon,
+ *          targetPageLayoutElementId  = accountIcon,
+ *          label = "accountIcon"
+ *       )
+ *       sharedElement(
+ *          currentPageLayoutElementId = accountName,
+ *          targetPageLayoutElementId  = accountName,
+ *          label = "accountIcon"
  *       )
  *    }
  * )

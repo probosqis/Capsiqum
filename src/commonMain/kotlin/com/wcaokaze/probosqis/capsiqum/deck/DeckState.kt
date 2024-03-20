@@ -33,7 +33,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.capsiqum.PageStackBoardScrollState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
@@ -82,7 +81,7 @@ sealed class DeckState<T>(initialDeck: Deck<T>) {
          layoutLogic.recreateLayoutState(value)
       }
 
-   internal val scrollState = PageStackBoardScrollState()
+   internal val scrollState = DeckScrollState()
 
    internal abstract val layoutLogic: DeckLayoutLogic<T>
 
@@ -421,7 +420,7 @@ internal abstract class DeckLayoutLogic<T>(
    }
 
    protected fun updateMaxScrollOffset(
-      scrollState: PageStackBoardScrollState,
+      scrollState: DeckScrollState,
       maxScrollOffset: Float,
       animCoroutineScope: CoroutineScope
    ) {

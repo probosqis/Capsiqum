@@ -16,8 +16,6 @@
 
 package com.wcaokaze.probosqis.capsiqum.transition
 
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.snap
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
@@ -29,7 +27,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -64,30 +61,6 @@ class PageTransitionElementAnimationsTest {
             = transitionSpec
    }
 
-   private fun PageTransitionSpec.Builder.hideBackground() {
-      currentPageElement(PageLayoutIds.background) {
-         val alpha by transition.animateFloat(
-            transitionSpec = { snap(500) },
-            label = "background"
-         ) {
-            if (it.isCurrentPage) { 1.0f } else { 0.0f }
-         }
-
-         Modifier.alpha(alpha)
-      }
-
-      targetPageElement(PageLayoutIds.background) {
-         val alpha by transition.animateFloat(
-            transitionSpec = { snap(500) },
-            label = "background"
-         ) {
-            if (it.isTargetPage) { 1.0f } else { 0.0f }
-         }
-
-         Modifier.alpha(alpha)
-      }
-   }
-
    private fun verifyEnterAnim(
       fileNamePrefix: String,
       pageAComposable: @Composable () -> Unit,
@@ -119,14 +92,8 @@ class PageTransitionElementAnimationsTest {
       verifyEnterAnim: Boolean
    ) {
       val transitionSpec = pageTransitionSpec(
-         enter = {
-            hideBackground()
-            enterTransitions()
-         },
-         exit = {
-            hideBackground()
-            exitTransitions()
-         }
+         enter = enterTransitions,
+         exit = exitTransitions
       )
       val transitionState = PageTransitionStateImpl(transitionSpec)
 

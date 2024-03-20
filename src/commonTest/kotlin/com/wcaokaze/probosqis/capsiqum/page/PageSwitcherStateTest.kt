@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.capsiqum
+package com.wcaokaze.probosqis.capsiqum.page
 
-import com.wcaokaze.probosqis.capsiqum.page.Page
-import com.wcaokaze.probosqis.capsiqum.page.PageState
-import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
+import kotlinx.coroutines.CoroutineScope
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-class PageComposableSwitcherTest {
+class PageSwitcherStateTest {
    private class PageA : Page()
    private class PageAState : PageState()
    private class PageB : Page()
@@ -33,37 +32,34 @@ class PageComposableSwitcherTest {
 
    @Test
    fun getPageComposable() {
-      val pageComposableSwitcher = PageComposableSwitcher(
+      val pageSwitcherState = PageSwitcherState(
          listOf(
-            pageComposable<PageA, PageAState>(
-               PageStateFactory { _, _ -> PageAState() },
-               content = { _, _, _, _ -> },
-               header = { _, _, _ -> },
-               footer = null,
-               pageTransitions = {}
+            PageComposable<PageA, PageAState>(
+               stateFactory = { _, _ -> PageAState() },
+               composable = { _, _ -> }
             ),
-            pageComposable<PageB, PageBState>(
-               PageStateFactory { _, _ -> PageBState() },
-               content = { _, _, _, _ -> },
-               header = { _, _, _ -> },
-               footer = null,
-               pageTransitions = {}
+            PageComposable<PageB, PageBState>(
+               stateFactory = { _, _ -> PageBState() },
+               composable = { _, _ -> }
             ),
-         )
+         ),
+         object : CoroutineScope {
+            override val coroutineContext = EmptyCoroutineContext
+         }
       )
 
       val pageA = PageA()
-      val pageComposableA = pageComposableSwitcher[pageA]
+      val pageComposableA = pageSwitcherState.getComposableFor(pageA)
       assertNotNull(pageComposableA)
       assertEquals(pageComposableA.pageClass, PageA::class)
 
       val pageB = PageB()
-      val pageComposableB = pageComposableSwitcher[pageB]
+      val pageComposableB = pageSwitcherState.getComposableFor(pageB)
       assertNotNull(pageComposableB)
       assertEquals(pageComposableB.pageClass, PageB::class)
 
       val pageC = PageC()
-      val pageComposableC = pageComposableSwitcher[pageC]
+      val pageComposableC = pageSwitcherState.getComposableFor(pageC)
       assertNull(pageComposableC)
    }
 }

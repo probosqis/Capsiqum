@@ -19,12 +19,10 @@ package com.wcaokaze.probosqis.capsiqum.transition
 import androidx.compose.animation.core.Transition
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.wcaokaze.probosqis.capsiqum.PageComposable
 import kotlinx.collections.immutable.ImmutableMap
 
 /**
- * ページ遷移中、[PageComposable.contentComposable]内のComposableに
- * 適用されるModifier。
+ * ページ遷移中、[PageTransition]のcontentに適用されるModifier。
  *
  * [PageTransitionElementAnimScope.transition]から現在の遷移状況や
  * 遷移元、遷移先の[PageLayoutInfo]を取得できるため、それを使ってアニメーションを
@@ -37,8 +35,7 @@ sealed class PageTransitionElementAnim<S : PageTransitionElementAnimScope> {
 }
 
 /**
- * ページ遷移中、遷移元の[PageComposable.contentComposable]内のComposableに
- * 適用されるModifier。
+ * ページ遷移中、[PageTransition]の遷移元のcontentに適用されるModifier。
  *
  * @see PageTransitionSpec
  */
@@ -48,8 +45,7 @@ class CurrentPageTransitionElementAnim(
 ) : PageTransitionElementAnim<CurrentPageTransitionElementAnimScope>()
 
 /**
- * ページ遷移中、遷移先の[PageComposable.contentComposable]内のComposableに
- * 適用されるModifier。
+ * ページ遷移中、[PageTransition]の遷移先のcontentに適用されるModifier。
  *
  * @see PageTransitionSpec
  */

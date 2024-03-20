@@ -21,7 +21,6 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -45,7 +44,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.wcaokaze.probosqis.capsiqum.PageStackBoardScrollState
 import kotlinx.coroutines.CoroutineScope
 import org.jetbrains.annotations.TestOnly
 import kotlin.math.ceil
@@ -157,7 +155,7 @@ internal class MultiColumnLayoutLogic<T>(
       cardPadding: Int,
       windowInsets: WindowInsets,
       layoutDirection: LayoutDirection,
-      scrollState: PageStackBoardScrollState
+      scrollState: DeckScrollState
    ) {
       val leftWindowInset  = windowInsets.getLeft (density, layoutDirection)
       val rightWindowInset = windowInsets.getRight(density, layoutDirection)

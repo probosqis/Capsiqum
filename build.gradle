@@ -40,12 +40,13 @@ kotlin {
          implementation libs.kotlinx.serialization
          implementation libs.kotlinx.collections.immutable
          implementation libs.androidx.annotation
-         implementation compose.material3
+         implementation compose.foundation
          implementation project(':panoptiqon')
          implementation project(':panoptiqon-compose')
       }
 
       commonTest.dependencies {
+         implementation compose.material3
          implementation compose.uiTestJUnit4
          implementation libs.kotlin.test.junit
          implementation libs.roborazzi.core

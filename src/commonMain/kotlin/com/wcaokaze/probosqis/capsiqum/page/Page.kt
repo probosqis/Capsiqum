@@ -16,20 +16,6 @@
 
 package com.wcaokaze.probosqis.capsiqum.page
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.requiredHeight
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.LocalAbsoluteTonalElevation
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.surfaceColorAtElevation
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -38,11 +24,6 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.unit.dp
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asState
 import com.wcaokaze.probosqis.panoptiqon.update
@@ -277,74 +258,5 @@ abstract class PageState {
             }
          }
       }
-   }
-}
-
-@Composable
-internal fun <P : Page, S : PageState> PageContent(
-   pageContentComposable: @Composable (P, S, PageStackState, WindowInsets) -> Unit,
-   page: Page,
-   pageState: PageState,
-   pageStackState: PageStackState,
-   windowInsets: WindowInsets
-) {
-   @Suppress("UNCHECKED_CAST")
-   pageContentComposable(
-      page as P,
-      pageState as S,
-      pageStackState,
-      windowInsets
-   )
-}
-
-internal val pageFooterHeight = 48.dp
-
-@Composable
-internal fun <P : Page, S : PageState> PageFooter(
-   footerComposable: @Composable (P, S, PageStackState) -> Unit,
-   page: Page,
-   pageState: PageState,
-   pageStackState: PageStackState,
-   windowInsets: WindowInsets
-) {
-   val absoluteElevation = LocalAbsoluteTonalElevation.current
-   val background = MaterialTheme.colorScheme
-      .surfaceColorAtElevation(absoluteElevation + 4.dp)
-
-   Box(
-      modifier = Modifier
-         .shadow(4.dp)
-         .background(background)
-         .pointerInput(Unit) {}
-         .windowInsetsPadding(windowInsets)
-         .fillMaxWidth()
-         .requiredHeight(pageFooterHeight)
-   ) {
-      CompositionLocalProvider(
-         LocalContentColor provides MaterialTheme.colorScheme.onSurface,
-      ) {
-         @Suppress("UNCHECKED_CAST")
-         footerComposable(
-            page as P,
-            pageState as S,
-            pageStackState
-         )
-      }
-   }
-}
-
-@Composable
-inline fun FooterButton(
-   noinline onClick: () -> Unit,
-   modifier: Modifier = Modifier,
-   content: @Composable () -> Unit
-) {
-   Box(
-      contentAlignment = Alignment.Center,
-      modifier = modifier
-         .fillMaxHeight()
-         .clickable(onClick = onClick)
-   ) {
-      content()
    }
 }
