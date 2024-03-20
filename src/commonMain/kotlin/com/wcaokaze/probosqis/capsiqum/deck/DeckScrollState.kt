@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 wcaokaze
+ * Copyright 2023-2024 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.wcaokaze.probosqis.capsiqum
+package com.wcaokaze.probosqis.capsiqum.deck
 
 import androidx.compose.foundation.MutatePriority
 import androidx.compose.foundation.MutatorMutex
@@ -27,7 +27,7 @@ import androidx.compose.runtime.setValue
 import kotlinx.coroutines.coroutineScope
 
 @Stable
-internal class PageStackBoardScrollState : ScrollableState {
+internal class DeckScrollState : ScrollableState {
    private val scrollMutex = MutatorMutex()
    private var isScrolling by mutableStateOf(false)
 

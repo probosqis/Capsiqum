@@ -44,15 +44,6 @@ class PageLayoutInfoTest {
    }
 
    @Test
-   fun globalIds_companionObjectEqualsSubclasses() {
-      val someLayoutIds = object : PageLayoutIds() {}
-
-      assertEquals(someLayoutIds.root,       PageLayoutIds.root)
-      assertEquals(someLayoutIds.background, PageLayoutIds.background)
-      assertEquals(someLayoutIds.content,    PageLayoutIds.content)
-   }
-
-   @Test
    fun getAndSet() {
       val pageLayoutInfo = PageLayoutInfoImpl(key = Unit)
       val layoutId1 = PageLayoutInfo.LayoutId()

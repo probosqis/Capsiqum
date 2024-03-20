@@ -77,6 +77,13 @@ class Deck<out T>(val rootRow: Row<T>) {
    override fun equals(other: Any?) = other is Deck<*> && other.rootRow == rootRow
 }
 
+val <T> Deck.Layout<T>.cardCount: Int get() {
+   return when (this) {
+      is Deck.Card         -> 1
+      is Deck.LayoutParent -> leafCount
+   }
+}
+
 fun <T> Deck.Column<T>.inserted(index: Int, element: T): Deck.Column<T>
       = inserted(index, Deck.Card(element))
 
