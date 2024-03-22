@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.capsiqum.deck
 
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
@@ -59,12 +60,26 @@ abstract class MultiColumnDeckTestBase : DeckTestBase() {
       card: @Composable (Int) -> Unit = { Text("$it", Modifier.fillMaxWidth()) }
    ) {
       MultiColumnDeck(
+         state, sizeModifier = { Modifier.width(width).fillMaxHeight() },
+         cardCount, windowInsets, card
+      )
+   }
+
+   @Composable
+   protected fun MultiColumnDeck(
+      state: MultiColumnDeckState<Int>,
+      sizeModifier: () -> Modifier,
+      cardCount: Int = defaultCardCount,
+      windowInsets: WindowInsets = defaultWindowInsets,
+      card: @Composable (Int) -> Unit = { Text("$it", Modifier.fillMaxWidth()) }
+   ) {
+      MultiColumnDeck(
          state,
          cardCount,
          windowInsets = windowInsets,
          card = card,
          modifier = Modifier
-            .width(width)
+            .then(sizeModifier())
             .testTag(deckTestTag)
       )
    }
@@ -130,10 +145,21 @@ abstract class SingleColumnDeckTestBase : DeckTestBase() {
       card: @Composable (Int) -> Unit = { Text("$it", Modifier.fillMaxWidth()) }
    ) {
       SingleColumnDeck(
+         state, sizeModifier = { Modifier.width(width).fillMaxHeight() }, card
+      )
+   }
+
+   @Composable
+   protected fun SingleColumnDeck(
+      state: SingleColumnDeckState<Int>,
+      sizeModifier: () -> Modifier,
+      card: @Composable (Int) -> Unit = { Text("$it", Modifier.fillMaxWidth()) }
+   ) {
+      SingleColumnDeck(
          state,
          card = card,
          modifier = Modifier
-            .width(width)
+            .then(sizeModifier())
             .testTag(deckTestTag)
       )
    }

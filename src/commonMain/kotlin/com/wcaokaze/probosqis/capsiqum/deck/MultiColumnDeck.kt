@@ -221,6 +221,12 @@ fun <T> MultiColumnDeck(
             }
          ),
       measurePolicy = remember(state, cardCount) {{ constraints ->
+         require(constraints.hasFixedWidth) {
+            "Deck must has a fixed width (e.g. Modifier.size) since its cards' " +
+            "width are determined from Deck's width. The intrinsic width of the " +
+            "cards cannot be used as wrapContentWidth for Deck."
+         }
+
          val deckWidth  = constraints.maxWidth
          val deckHeight = constraints.maxHeight
          val cardPaddingPx = cardPadding.roundToPx()

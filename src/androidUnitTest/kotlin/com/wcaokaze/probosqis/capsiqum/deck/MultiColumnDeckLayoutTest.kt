@@ -17,8 +17,16 @@
 package com.wcaokaze.probosqis.capsiqum.deck
 
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
 import androidx.compose.ui.test.assertWidthIsEqualTo
@@ -118,6 +126,51 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
          .assertWidthIsEqualTo(
             expectedCardWidth(windowInsets = windowInsets)
          )
+   }
+
+   @Test
+   fun width_sizeModifier() {
+      var width by mutableStateOf(50.dp)
+      var cardCount by mutableIntStateOf(1)
+      val deckState = createDeckState(cardCount = 1)
+
+      rule.setContent {
+         MultiColumnDeck(
+            deckState,
+            sizeModifier = { Modifier.width(width).fillMaxHeight() },
+            cardCount
+         )
+      }
+
+      rule.onNodeWithTag(deckTestTag).assertWidthIsEqualTo(50.dp)
+      width = 100.dp
+      rule.onNodeWithTag(deckTestTag).assertWidthIsEqualTo(100.dp)
+      width = 70.dp
+      rule.onNodeWithTag(deckTestTag).assertWidthIsEqualTo(70.dp)
+
+      cardCount = 2
+
+      width = 50.dp
+      rule.onNodeWithTag(deckTestTag).assertWidthIsEqualTo(50.dp)
+      width = 100.dp
+      rule.onNodeWithTag(deckTestTag).assertWidthIsEqualTo(100.dp)
+
+      deckState.addColumn(0, 1)
+      rule.onNodeWithTag(deckTestTag).assertWidthIsEqualTo(100.dp)
+      deckState.addColumn(0, 2)
+      rule.onNodeWithTag(deckTestTag).assertWidthIsEqualTo(100.dp)
+   }
+
+   @Test
+   fun width_wrapContent() {
+      assertFails {
+         rule.setContent {
+            MultiColumnDeck(
+               remember { createDeckState(cardCount = 1) },
+               sizeModifier = { Modifier.wrapContentWidth().fillMaxHeight() }
+            )
+         }
+      }
    }
 
    @Test
