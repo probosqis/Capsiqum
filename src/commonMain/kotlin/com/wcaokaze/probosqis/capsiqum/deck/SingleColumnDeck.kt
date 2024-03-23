@@ -78,6 +78,8 @@ internal class SingleColumnLayoutLogic<T>(
 ) : DeckLayoutLogic<T>(initialDeck, contentKeyChooser) {
    private var deckWidth by mutableStateOf(0)
 
+   override val width: Int get() = deckWidth
+
    internal val layoutStateList
       @TestOnly get() = list
 

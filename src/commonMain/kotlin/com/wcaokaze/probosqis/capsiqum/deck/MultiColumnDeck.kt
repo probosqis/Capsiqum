@@ -95,6 +95,8 @@ internal class MultiColumnLayoutLogic<T>(
    private var leftWindowInset  by mutableStateOf(0)
    private var rightWindowInset by mutableStateOf(0)
 
+   override val width: Int get() = deckWidth
+
    internal val layoutStateList
       @TestOnly get() = list
 
