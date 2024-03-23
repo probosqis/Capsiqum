@@ -16,8 +16,12 @@
 
 package com.wcaokaze.probosqis.capsiqum.deck
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,12 +30,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.test.swipeRight
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
@@ -95,6 +102,62 @@ class SingleColumnDeckLayoutTest : SingleColumnDeckTestBase() {
             )
          }
       }
+   }
+
+   @Test
+   fun height_sizeModifier() {
+      var height by mutableStateOf(50.dp)
+      val deckState = createDeckState(cardCount = 1)
+
+      rule.setContent {
+         SingleColumnDeck(
+            deckState,
+            sizeModifier = { Modifier.fillMaxWidth().height(height) }
+         )
+      }
+
+      rule.onNodeWithTag(deckTestTag).assertHeightIsEqualTo(50.dp)
+      height = 100.dp
+      rule.onNodeWithTag(deckTestTag).assertHeightIsEqualTo(100.dp)
+      height = 70.dp
+      rule.onNodeWithTag(deckTestTag).assertHeightIsEqualTo(70.dp)
+   }
+
+   @Test
+   fun height_wrapContent() {
+      val deckState = SingleColumnDeckState(
+         Deck(
+            listOf(Deck.Card(20.dp), Deck.Card(40.dp))
+         ),
+         key = { it }
+      )
+
+      rule.setContent {
+         SingleColumnDeck(
+            deckState,
+            sizeModifier = { Modifier.fillMaxWidth().wrapContentHeight() }
+         ) {
+            Box(Modifier.height(it))
+         }
+      }
+
+      rule.onNodeWithTag(deckTestTag).assertHeightIsEqualTo(20.dp)
+
+      rule.onNodeWithTag(deckTestTag).performTouchInput { swipeLeft() }
+      rule.runOnIdle {
+         assertEquals(1, deckState.activeCardIndex)
+      }
+      rule.onNodeWithTag(deckTestTag).assertHeightIsEqualTo(40.dp)
+
+      rule.onNodeWithTag(deckTestTag).performTouchInput { swipeRight() }
+      rule.onNodeWithTag(deckTestTag).assertHeightIsEqualTo(20.dp)
+
+      rule.onNodeWithTag(deckTestTag).performTouchInput {
+         down(Offset(0.0f, 0.0f))
+         moveBy(Offset(-viewConfiguration.touchSlop - 20.dp.toPx(), 0.0f))
+         // up()
+      }
+      rule.onNodeWithTag(deckTestTag).assertHeightIsEqualTo(40.dp)
    }
 
    @Test

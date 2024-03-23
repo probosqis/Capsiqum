@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import org.jetbrains.annotations.TestOnly
@@ -190,8 +191,7 @@ fun <T> SingleColumnDeck(
             "cards cannot be used as wrapContentWidth for Deck."
          }
 
-         val deckWidth  = constraints.maxWidth
-         val deckHeight = constraints.maxHeight
+         val deckWidth = constraints.maxWidth
          val cardPaddingPx = cardPadding.roundToPx()
 
          state.layout(density = this, coroutineScope, deckWidth, cardPaddingPx)
@@ -231,7 +231,12 @@ fun <T> SingleColumnDeck(
                }
             } .single()
 
-            val cardConstraints = Constraints.fixed(cardWidth, deckHeight)
+            val cardConstraints = Constraints(
+               minWidth = cardWidth,
+               maxWidth = cardWidth,
+               minHeight = constraints.minHeight,
+               maxHeight = constraints.maxHeight
+            )
 
             val placeable = measurable.measure(cardConstraints)
             Pair(layoutState, placeable)
@@ -239,6 +244,14 @@ fun <T> SingleColumnDeck(
 
          state.firstVisibleCardIndex = firstVisibleIndex
          state.lastVisibleCardIndex  = lastVisibleIndex
+
+         val deckHeight = when {
+            constraints.hasFixedHeight -> constraints.minHeight
+            placeables.isEmpty() -> constraints.minHeight
+            else -> constraints.constrainHeight(
+               placeables.maxOf { it.second.height }
+            )
+         }
 
          layout(deckWidth, deckHeight) {
             for ((layoutState, placeable) in placeables) {
