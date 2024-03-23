@@ -17,7 +17,6 @@
 package com.wcaokaze.probosqis.capsiqum.deck
 
 import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -32,11 +31,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.PointerType
-import androidx.compose.ui.input.pointer.changedToDownIgnoreConsumed
-import androidx.compose.ui.input.pointer.isPrimaryPressed
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
@@ -194,7 +188,7 @@ internal class MultiColumnLayoutLogic<T>(
 @Composable
 fun <T> MultiColumnDeck(
    state: MultiColumnDeckState<T>,
-   cardCount: Int,
+   columnCount: Int,
    modifier: Modifier = Modifier,
    windowInsets: WindowInsets = WindowInsets(0),
    cardPadding: Dp = MultiColumnDeckDefaults.CardPadding,
@@ -219,7 +213,7 @@ fun <T> MultiColumnDeck(
                DeckFlingBehavior.Standard(state)
             }
          ),
-      measurePolicy = remember(state, cardCount) {{ constraints ->
+      measurePolicy = remember(state, columnCount) {{ constraints ->
          require(constraints.hasFixedWidth) {
             "Deck must has a fixed width (e.g. Modifier.size) since its cards' " +
             "width are determined from Deck's width. The intrinsic width of " +
@@ -235,7 +229,7 @@ fun <T> MultiColumnDeck(
          val deckHeight = constraints.maxHeight
          val cardPaddingPx = cardPadding.roundToPx()
 
-         state.layout(density = this, coroutineScope, deckWidth, cardCount,
+         state.layout(density = this, coroutineScope, deckWidth, columnCount,
             cardPaddingPx, windowInsets, layoutDirection)
 
          val scrollOffset = state.scrollState.scrollOffset.toInt()
