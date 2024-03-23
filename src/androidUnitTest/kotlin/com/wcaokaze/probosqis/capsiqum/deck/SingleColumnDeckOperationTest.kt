@@ -272,7 +272,7 @@ class SingleColumnDeckOperationTest : SingleColumnDeckTestBase() {
    fun addCard_viaDeckState() {
       val deckState = createDeckState(cardCount = 2)
       rule.setContent {
-         SingleColumnDeck(deckState) { i ->
+         SingleColumnDeck(deckState) { _, i ->
             Button(
                onClick = {
                   val idx = deckState.deck.sequence().indexOfFirst { it.content == i }
@@ -328,7 +328,7 @@ class SingleColumnDeckOperationTest : SingleColumnDeckTestBase() {
       rule.setContent {
          coroutineScope = rememberCoroutineScope()
 
-         SingleColumnDeck(deckState) { i ->
+         SingleColumnDeck(deckState) { _, i ->
             Button(
                onClick = { deckState.removeCardByKey(i) }
             ) {

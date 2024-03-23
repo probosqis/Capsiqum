@@ -143,7 +143,7 @@ fun <T> SingleColumnDeck(
    state: SingleColumnDeckState<T>,
    modifier: Modifier = Modifier,
    cardPadding: Dp = SingleColumnDeckDefaults.CardPadding,
-   card: @Composable (T) -> Unit
+   card: @Composable (index: Int, T) -> Unit
 ) {
    val coroutineScope = rememberCoroutineScope()
 
@@ -207,7 +207,7 @@ fun <T> SingleColumnDeck(
 
             val measurable = subcompose(layoutState.key) {
                Box(Modifier.alpha(layoutState.alpha)) {
-                  card(layoutState.card.content)
+                  card(index, layoutState.card.content)
                }
             } .single()
 

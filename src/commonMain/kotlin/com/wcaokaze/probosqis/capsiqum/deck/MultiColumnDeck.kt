@@ -196,7 +196,7 @@ fun <T> MultiColumnDeck(
    modifier: Modifier = Modifier,
    windowInsets: WindowInsets = WindowInsets(0),
    cardPadding: Dp = MultiColumnDeckDefaults.CardPadding,
-   card: @Composable (T) -> Unit
+   card: @Composable (index: Int, T) -> Unit
 ) {
    val coroutineScope = rememberCoroutineScope()
 
@@ -281,7 +281,7 @@ fun <T> MultiColumnDeck(
 
             val measurable = subcompose(layoutState.key) {
                Box(Modifier.alpha(layoutState.alpha)) {
-                  card(layoutState.card.content)
+                  card(index, layoutState.card.content)
                }
             } .single()
 

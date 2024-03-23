@@ -57,7 +57,9 @@ abstract class MultiColumnDeckTestBase : DeckTestBase() {
       width: Dp = defaultDeckWidth,
       cardCount: Int = defaultCardCount,
       windowInsets: WindowInsets = defaultWindowInsets,
-      card: @Composable (T) -> Unit = { Text("$it", Modifier.fillMaxWidth()) }
+      card: @Composable (index: Int, T) -> Unit = { _, content ->
+         Text("$content", Modifier.fillMaxWidth())
+      }
    ) {
       MultiColumnDeck(
          state, sizeModifier = { Modifier.width(width).fillMaxHeight() },
@@ -71,7 +73,9 @@ abstract class MultiColumnDeckTestBase : DeckTestBase() {
       sizeModifier: () -> Modifier,
       cardCount: Int = defaultCardCount,
       windowInsets: WindowInsets = defaultWindowInsets,
-      card: @Composable (T) -> Unit = { Text("$it", Modifier.fillMaxWidth()) }
+      card: @Composable (index: Int, T) -> Unit = { _, content ->
+         Text("$content", Modifier.fillMaxWidth())
+      }
    ) {
       MultiColumnDeck(
          state,
@@ -142,7 +146,9 @@ abstract class SingleColumnDeckTestBase : DeckTestBase() {
    protected fun <T> SingleColumnDeck(
       state: SingleColumnDeckState<T>,
       width: Dp = defaultDeckWidth,
-      card: @Composable (T) -> Unit = { Text("$it", Modifier.fillMaxWidth()) }
+      card: @Composable (index: Int, T) -> Unit = { _, content ->
+         Text("$content", Modifier.fillMaxWidth())
+      }
    ) {
       SingleColumnDeck(
          state, sizeModifier = { Modifier.width(width).fillMaxHeight() }, card
@@ -153,7 +159,9 @@ abstract class SingleColumnDeckTestBase : DeckTestBase() {
    protected fun <T> SingleColumnDeck(
       state: SingleColumnDeckState<T>,
       sizeModifier: () -> Modifier,
-      card: @Composable (T) -> Unit = { Text("$it", Modifier.fillMaxWidth()) }
+      card: @Composable (index: Int, T) -> Unit = { _, content ->
+         Text("$content", Modifier.fillMaxWidth())
+      }
    ) {
       SingleColumnDeck(
          state,
