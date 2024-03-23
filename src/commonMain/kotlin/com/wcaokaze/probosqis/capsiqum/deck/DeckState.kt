@@ -348,7 +348,7 @@ internal abstract class DeckLayoutLogic<T>(
 
    /**
     * 指定したCardが指定した位置にあるときの
-    * [scrollOffset][PageStackBoardScrollState.scrollOffset]。
+    * [scrollOffset][DeckScrollState.scrollOffset]。
     * ただし実際にその位置までスクロールできるとは限らない。
     */
    internal abstract fun getScrollOffset(
