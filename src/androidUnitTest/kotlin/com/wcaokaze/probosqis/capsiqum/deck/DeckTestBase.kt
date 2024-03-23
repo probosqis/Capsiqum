@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.capsiqum.deck
 
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
@@ -51,12 +52,26 @@ abstract class MultiColumnDeckTestBase : DeckTestBase() {
    )
 
    @Composable
-   protected fun MultiColumnDeck(
-      state: MultiColumnDeckState<Int>,
+   protected fun <T> MultiColumnDeck(
+      state: MultiColumnDeckState<T>,
       width: Dp = defaultDeckWidth,
       cardCount: Int = defaultCardCount,
       windowInsets: WindowInsets = defaultWindowInsets,
-      card: @Composable (Int) -> Unit = { Text("$it", Modifier.fillMaxWidth()) }
+      card: @Composable (T) -> Unit = { Text("$it", Modifier.fillMaxWidth()) }
+   ) {
+      MultiColumnDeck(
+         state, sizeModifier = { Modifier.width(width).fillMaxHeight() },
+         cardCount, windowInsets, card
+      )
+   }
+
+   @Composable
+   protected fun <T> MultiColumnDeck(
+      state: MultiColumnDeckState<T>,
+      sizeModifier: () -> Modifier,
+      cardCount: Int = defaultCardCount,
+      windowInsets: WindowInsets = defaultWindowInsets,
+      card: @Composable (T) -> Unit = { Text("$it", Modifier.fillMaxWidth()) }
    ) {
       MultiColumnDeck(
          state,
@@ -64,7 +79,7 @@ abstract class MultiColumnDeckTestBase : DeckTestBase() {
          windowInsets = windowInsets,
          card = card,
          modifier = Modifier
-            .width(width)
+            .then(sizeModifier())
             .testTag(deckTestTag)
       )
    }
@@ -124,16 +139,27 @@ abstract class SingleColumnDeckTestBase : DeckTestBase() {
    )
 
    @Composable
-   protected fun SingleColumnDeck(
-      state: SingleColumnDeckState<Int>,
+   protected fun <T> SingleColumnDeck(
+      state: SingleColumnDeckState<T>,
       width: Dp = defaultDeckWidth,
-      card: @Composable (Int) -> Unit = { Text("$it", Modifier.fillMaxWidth()) }
+      card: @Composable (T) -> Unit = { Text("$it", Modifier.fillMaxWidth()) }
+   ) {
+      SingleColumnDeck(
+         state, sizeModifier = { Modifier.width(width).fillMaxHeight() }, card
+      )
+   }
+
+   @Composable
+   protected fun <T> SingleColumnDeck(
+      state: SingleColumnDeckState<T>,
+      sizeModifier: () -> Modifier,
+      card: @Composable (T) -> Unit = { Text("$it", Modifier.fillMaxWidth()) }
    ) {
       SingleColumnDeck(
          state,
          card = card,
          modifier = Modifier
-            .width(width)
+            .then(sizeModifier())
             .testTag(deckTestTag)
       )
    }
