@@ -136,17 +136,14 @@ class SingleColumnDeckLayoutTest : SingleColumnDeckTestBase() {
          SingleColumnDeck(
             deckState,
             sizeModifier = { Modifier.fillMaxWidth().wrapContentHeight() }
-         ) {
-            Box(Modifier.height(it))
+         ) { _, height ->
+            Box(Modifier.height(height))
          }
       }
 
       rule.onNodeWithTag(deckTestTag).assertHeightIsEqualTo(20.dp)
 
       rule.onNodeWithTag(deckTestTag).performTouchInput { swipeLeft() }
-      rule.runOnIdle {
-         assertEquals(1, deckState.activeCardIndex)
-      }
       rule.onNodeWithTag(deckTestTag).assertHeightIsEqualTo(40.dp)
 
       rule.onNodeWithTag(deckTestTag).performTouchInput { swipeRight() }

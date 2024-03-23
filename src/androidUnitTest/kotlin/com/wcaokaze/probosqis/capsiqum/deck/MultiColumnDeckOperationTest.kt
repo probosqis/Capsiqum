@@ -478,7 +478,7 @@ class MultiColumnDeckOperationTest : MultiColumnDeckTestBase() {
       rule.setContent {
          coroutineScope = rememberCoroutineScope()
 
-         MultiColumnDeck(deckState) { i ->
+         MultiColumnDeck(deckState) { _, i ->
             Button(
                onClick = {
                   val idx = deckState.deck.sequence().indexOfFirst { it.content == i }
@@ -550,7 +550,7 @@ class MultiColumnDeckOperationTest : MultiColumnDeckTestBase() {
       rule.setContent {
          coroutineScope = rememberCoroutineScope()
 
-         MultiColumnDeck(deckState) { i ->
+         MultiColumnDeck(deckState) { _, i ->
             Button(
                onClick = { deckState.removeCardByKey(i) }
             ) {

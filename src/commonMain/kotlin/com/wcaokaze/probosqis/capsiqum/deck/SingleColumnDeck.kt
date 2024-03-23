@@ -57,26 +57,6 @@ class SingleColumnDeckState<T>(
    override val firstContentCardIndex get() = firstVisibleCardIndex
    override val lastContentCardIndex  get() = lastVisibleCardIndex
 
-   override val activeCardIndex: Int get() {
-      val firstVisibleIndex = firstVisibleCardIndex
-      val lastVisibleIndex  = lastVisibleCardIndex
-      if (firstVisibleIndex == lastVisibleIndex) { return firstVisibleIndex }
-
-      val firstVisibleLayout = layoutLogic.layoutState(firstVisibleIndex)
-      val lastVisibleLayout  = layoutLogic.layoutState(lastVisibleIndex)
-      val deckWidth = firstVisibleLayout.width
-
-      return if (
-         scrollState.scrollOffset + deckWidth / 2.0f
-            < (firstVisibleLayout.position.x
-               + lastVisibleLayout.position.x + lastVisibleLayout.width) / 2.0f
-      ) {
-         firstVisibleCardIndex
-      } else {
-         firstVisibleCardIndex + 1
-      }
-   }
-
    override val layoutLogic = SingleColumnLayoutLogic(initialDeck, key)
 
    internal fun layout(
@@ -97,6 +77,8 @@ internal class SingleColumnLayoutLogic<T>(
    contentKeyChooser: (T) -> Any
 ) : DeckLayoutLogic<T>(initialDeck, contentKeyChooser) {
    private var deckWidth by mutableStateOf(0)
+
+   override val width: Int get() = deckWidth
 
    internal val layoutStateList
       @TestOnly get() = list
@@ -163,7 +145,7 @@ fun <T> SingleColumnDeck(
    state: SingleColumnDeckState<T>,
    modifier: Modifier = Modifier,
    cardPadding: Dp = SingleColumnDeckDefaults.CardPadding,
-   card: @Composable (T) -> Unit
+   card: @Composable (index: Int, T) -> Unit
 ) {
    val coroutineScope = rememberCoroutineScope()
 
@@ -227,7 +209,7 @@ fun <T> SingleColumnDeck(
 
             val measurable = subcompose(layoutState.key) {
                Box(Modifier.alpha(layoutState.alpha)) {
-                  card(layoutState.card.content)
+                  card(index, layoutState.card.content)
                }
             } .single()
 

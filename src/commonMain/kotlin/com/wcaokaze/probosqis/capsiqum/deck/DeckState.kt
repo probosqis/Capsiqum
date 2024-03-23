@@ -109,6 +109,9 @@ sealed class DeckState<T>(initialDeck: Deck<T>) {
     */
    abstract val firstContentCardIndex: Int
 
+   val layoutInfo: DeckLayoutInfo<T> get() = layoutLogic
+   val scrollOffset: Float get() = scrollState.scrollOffset
+
    /**
     * Deck内のWindowInsets領域を除いた領域の最後に表示されているCardのindex。
     *
@@ -116,8 +119,6 @@ sealed class DeckState<T>(initialDeck: Deck<T>) {
     * [lastVisibleCardIndex]
     */
    abstract val lastContentCardIndex: Int
-
-   abstract val activeCardIndex: Int
 
    private var cardInsertionAnimOffset by mutableFloatStateOf(0.0f)
 
@@ -206,7 +207,7 @@ sealed class DeckState<T>(initialDeck: Deck<T>) {
    }
 
    fun removeCardByKey(key: Any): Job {
-      val index = layoutLogic.layoutStates.indexOfFirst { it.key == key }
+      val index = layoutLogic.cardsInfo.indexOfFirst { it.key == key }
 
       if (index < 0) {
          throw IllegalArgumentException("Card key not found: $key")
@@ -222,11 +223,24 @@ sealed class DeckState<T>(initialDeck: Deck<T>) {
    }
 }
 
+interface DeckLayoutInfo<out T> {
+   val width: Int
+
+   val cardsInfo: List<CardInfo<T>>
+
+   interface CardInfo<out T> {
+      val card: Deck.Card<T>
+      val key: Any
+      val position: IntOffset
+      val width: Int
+   }
+}
+
 @Stable
 internal class DeckCardLayoutState<out T>(
-   val card: Deck.Card<T>,
-   val key: Any
-) {
+   override val card: Deck.Card<T>,
+   override val key: Any
+) : DeckLayoutInfo.CardInfo<T> {
    /**
     * [DeckState.deck]が更新されて生成された直後のインスタンスの場合 `false`。
     * [DeckState.layout]が呼ばれて位置とサイズが決まったあと `true` になる
@@ -264,14 +278,14 @@ internal class DeckCardLayoutState<out T>(
    }
 
    private lateinit var positionAnimatable: Animatable<IntOffset, *>
-   val position: IntOffset get() {
+   override val position: IntOffset get() {
       require(isInitialized)
       val (x, y) = positionAnimatable.value
       return IntOffset(x, y + yOffsetAnimatable.value.toInt())
    }
 
    private lateinit var widthAnimatable: Animatable<Int, *>
-   val width: Int get() {
+   override val width: Int get() {
       require(isInitialized)
       return widthAnimatable.value
    }
@@ -325,7 +339,7 @@ internal class DeckCardLayoutState<out T>(
 internal abstract class DeckLayoutLogic<T>(
    initialDeck: Deck<T>,
    private val contentKeyChooser: (T) -> Any
-) {
+) : DeckLayoutInfo<T> {
    /** [DeckState.deck]と同じ順 */
    protected var list: ImmutableList<DeckCardLayoutState<T>>
          by mutableStateOf(persistentListOf())
@@ -341,7 +355,7 @@ internal abstract class DeckLayoutLogic<T>(
       recreateLayoutState(initialDeck)
    }
 
-   val layoutStates: List<DeckCardLayoutState<T>> get() = list
+   override val cardsInfo: List<DeckLayoutInfo.CardInfo<T>> get() = list
 
    fun layoutState(key: Any): DeckCardLayoutState<T>? = map[key]
    fun layoutState(index: Int): DeckCardLayoutState<T> = list[index]
