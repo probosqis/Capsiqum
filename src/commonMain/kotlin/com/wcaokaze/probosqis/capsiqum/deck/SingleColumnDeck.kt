@@ -57,26 +57,6 @@ class SingleColumnDeckState<T>(
    override val firstContentCardIndex get() = firstVisibleCardIndex
    override val lastContentCardIndex  get() = lastVisibleCardIndex
 
-   override val activeCardIndex: Int get() {
-      val firstVisibleIndex = firstVisibleCardIndex
-      val lastVisibleIndex  = lastVisibleCardIndex
-      if (firstVisibleIndex == lastVisibleIndex) { return firstVisibleIndex }
-
-      val firstVisibleLayout = layoutLogic.layoutState(firstVisibleIndex)
-      val lastVisibleLayout  = layoutLogic.layoutState(lastVisibleIndex)
-      val deckWidth = firstVisibleLayout.width
-
-      return if (
-         scrollState.scrollOffset + deckWidth / 2.0f
-            < (firstVisibleLayout.position.x
-               + lastVisibleLayout.position.x + lastVisibleLayout.width) / 2.0f
-      ) {
-         firstVisibleCardIndex
-      } else {
-         firstVisibleCardIndex + 1
-      }
-   }
-
    override val layoutLogic = SingleColumnLayoutLogic(initialDeck, key)
 
    internal fun layout(

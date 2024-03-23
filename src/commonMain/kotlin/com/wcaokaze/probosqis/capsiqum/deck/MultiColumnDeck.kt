@@ -67,9 +67,6 @@ class MultiColumnDeckState<T>(
    override var lastContentCardIndex by mutableIntStateOf(0)
       internal set
 
-   override var activeCardIndex by mutableIntStateOf(0)
-      internal set
-
    override val layoutLogic = MultiColumnLayoutLogic(initialDeck, key)
 
    internal fun layout(
@@ -283,13 +280,7 @@ fun <T> MultiColumnDeck(
             }
 
             val measurable = subcompose(layoutState.key) {
-               Box(
-                  Modifier
-                     .alpha(layoutState.alpha)
-                     .detectTouch(
-                        onTouch = { state.activeCardIndex = index }
-                     )
-               ) {
+               Box(Modifier.alpha(layoutState.alpha)) {
                   card(layoutState.card.content)
                }
             } .single()
@@ -304,8 +295,6 @@ fun <T> MultiColumnDeck(
          state.lastVisibleCardIndex  = lastVisibleIndex
          state.firstContentCardIndex = firstContentIndex
          state.lastContentCardIndex  = lastContentIndex
-         state.activeCardIndex = state.activeCardIndex
-            .coerceIn(firstContentIndex, lastContentIndex)
 
          layout(deckWidth, deckHeight) {
             for ((layoutState, placeable) in placeables) {
@@ -318,25 +307,4 @@ fun <T> MultiColumnDeck(
          }
       }}
    )
-}
-
-@Stable
-private fun Modifier.detectTouch(onTouch: () -> Unit): Modifier {
-   return pointerInput(onTouch) {
-      awaitEachGesture {
-         val event = awaitPointerEvent(PointerEventPass.Initial)
-
-         val isDownEvent = event.changes.any {
-            if (it.type == PointerType.Mouse) {
-               event.buttons.isPrimaryPressed && it.changedToDownIgnoreConsumed()
-            } else {
-               it.changedToDownIgnoreConsumed()
-            }
-         }
-
-         if (isDownEvent) {
-            onTouch()
-         }
-      }
-   }
 }

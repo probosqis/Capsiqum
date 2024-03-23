@@ -117,8 +117,6 @@ sealed class DeckState<T>(initialDeck: Deck<T>) {
     */
    abstract val lastContentCardIndex: Int
 
-   abstract val activeCardIndex: Int
-
    private var cardInsertionAnimOffset by mutableFloatStateOf(0.0f)
 
    suspend fun animateScroll(
