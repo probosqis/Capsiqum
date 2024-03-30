@@ -41,7 +41,7 @@ abstract class DeckTestBase {
 @Config(qualifiers = "w600dp")
 abstract class MultiColumnDeckTestBase : DeckTestBase() {
    protected val defaultDeckWidth = 600.dp
-   protected val defaultCardCount = 2
+   protected val defaultColumnCount = 2
    protected val defaultWindowInsets = WindowInsets(0)
 
    protected abstract val density: Density
@@ -55,7 +55,7 @@ abstract class MultiColumnDeckTestBase : DeckTestBase() {
    protected fun <T> MultiColumnDeck(
       state: MultiColumnDeckState<T>,
       width: Dp = defaultDeckWidth,
-      cardCount: Int = defaultCardCount,
+      columnCount: Int = defaultColumnCount,
       windowInsets: WindowInsets = defaultWindowInsets,
       card: @Composable (index: Int, T) -> Unit = { _, content ->
          Text("$content", Modifier.fillMaxWidth())
@@ -63,7 +63,7 @@ abstract class MultiColumnDeckTestBase : DeckTestBase() {
    ) {
       MultiColumnDeck(
          state, sizeModifier = { Modifier.width(width).fillMaxHeight() },
-         cardCount, windowInsets, card
+         columnCount, windowInsets, card
       )
    }
 
@@ -71,7 +71,7 @@ abstract class MultiColumnDeckTestBase : DeckTestBase() {
    protected fun <T> MultiColumnDeck(
       state: MultiColumnDeckState<T>,
       sizeModifier: () -> Modifier,
-      cardCount: Int = defaultCardCount,
+      columnCount: Int = defaultColumnCount,
       windowInsets: WindowInsets = defaultWindowInsets,
       card: @Composable (index: Int, T) -> Unit = { _, content ->
          Text("$content", Modifier.fillMaxWidth())
@@ -79,7 +79,7 @@ abstract class MultiColumnDeckTestBase : DeckTestBase() {
    ) {
       MultiColumnDeck(
          state,
-         cardCount,
+         columnCount,
          windowInsets = windowInsets,
          card = card,
          modifier = Modifier
@@ -90,7 +90,7 @@ abstract class MultiColumnDeckTestBase : DeckTestBase() {
 
    protected fun expectedCardWidth(
       deckWidth: Dp = defaultDeckWidth,
-      cardCount: Int = defaultCardCount,
+      columnCount: Int = defaultColumnCount,
       windowInsets: WindowInsets = defaultWindowInsets
    ): Dp {
       val leftWindowInset:  Dp
@@ -101,20 +101,20 @@ abstract class MultiColumnDeckTestBase : DeckTestBase() {
          rightWindowInset = windowInsets.getRight(this, LayoutDirection.Ltr).toDp()
       }
 
-      return (deckWidth - leftWindowInset - rightWindowInset - 16.dp) / cardCount - 16.dp
+      return (deckWidth - leftWindowInset - rightWindowInset - 16.dp) / columnCount - 16.dp
    }
 
    protected fun expectedCardLeftPosition(
       index: Int,
       deckWidth: Dp = defaultDeckWidth,
-      cardCount: Int = defaultCardCount,
+      columnCount: Int = defaultColumnCount,
       windowInsets: WindowInsets = defaultWindowInsets
    ): Dp {
       val leftWindowInset = with (density) {
          windowInsets.getLeft(this, LayoutDirection.Ltr).toDp()
       }
 
-      val cardWidth = expectedCardWidth(deckWidth, cardCount, windowInsets)
+      val cardWidth = expectedCardWidth(deckWidth, columnCount, windowInsets)
 
       return leftWindowInset + 16.dp + (cardWidth + 16.dp) * index
    }
@@ -122,11 +122,11 @@ abstract class MultiColumnDeckTestBase : DeckTestBase() {
    protected fun expectedScrollOffset(
       index: Int,
       deckWidth: Dp = defaultDeckWidth,
-      cardCount: Int = defaultCardCount,
+      columnCount: Int = defaultColumnCount,
       windowInsets: WindowInsets = defaultWindowInsets
    ): Float {
       val cardDistance = expectedCardWidth(
-         deckWidth, cardCount, windowInsets) + 16.dp
+         deckWidth, columnCount, windowInsets) + 16.dp
 
       return with (density) { cardDistance.toPx() * index }
    }

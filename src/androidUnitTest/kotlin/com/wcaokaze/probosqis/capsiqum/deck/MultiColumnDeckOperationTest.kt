@@ -53,13 +53,13 @@ class MultiColumnDeckOperationTest : MultiColumnDeckTestBase() {
    fun animateScroll() {
       val deckState = createDeckState(cardCount = 4)
       lateinit var coroutineScope: CoroutineScope
-      var cardCount by mutableIntStateOf(2)
+      var columnCount by mutableIntStateOf(2)
       var windowInsets by mutableStateOf(WindowInsets(0))
       rule.setContent {
          coroutineScope = rememberCoroutineScope()
          MultiColumnDeck(
             deckState,
-            cardCount = cardCount,
+            columnCount = columnCount,
             windowInsets = windowInsets
          )
       }
@@ -87,13 +87,13 @@ class MultiColumnDeckOperationTest : MultiColumnDeckTestBase() {
          rule.onNodeWithText("$leftmostCardIndex")
             .assertLeftPositionInRootIsEqualTo(
                expectedCardLeftPosition(0,
-                  cardCount = cardCount, windowInsets = windowInsets)
+                  columnCount = columnCount, windowInsets = windowInsets)
             )
 
          rule.runOnIdle {
             assertEquals(
                expectedScrollOffset(leftmostCardIndex,
-                  cardCount = cardCount, windowInsets = windowInsets),
+                  columnCount = columnCount, windowInsets = windowInsets),
                deckState.scrollState.scrollOffset
             )
          }
@@ -106,8 +106,8 @@ class MultiColumnDeckOperationTest : MultiColumnDeckTestBase() {
          windowInsets = insets
 
          for (parameterType in listOf(byIndex, byKey)) {
-            // -------- cardCount = 2 --------
-            cardCount = 2
+            // -------- columnCount = 2 --------
+            columnCount = 2
             coroutineScope.launch {
                animateScroll(0, PositionInDeck.FirstVisible, byIndex)
             }
@@ -284,8 +284,8 @@ class MultiColumnDeckOperationTest : MultiColumnDeckTestBase() {
                }
             }
 
-            // -------- cardCount = 1 --------
-            cardCount = 1
+            // -------- columnCount = 1 --------
+            columnCount = 1
             coroutineScope.launch {
                animateScroll(0, PositionInDeck.FirstVisible, byIndex)
             }

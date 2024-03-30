@@ -67,14 +67,14 @@ class MultiColumnDeckState<T>(
       density: Density,
       animCoroutineScope: CoroutineScope,
       deckWidth: Int,
-      cardCount: Int,
+      columnCount: Int,
       cardPadding: Int,
       windowInsets: WindowInsets,
       layoutDirection: LayoutDirection
    ) {
       super.layout(density)
 
-      layoutLogic.layout(density, animCoroutineScope, deckWidth, cardCount,
+      layoutLogic.layout(density, animCoroutineScope, deckWidth, columnCount,
          cardPadding, windowInsets, layoutDirection, scrollState)
    }
 }
@@ -144,7 +144,7 @@ internal class MultiColumnLayoutLogic<T>(
       density: Density,
       animCoroutineScope: CoroutineScope,
       deckWidth: Int,
-      cardCount: Int,
+      columnCount: Int,
       cardPadding: Int,
       windowInsets: WindowInsets,
       layoutDirection: LayoutDirection,
@@ -156,7 +156,7 @@ internal class MultiColumnLayoutLogic<T>(
       val cardWidth = ceil(
          (deckWidth
                - leftWindowInset - rightWindowInset
-               - cardPadding * 2) / cardCount.toDouble()
+               - cardPadding * 2) / columnCount.toDouble()
          - cardPadding * 2
       ).toInt()
 

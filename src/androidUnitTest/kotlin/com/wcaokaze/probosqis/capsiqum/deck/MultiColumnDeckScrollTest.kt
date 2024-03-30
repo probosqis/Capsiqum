@@ -256,7 +256,7 @@ class MultiColumnDeckScrollTest : MultiColumnDeckTestBase() {
    fun snap_windowInsets() {
       val windowInsets = WindowInsets(left = 32.dp, right = 32.dp)
 
-      val deckState =createDeckState(cardCount = 4)
+      val deckState = createDeckState(cardCount = 4)
       rule.setContent {
          MultiColumnDeck(deckState, windowInsets = windowInsets)
       }
@@ -330,7 +330,7 @@ class MultiColumnDeckScrollTest : MultiColumnDeckTestBase() {
 
    @Test
    fun snap_edges() {
-      val deckState= createDeckState(cardCount = 4)
+      val deckState = createDeckState(cardCount = 4)
       rule.setContent {
          MultiColumnDeck(deckState)
       }

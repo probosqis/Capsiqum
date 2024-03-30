@@ -266,7 +266,7 @@ class SingleColumnDeckScrollTest : SingleColumnDeckTestBase() {
 
    @Test
    fun snap_edges() {
-      val deckState= createDeckState(cardCount = 4)
+      val deckState = createDeckState(cardCount = 4)
       rule.setContent {
          SingleColumnDeck(deckState)
       }

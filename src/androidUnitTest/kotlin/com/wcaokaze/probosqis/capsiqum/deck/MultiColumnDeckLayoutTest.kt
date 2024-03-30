@@ -135,14 +135,14 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
    @Test
    fun width_sizeModifier() {
       var width by mutableStateOf(50.dp)
-      var cardCount by mutableIntStateOf(1)
+      var columnCount by mutableIntStateOf(1)
       val deckState = createDeckState(cardCount = 1)
 
       rule.setContent {
          MultiColumnDeck(
             deckState,
             sizeModifier = { Modifier.width(width).fillMaxHeight() },
-            cardCount
+            columnCount
          )
       }
 
@@ -152,7 +152,7 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
       width = 70.dp
       rule.onNodeWithTag(deckTestTag).assertWidthIsEqualTo(70.dp)
 
-      cardCount = 2
+      columnCount = 2
 
       width = 50.dp
       rule.onNodeWithTag(deckTestTag).assertWidthIsEqualTo(50.dp)
@@ -180,14 +180,14 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
    @Test
    fun height_sizeModifier() {
       var height by mutableStateOf(50.dp)
-      var cardCount by mutableIntStateOf(1)
+      var columnCount by mutableIntStateOf(1)
       val deckState = createDeckState(cardCount = 1)
 
       rule.setContent {
          MultiColumnDeck(
             deckState,
             sizeModifier = { Modifier.fillMaxWidth().height(height) },
-            cardCount
+            columnCount
          )
       }
 
@@ -197,7 +197,7 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
       height = 70.dp
       rule.onNodeWithTag(deckTestTag).assertHeightIsEqualTo(70.dp)
 
-      cardCount = 2
+      columnCount = 2
 
       height = 50.dp
       rule.onNodeWithTag(deckTestTag).assertHeightIsEqualTo(50.dp)
