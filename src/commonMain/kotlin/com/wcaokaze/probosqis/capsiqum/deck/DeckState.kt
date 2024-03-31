@@ -158,26 +158,6 @@ sealed class DeckState<T>(initialDeck: Deck<T>) {
       targetPositionInDeck,
       scrollState.scrollOffset
    )
-
-   fun addColumn(index: Int, content: T) {
-      deck = Deck(
-         rootRow = deck.rootRow.inserted(index, content)
-      )
-   }
-
-   fun removeCard(index: Int) {
-      deck = deck.removed(index)
-   }
-
-   fun removeCardByKey(key: Any) {
-      val index = layoutLogic.cardsInfo.indexOfFirst { it.key == key }
-
-      if (index < 0) {
-         throw IllegalArgumentException("Card key not found: $key")
-      }
-
-      removeCard(index)
-   }
 }
 
 interface DeckLayoutInfo<out T> {

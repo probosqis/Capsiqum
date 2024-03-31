@@ -175,10 +175,6 @@ class SingleColumnDeckLayoutTest : SingleColumnDeckTestBase() {
          assertFails {
             deckState.deck = Deck(List(2) { Deck.Card(0) })
          }
-
-         assertFails {
-            deckState.addColumn(1, 0)
-         }
       }
    }
 

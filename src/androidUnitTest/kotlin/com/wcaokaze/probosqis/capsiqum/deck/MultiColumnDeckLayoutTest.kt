@@ -159,9 +159,9 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
       width = 100.dp
       rule.onNodeWithTag(deckTestTag).assertWidthIsEqualTo(100.dp)
 
-      deckState.addColumn(0, 1)
+      deckState.deck = createDeck(cardCount = 2)
       rule.onNodeWithTag(deckTestTag).assertWidthIsEqualTo(100.dp)
-      deckState.addColumn(0, 2)
+      deckState.deck = createDeck(cardCount = 3)
       rule.onNodeWithTag(deckTestTag).assertWidthIsEqualTo(100.dp)
    }
 
@@ -204,9 +204,9 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
       height = 100.dp
       rule.onNodeWithTag(deckTestTag).assertHeightIsEqualTo(100.dp)
 
-      deckState.addColumn(0, 1)
+      deckState.deck = createDeck(cardCount = 2)
       rule.onNodeWithTag(deckTestTag).assertHeightIsEqualTo(100.dp)
-      deckState.addColumn(0, 2)
+      deckState.deck = createDeck(cardCount = 3)
       rule.onNodeWithTag(deckTestTag).assertHeightIsEqualTo(100.dp)
    }
 
@@ -239,10 +239,6 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
 
          assertFails {
             deckState.deck = Deck(List(2) { Deck.Card(0) })
-         }
-
-         assertFails {
-            deckState.addColumn(1, 0)
          }
       }
    }
