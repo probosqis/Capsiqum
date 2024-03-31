@@ -320,8 +320,10 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
          }
       }
 
+      lateinit var coroutineScope: CoroutineScope
       val deckState = createDeckState(cardCount = 2)
       rule.setContent {
+         coroutineScope = rememberCoroutineScope()
          MultiColumnDeck(deckState)
       }
 
@@ -342,9 +344,14 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
          assertCardNumbers(listOf(2, 0, 1), deckState.deck)
          assertLayoutStatesExist(deckState.deck, deckState.layoutLogic)
          assertTrue(deckState.layoutLogic.layoutState(0).isInitialized)
+         assertEquals(expectedScrollOffset(0), deckState.scrollOffset)
       }
 
       // ---- insert last ----
+
+      coroutineScope.launch {
+         deckState.animateScroll(2)
+      }
 
       deckState.deck = Deck(
          rootRow = deckState.deck.rootRow.inserted(3, Deck.Card(3))
@@ -356,6 +363,7 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
          assertCardNumbers(listOf(2, 0, 1, 3), deckState.deck)
          assertLayoutStatesExist(deckState.deck, deckState.layoutLogic)
          assertTrue(deckState.layoutLogic.layoutState(3).isInitialized)
+         assertEquals(expectedScrollOffset(1), deckState.scrollOffset)
       }
 
       // ---- insert middle ----
@@ -370,6 +378,7 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
          assertCardNumbers(listOf(2, 0, 4, 1, 3), deckState.deck)
          assertLayoutStatesExist(deckState.deck, deckState.layoutLogic)
          assertTrue(deckState.layoutLogic.layoutState(2).isInitialized)
+         assertEquals(expectedScrollOffset(1), deckState.scrollOffset)
       }
 
       // ---- replace ----
@@ -384,9 +393,14 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
          assertCardNumbers(listOf(2, 0, 5, 1, 3), deckState.deck)
          assertLayoutStatesExist(deckState.deck, deckState.layoutLogic)
          assertTrue(deckState.layoutLogic.layoutState(2).isInitialized)
+         assertEquals(expectedScrollOffset(1), deckState.scrollOffset)
       }
 
       // ---- remove first ----
+
+      coroutineScope.launch {
+         deckState.animateScroll(0)
+      }
 
       deckState.deck = Deck(
          rootRow = deckState.deck.rootRow.removed(0)
@@ -395,9 +409,14 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
       rule.runOnIdle {
          assertCardNumbers(listOf(0, 5, 1, 3), deckState.deck)
          assertLayoutStatesExist(deckState.deck, deckState.layoutLogic)
+         assertEquals(expectedScrollOffset(0), deckState.scrollOffset)
       }
 
       // ---- remove last ----
+
+      coroutineScope.launch {
+         deckState.animateScroll(3)
+      }
 
       deckState.deck = Deck(
          rootRow = deckState.deck.rootRow.removed(3)
@@ -406,6 +425,7 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
       rule.runOnIdle {
          assertCardNumbers(listOf(0, 5, 1), deckState.deck)
          assertLayoutStatesExist(deckState.deck, deckState.layoutLogic)
+         assertEquals(expectedScrollOffset(1), deckState.scrollOffset)
       }
 
       // ---- remove middle ----
@@ -417,6 +437,7 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
       rule.runOnIdle {
          assertCardNumbers(listOf(0, 1), deckState.deck)
          assertLayoutStatesExist(deckState.deck, deckState.layoutLogic)
+         assertEquals(expectedScrollOffset(0), deckState.scrollOffset)
       }
    }
 

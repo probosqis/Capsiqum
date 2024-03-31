@@ -159,30 +159,10 @@ sealed class DeckState<T>(initialDeck: Deck<T>) {
       scrollState.scrollOffset
    )
 
-   fun addColumn(index: Int, content: T): Job {
-      val coroutineScope = coroutineScope
-      if (coroutineScope != null) {
-         return coroutineScope.launch {
-            deck = Deck(
-               rootRow = deck.rootRow.inserted(index, content)
-            )
-
-            val layoutState = layoutLogic.layoutState(index)
-
-            layoutState.awaitInitialized()
-
-            val currentScrollOffset = scrollState.scrollOffset
-            val targetScrollOffset = layoutLogic.getScrollOffset(
-               layoutState, PositionInDeck.NearestVisible, currentScrollOffset)
-
-            scrollState.animateScrollBy(targetScrollOffset - currentScrollOffset)
-         }
-      } else {
-         deck = Deck(
-            rootRow = deck.rootRow.inserted(index, content)
-         )
-         return Job().apply { complete() }
-      }
+   fun addColumn(index: Int, content: T) {
+      deck = Deck(
+         rootRow = deck.rootRow.inserted(index, content)
+      )
    }
 
    fun removeCard(index: Int) {

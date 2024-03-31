@@ -36,10 +36,8 @@ import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.Test
-import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
-import kotlin.test.assertNotEquals
 
 @RunWith(RobolectricTestRunner::class)
 class MultiColumnDeckOperationTest : MultiColumnDeckTestBase() {
@@ -468,119 +466,6 @@ class MultiColumnDeckOperationTest : MultiColumnDeckTestBase() {
                }
             }
          }
-      }
-   }
-
-   @Test
-   fun addCard_viaDeckState() {
-      val deckState = createDeckState(cardCount = 2)
-      lateinit var coroutineScope: CoroutineScope
-      rule.setContent {
-         coroutineScope = rememberCoroutineScope()
-
-         MultiColumnDeck(deckState) { _, i ->
-            Button(
-               onClick = {
-                  val idx = deckState.deck.sequence().indexOfFirst { it.content == i }
-                  deckState.addColumn(idx + 1, i + 100)
-               }
-            ) {
-               Text("Add Card $i")
-            }
-         }
-      }
-
-      fun assertCardNumbers(expected: List<Int>, actual: Deck<Int>) {
-         val contents = actual.sequence().map { it.content } .toList()
-         assertContentEquals(expected, contents)
-      }
-
-      rule.runOnIdle {
-         assertCardNumbers(listOf(0, 1), deckState.deck)
-         assertEquals(expectedScrollOffset(0), deckState.scrollState.scrollOffset)
-      }
-
-      rule.onNodeWithText("Add Card 1").performClick()
-      rule.runOnIdle {
-         assertCardNumbers(listOf(0, 1, 101), deckState.deck)
-         assertEquals(expectedScrollOffset(1), deckState.scrollState.scrollOffset)
-      }
-
-      coroutineScope.launch {
-         deckState.animateScroll(0)
-      }
-
-      rule.onNodeWithText("Add Card 0").performClick()
-      rule.runOnIdle {
-         assertCardNumbers(listOf(0, 100, 1, 101), deckState.deck)
-         assertEquals(expectedScrollOffset(0), deckState.scrollState.scrollOffset)
-      }
-
-      rule.onNodeWithText("Add Card 100").performClick()
-      rule.runOnIdle {
-         assertCardNumbers(listOf(0, 100, 200, 1, 101), deckState.deck)
-         assertEquals(expectedScrollOffset(1), deckState.scrollState.scrollOffset)
-      }
-   }
-
-   @Test
-   fun removeCard_viaDeckState() {
-      val deckState = createDeckState(cardCount = 6)
-      lateinit var coroutineScope: CoroutineScope
-      rule.setContent {
-         coroutineScope = rememberCoroutineScope()
-
-         MultiColumnDeck(deckState) { _, i ->
-            Button(
-               onClick = { deckState.removeCardByKey(i) }
-            ) {
-               Text("Remove Card $i")
-            }
-         }
-      }
-
-      fun assertCardNumbers(expected: List<Int>, actual: Deck<Int>) {
-         val contents = actual.sequence().map { it.content } .toList()
-         assertContentEquals(expected, contents)
-      }
-
-      rule.runOnIdle {
-         assertCardNumbers(listOf(0, 1, 2, 3, 4, 5), deckState.deck)
-         assertEquals(expectedScrollOffset(0), deckState.scrollState.scrollOffset)
-      }
-
-      rule.onNodeWithText("Remove Card 1").performClick()
-      rule.runOnIdle {
-         assertCardNumbers(listOf(0, 2, 3, 4, 5), deckState.deck)
-         assertEquals(expectedScrollOffset(0), deckState.scrollState.scrollOffset)
-      }
-
-      rule.onNodeWithText("Remove Card 0").performClick()
-      rule.runOnIdle {
-         assertCardNumbers(listOf(2, 3, 4, 5), deckState.deck)
-         assertEquals(expectedScrollOffset(0), deckState.scrollState.scrollOffset)
-      }
-
-      coroutineScope.launch {
-         deckState.animateScroll(1, PositionInDeck.FirstVisible)
-      }
-
-      rule.onNodeWithText("Remove Card 3").performClick()
-      rule.runOnIdle {
-         assertCardNumbers(listOf(2, 4, 5), deckState.deck)
-         assertEquals(expectedScrollOffset(1), deckState.scrollState.scrollOffset)
-      }
-
-      rule.onNodeWithText("Remove Card 5").performClick()
-      rule.runOnIdle {
-         assertCardNumbers(listOf(2, 4), deckState.deck)
-         assertEquals(expectedScrollOffset(0), deckState.scrollState.scrollOffset)
-      }
-
-      rule.onNodeWithText("Remove Card 4").performClick()
-      rule.runOnIdle {
-         assertCardNumbers(listOf(2), deckState.deck)
-         assertEquals(expectedScrollOffset(0), deckState.scrollState.scrollOffset)
       }
    }
 }
