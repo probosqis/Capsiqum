@@ -60,13 +60,10 @@ class SingleColumnDeckState<T>(
    override val layoutLogic = SingleColumnLayoutLogic(initialDeck, key)
 
    internal fun layout(
-      density: Density,
       animCoroutineScope: CoroutineScope,
       deckWidth: Int,
       cardPadding: Int
    ) {
-      super.layout(density)
-
       layoutLogic.layout(animCoroutineScope, deckWidth, cardPadding, scrollState)
    }
 }
@@ -176,7 +173,7 @@ fun <T> SingleColumnDeck(
          val deckWidth = constraints.maxWidth
          val cardPaddingPx = cardPadding.roundToPx()
 
-         state.layout(density = this, coroutineScope, deckWidth, cardPaddingPx)
+         state.layout(coroutineScope, deckWidth, cardPaddingPx)
 
          val scrollOffset = state.scrollState.scrollOffset.toInt()
          val visibleLeft = scrollOffset

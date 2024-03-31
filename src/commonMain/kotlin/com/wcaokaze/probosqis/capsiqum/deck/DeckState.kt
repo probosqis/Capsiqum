@@ -120,8 +120,6 @@ sealed class DeckState<T>(initialDeck: Deck<T>) {
     */
    abstract val lastContentCardIndex: Int
 
-   private var cardInsertionAnimOffset by mutableFloatStateOf(0.0f)
-
    suspend fun animateScroll(
       targetIndex: Int,
       targetPositionInDeck: PositionInDeck = PositionInDeck.NearestVisible,
@@ -199,12 +197,6 @@ sealed class DeckState<T>(initialDeck: Deck<T>) {
       }
 
       removeCard(index)
-   }
-
-   protected fun layout(density: Density) {
-      with (density) {
-         cardInsertionAnimOffset = 64.dp.toPx()
-      }
    }
 }
 

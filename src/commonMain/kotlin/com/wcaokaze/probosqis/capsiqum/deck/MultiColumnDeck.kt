@@ -72,8 +72,6 @@ class MultiColumnDeckState<T>(
       windowInsets: WindowInsets,
       layoutDirection: LayoutDirection
    ) {
-      super.layout(density)
-
       layoutLogic.layout(density, animCoroutineScope, deckWidth, columnCount,
          cardPadding, windowInsets, layoutDirection, scrollState)
    }
