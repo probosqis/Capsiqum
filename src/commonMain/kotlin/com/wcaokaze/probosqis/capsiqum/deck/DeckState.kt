@@ -171,18 +171,13 @@ sealed class DeckState<T>(initialDeck: Deck<T>) {
 
             val layoutState = layoutLogic.layoutState(index)
 
-            launch {
-               layoutState.awaitInitialized()
+            layoutState.awaitInitialized()
 
-               val currentScrollOffset = scrollState.scrollOffset
-               val targetScrollOffset = layoutLogic.getScrollOffset(
-                  layoutState, PositionInDeck.NearestVisible, currentScrollOffset)
+            val currentScrollOffset = scrollState.scrollOffset
+            val targetScrollOffset = layoutLogic.getScrollOffset(
+               layoutState, PositionInDeck.NearestVisible, currentScrollOffset)
 
-               scrollState.animateScrollBy(targetScrollOffset - currentScrollOffset)
-            }
-            launch {
-               layoutState.animateInsertion(cardInsertionAnimOffset)
-            }
+            scrollState.animateScrollBy(targetScrollOffset - currentScrollOffset)
          }
       } else {
          deck = Deck(
@@ -192,28 +187,18 @@ sealed class DeckState<T>(initialDeck: Deck<T>) {
       }
    }
 
-   fun removeCard(index: Int): Job {
-      val coroutineScope= coroutineScope
-
-      return if (coroutineScope != null) {
-         coroutineScope.launch {
-            layoutLogic.layoutState(index).animateRemoving(cardInsertionAnimOffset)
-            deck = deck.removed(index)
-         }
-      } else {
-         deck = deck.removed(index)
-         Job().apply { complete() }
-      }
+   fun removeCard(index: Int) {
+      deck = deck.removed(index)
    }
 
-   fun removeCardByKey(key: Any): Job {
+   fun removeCardByKey(key: Any) {
       val index = layoutLogic.cardsInfo.indexOfFirst { it.key == key }
 
       if (index < 0) {
          throw IllegalArgumentException("Card key not found: $key")
       }
 
-      return removeCard(index)
+      removeCard(index)
    }
 
    protected fun layout(density: Density) {
@@ -248,40 +233,10 @@ internal class DeckCardLayoutState<out T>(
    var isInitialized by mutableStateOf(false)
       internal set
 
-   private val yOffsetAnimatable = Animatable(0.0f)
-   internal suspend fun animateInsertion(yOffset: Float) {
-      coroutineScope {
-         alphaAnimatable.snapTo(0.0f)
-         yOffsetAnimatable.snapTo(yOffset)
-
-         delay(200.milliseconds)
-
-         launch {
-            alphaAnimatable.animateTo(1.0f, tween(durationMillis = 200))
-         }
-         launch {
-            yOffsetAnimatable.animateTo(0.0f, tween(durationMillis = 200))
-         }
-      }
-   }
-   internal suspend fun animateRemoving(yOffset: Float) {
-      coroutineScope {
-         launch {
-            alphaAnimatable.animateTo(
-               0.0f, tween(durationMillis = 200, easing = LinearEasing))
-         }
-         launch {
-            yOffsetAnimatable.animateTo(
-               yOffset, tween(durationMillis = 200, easing = LinearEasing))
-         }
-      }
-   }
-
    private lateinit var positionAnimatable: Animatable<IntOffset, *>
    override val position: IntOffset get() {
       require(isInitialized)
-      val (x, y) = positionAnimatable.value
-      return IntOffset(x, y + yOffsetAnimatable.value.toInt())
+      return positionAnimatable.value
    }
 
    private lateinit var widthAnimatable: Animatable<Int, *>
@@ -289,9 +244,6 @@ internal class DeckCardLayoutState<out T>(
       require(isInitialized)
       return widthAnimatable.value
    }
-
-   private val alphaAnimatable = Animatable(1.0f)
-   val alpha: Float get() = alphaAnimatable.value
 
    internal fun update(
       position: IntOffset,

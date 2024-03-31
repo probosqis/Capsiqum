@@ -294,30 +294,10 @@ class SingleColumnDeckOperationTest : SingleColumnDeckTestBase() {
          assertEquals(expectedScrollOffset(0), deckState.scrollState.scrollOffset)
       }
 
-      rule.mainClock.autoAdvance = false
       rule.onNodeWithText("Add Card 0").performClick()
       rule.runOnIdle {
          assertCardNumbers(listOf(0, 100, 1), deckState.deck)
-
-         // ボタン押下直後、まだDeckは動いていない
-         assertEquals(expectedScrollOffset(0), deckState.scrollState.scrollOffset)
-
-         // 挿入されるCardは透明
-         assertEquals(0.0f, deckState.layoutLogic.layoutState(1).alpha)
-      }
-      // Cardひとつ分スクロールされるまで進める
-      rule.mainClock.advanceTimeUntil {
-         deckState.scrollState.scrollOffset == expectedScrollOffset(1)
-      }
-      rule.runOnIdle {
-         // Card挿入アニメーションが開始されているがまだ終わっていない
-         assertNotEquals(1.0f, deckState.layoutLogic.layoutState(1).alpha)
-      }
-      // アニメーション終了まで進める
-      rule.mainClock.autoAdvance = true
-      rule.runOnIdle {
-         // 挿入アニメーション終了後不透明度は100%
-         assertEquals(1.0f, deckState.layoutLogic.layoutState(1).alpha)
+         assertEquals(expectedScrollOffset(1), deckState.scrollState.scrollOffset)
       }
    }
 

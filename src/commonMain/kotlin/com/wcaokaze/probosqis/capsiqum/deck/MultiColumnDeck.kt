@@ -276,7 +276,7 @@ fun <T> MultiColumnDeck(
             }
 
             val measurable = subcompose(layoutState.key) {
-               Box(Modifier.alpha(layoutState.alpha)) {
+               Box {
                   card(index, layoutState.card.content)
                }
             } .single()
