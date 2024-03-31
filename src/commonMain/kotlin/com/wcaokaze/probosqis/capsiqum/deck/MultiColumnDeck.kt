@@ -194,10 +194,6 @@ fun <T> MultiColumnDeck(
 ) {
    val coroutineScope = rememberCoroutineScope()
 
-   LaunchedEffect(coroutineScope) {
-      state.setCoroutineScope(coroutineScope)
-   }
-
    SubcomposeLayout(
       modifier = modifier
          .scrollable(

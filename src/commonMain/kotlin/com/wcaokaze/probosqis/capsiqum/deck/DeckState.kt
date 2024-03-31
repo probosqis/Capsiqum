@@ -68,11 +68,6 @@ enum class PositionInDeck {
 
 @Stable
 sealed class DeckState<T>(initialDeck: Deck<T>) {
-   private var coroutineScope: CoroutineScope? = null
-   internal fun setCoroutineScope(coroutineScope: CoroutineScope) {
-      this.coroutineScope = coroutineScope
-   }
-
    private val _deck = mutableStateOf(initialDeck)
    var deck: Deck<T>
       get() = _deck.value
