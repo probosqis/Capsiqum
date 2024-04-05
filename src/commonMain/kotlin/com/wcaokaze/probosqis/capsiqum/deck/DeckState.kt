@@ -18,21 +18,15 @@ package com.wcaokaze.probosqis.capsiqum.deck
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
@@ -41,12 +35,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Deck内の位置
@@ -67,15 +56,7 @@ enum class PositionInDeck {
 }
 
 @Stable
-sealed class DeckState<T>(initialDeck: Deck<T>) {
-   private val _deck = mutableStateOf(initialDeck)
-   var deck: Deck<T>
-      get() = _deck.value
-      set(value) {
-         _deck.value = value
-         layoutLogic.recreateLayoutState(value)
-      }
-
+sealed class DeckState<T> {
    internal val scrollState = DeckScrollState()
 
    internal abstract val layoutLogic: DeckLayoutLogic<T>
@@ -121,7 +102,6 @@ sealed class DeckState<T>(initialDeck: Deck<T>) {
       animationSpec: AnimationSpec<Float> = spring()
    ) {
       val layoutState = layoutLogic.layoutState(targetIndex)
-      layoutState.awaitInitialized()
       val targetScrollOffset = layoutLogic.getScrollOffset(
          layoutState, targetPositionInDeck, scrollState.scrollOffset)
 
@@ -137,7 +117,6 @@ sealed class DeckState<T>(initialDeck: Deck<T>) {
       val layoutState = layoutLogic.layoutState(targetCardKey)
          ?: throw IllegalArgumentException("Card key not found: $targetCardKey")
 
-      layoutState.awaitInitialized()
       val targetScrollOffset = layoutLogic.getScrollOffset(
          layoutState, targetPositionInDeck, scrollState.scrollOffset)
 
@@ -173,24 +152,13 @@ internal class DeckCardLayoutState<out T>(
    override val card: Deck.Card<T>,
    override val key: Any
 ) : DeckLayoutInfo.CardInfo<T> {
-   /**
-    * [DeckState.deck]が更新されて生成された直後のインスタンスの場合 `false`。
-    * [DeckState.layout]が呼ばれて位置とサイズが決まったあと `true` になる
-    */
-   var isInitialized by mutableStateOf(false)
-      internal set
+   private val isInitialized: Boolean get() = ::positionAnimatable.isInitialized
 
    private lateinit var positionAnimatable: Animatable<IntOffset, *>
-   override val position: IntOffset get() {
-      require(isInitialized)
-      return positionAnimatable.value
-   }
+   override val position: IntOffset get() = positionAnimatable.value
 
    private lateinit var widthAnimatable: Animatable<Int, *>
-   override val width: Int get() {
-      require(isInitialized)
-      return widthAnimatable.value
-   }
+   override val width: Int get() = widthAnimatable.value
 
    internal fun update(
       position: IntOffset,
@@ -221,38 +189,28 @@ internal class DeckCardLayoutState<out T>(
       }
    }
 
-   internal suspend fun awaitInitialized() {
-      snapshotFlow { isInitialized }
-         .filter { it }
-         .first()
-   }
-
    private fun initialize(position: IntOffset, width: Int) {
-      assert(!isInitialized)
       positionAnimatable = Animatable(position, IntOffset.VectorConverter)
       widthAnimatable = Animatable(width, Int.VectorConverter)
-      isInitialized = true
    }
 }
 
 internal abstract class DeckLayoutLogic<T>(
-   initialDeck: Deck<T>,
    private val contentKeyChooser: (T) -> Any
 ) : DeckLayoutInfo<T> {
-   /** [DeckState.deck]と同じ順 */
+   /** 最後に実行された[layout]の結果。[layout]の引数のDeckと同じ順 */
    protected var list: ImmutableList<DeckCardLayoutState<T>>
          by mutableStateOf(persistentListOf())
 
    protected var map: ImmutableMap<Any, DeckCardLayoutState<T>>
          by mutableStateOf(persistentMapOf())
 
+   private var layoutDeck by mutableStateOf(Deck<T>())
+   private var layoutKeys: Array<out Any> by mutableStateOf(emptyArray())
+
    private var maxScrollOffsetAnimTarget by mutableStateOf(0.0f)
    private var maxScrollOffsetAnimJob: Job
          by mutableStateOf(Job().apply { complete() })
-
-   init {
-      recreateLayoutState(initialDeck)
-   }
 
    override val cardsInfo: List<DeckLayoutInfo.CardInfo<T>> get() = list
 
@@ -275,7 +233,32 @@ internal abstract class DeckLayoutLogic<T>(
 
    internal fun <U> cardPositionAnimSpec() = spring<U>()
 
-   internal fun recreateLayoutState(deck: Deck<T>) {
+   protected inline fun layout(
+      deck: Deck<T>,
+      vararg keys: Any,
+      layoutLogic: (
+         ImmutableList<DeckCardLayoutState<T>>,
+         ImmutableMap<Any, DeckCardLayoutState<T>>
+      ) -> Unit
+   ) {
+      val keyEqualsPreviousLayout = keys contentEquals layoutKeys
+
+      if (deck === layoutDeck && keyEqualsPreviousLayout) { return }
+
+      val shouldLayout = recreateLayoutState(deck)
+      if (!shouldLayout && keyEqualsPreviousLayout) { return }
+
+      layoutLogic(list, map)
+      layoutDeck = deck
+      layoutKeys = keys
+   }
+
+   /**
+    * @return
+    * [list], [map]に変更があった場合true。この場合レイアウトを再実行する
+    * 必要がある
+    */
+   private fun recreateLayoutState(deck: Deck<T>): Boolean {
       val oldLayoutList = list
       val oldLayoutMap = map
 
@@ -316,10 +299,11 @@ internal abstract class DeckLayoutLogic<T>(
          }
       }
 
-      when {
+      return when {
          i < 0 -> {
             list = resultList.toImmutableList()
             map = resultMap.toImmutableMap()
+            true
          }
          i < oldLayoutList.size -> {
             list = oldLayoutList.subList(0, i)
@@ -328,7 +312,9 @@ internal abstract class DeckLayoutLogic<T>(
                resultMap[s.key] = s
             }
             map = resultMap.toImmutableMap()
+            true
          }
+         else -> false
       }
    }
 

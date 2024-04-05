@@ -18,6 +18,7 @@ package com.wcaokaze.probosqis.capsiqum.deck
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
@@ -90,9 +91,12 @@ class SingleColumnDeckScrollTest : SingleColumnDeckTestBase() {
 
    @Test
    fun scroll() {
-      val deckState = createDeckState(cardCount = 3)
+      val deckState = createDefaultDeckState<Int>()
       rule.setContent {
-         SingleColumnDeck(deckState)
+         SingleColumnDeck(
+            deck = remember { createDeck(cardCount = 3) },
+            deckState
+         )
       }
 
       rule.onNodeWithText("0")
@@ -123,9 +127,12 @@ class SingleColumnDeckScrollTest : SingleColumnDeckTestBase() {
 
    @Test
    fun edge() {
-      val deckState = createDeckState(cardCount = 2)
+      val deckState = createDefaultDeckState<Int>()
       rule.setContent {
-         SingleColumnDeck(deckState)
+         SingleColumnDeck(
+            deck = remember { createDeck(cardCount = 2) },
+            deckState
+         )
       }
 
       rule.onNodeWithText("0")
@@ -169,11 +176,14 @@ class SingleColumnDeckScrollTest : SingleColumnDeckTestBase() {
    fun edge_afterSizeChanged() {
       var deckWidth by mutableStateOf(300.dp)
 
-      val deckState = createDeckState(cardCount = 2)
+      val deckState = createDefaultDeckState<Int>()
       lateinit var coroutineScope: CoroutineScope
       rule.setContent {
          coroutineScope = rememberCoroutineScope()
-         SingleColumnDeck(deckState, deckWidth)
+         SingleColumnDeck(
+            deck = remember { createDeck(cardCount = 2) },
+            deckState, deckWidth
+         )
       }
 
       coroutineScope.launch {
@@ -217,9 +227,12 @@ class SingleColumnDeckScrollTest : SingleColumnDeckTestBase() {
 
    @Test
    fun snap() {
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       rule.setContent {
-         SingleColumnDeck(deckState)
+         SingleColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState
+         )
       }
 
       rule.runOnIdle {
@@ -239,9 +252,12 @@ class SingleColumnDeckScrollTest : SingleColumnDeckTestBase() {
 
    @Test
    fun snap_tooFast() {
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       rule.setContent {
-         SingleColumnDeck(deckState)
+         SingleColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState
+         )
       }
 
       rule.runOnIdle {
@@ -266,9 +282,12 @@ class SingleColumnDeckScrollTest : SingleColumnDeckTestBase() {
 
    @Test
    fun snap_edges() {
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       rule.setContent {
-         SingleColumnDeck(deckState)
+         SingleColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState
+         )
       }
 
       rule.runOnIdle {
@@ -295,9 +314,12 @@ class SingleColumnDeckScrollTest : SingleColumnDeckTestBase() {
 
    @Test
    fun snap_afterImmobility() {
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       rule.setContent {
-         SingleColumnDeck(deckState)
+         SingleColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState
+         )
       }
 
       rule.onNodeWithTag(deckTestTag).swipeLeft(40.dp)
@@ -334,11 +356,14 @@ class SingleColumnDeckScrollTest : SingleColumnDeckTestBase() {
 
    @Test
    fun overscroll() {
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       lateinit var coroutineScope: CoroutineScope
       rule.setContent {
          coroutineScope = rememberCoroutineScope()
-         SingleColumnDeck(deckState)
+         SingleColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState
+         )
       }
 
       val scrollDistance = with (rule.density) { 32.dp.toPx() }

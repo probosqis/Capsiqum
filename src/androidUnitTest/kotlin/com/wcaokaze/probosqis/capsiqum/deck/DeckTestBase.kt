@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Density
@@ -40,44 +41,42 @@ abstract class DeckTestBase {
 
 @Config(qualifiers = "w600dp")
 abstract class MultiColumnDeckTestBase : DeckTestBase() {
+   protected fun <T : Any> createDefaultDeckState() = MultiColumnDeckState<T>(key = { it })
    protected val defaultDeckWidth = 600.dp
    protected val defaultColumnCount = 2
    protected val defaultWindowInsets = WindowInsets(0)
+   protected val defaultCardComposable: @Composable (Int, Any?) -> Unit = { _, content ->
+      Text("$content", Modifier.fillMaxWidth())
+   }
 
    protected abstract val density: Density
 
-   protected fun createDeckState(cardCount: Int) = MultiColumnDeckState(
-      createDeck(cardCount),
-      key = { it }
-   )
-
    @Composable
-   protected fun <T> MultiColumnDeck(
-      state: MultiColumnDeckState<T>,
+   protected fun <T : Any> MultiColumnDeck(
+      deck: Deck<T>,
+      state: MultiColumnDeckState<T> = remember { createDefaultDeckState() },
       width: Dp = defaultDeckWidth,
       columnCount: Int = defaultColumnCount,
       windowInsets: WindowInsets = defaultWindowInsets,
-      card: @Composable (index: Int, T) -> Unit = { _, content ->
-         Text("$content", Modifier.fillMaxWidth())
-      }
+      card: @Composable (index: Int, T) -> Unit = defaultCardComposable,
    ) {
       MultiColumnDeck(
-         state, sizeModifier = { Modifier.width(width).fillMaxHeight() },
+         deck, state, sizeModifier = { Modifier.width(width).fillMaxHeight() },
          columnCount, windowInsets, card
       )
    }
 
    @Composable
-   protected fun <T> MultiColumnDeck(
-      state: MultiColumnDeckState<T>,
+   protected fun <T : Any> MultiColumnDeck(
+      deck: Deck<T>,
+      state: MultiColumnDeckState<T> = remember { createDefaultDeckState() },
       sizeModifier: () -> Modifier,
       columnCount: Int = defaultColumnCount,
       windowInsets: WindowInsets = defaultWindowInsets,
-      card: @Composable (index: Int, T) -> Unit = { _, content ->
-         Text("$content", Modifier.fillMaxWidth())
-      }
+      card: @Composable (index: Int, T) -> Unit = defaultCardComposable,
    ) {
       MultiColumnDeck(
+         deck,
          state,
          columnCount,
          windowInsets = windowInsets,
@@ -133,37 +132,36 @@ abstract class MultiColumnDeckTestBase : DeckTestBase() {
 }
 
 abstract class SingleColumnDeckTestBase : DeckTestBase() {
+   protected fun <T : Any> createDefaultDeckState() = SingleColumnDeckState<T>(key = { it })
    protected val defaultDeckWidth = 300.dp
+   protected val defaultCardComposable: @Composable (Int, Any?) -> Unit = { _, content ->
+      Text("$content", Modifier.fillMaxWidth())
+   }
 
    protected abstract val density: Density
 
-   protected fun createDeckState(cardCount: Int) = SingleColumnDeckState(
-      createDeck(cardCount),
-      key = { it }
-   )
-
    @Composable
-   protected fun <T> SingleColumnDeck(
-      state: SingleColumnDeckState<T>,
+   protected fun <T : Any> SingleColumnDeck(
+      deck: Deck<T>,
+      state: SingleColumnDeckState<T> = remember { createDefaultDeckState() },
       width: Dp = defaultDeckWidth,
-      card: @Composable (index: Int, T) -> Unit = { _, content ->
-         Text("$content", Modifier.fillMaxWidth())
-      }
+      card: @Composable (index: Int, T) -> Unit = defaultCardComposable,
    ) {
       SingleColumnDeck(
-         state, sizeModifier = { Modifier.width(width).fillMaxHeight() }, card
+         deck, state, sizeModifier = { Modifier.width(width).fillMaxHeight() },
+         card
       )
    }
 
    @Composable
-   protected fun <T> SingleColumnDeck(
-      state: SingleColumnDeckState<T>,
+   protected fun <T : Any> SingleColumnDeck(
+      deck: Deck<T>,
+      state: SingleColumnDeckState<T> = remember { createDefaultDeckState() },
       sizeModifier: () -> Modifier,
-      card: @Composable (index: Int, T) -> Unit = { _, content ->
-         Text("$content", Modifier.fillMaxWidth())
-      }
+      card: @Composable (index: Int, T) -> Unit = defaultCardComposable,
    ) {
       SingleColumnDeck(
+         deck,
          state,
          card = card,
          modifier = Modifier

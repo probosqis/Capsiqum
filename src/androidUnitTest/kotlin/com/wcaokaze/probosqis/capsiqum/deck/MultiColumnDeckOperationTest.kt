@@ -17,17 +17,15 @@
 package com.wcaokaze.probosqis.capsiqum.deck
 
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
@@ -49,13 +47,14 @@ class MultiColumnDeckOperationTest : MultiColumnDeckTestBase() {
 
    @Test
    fun animateScroll() {
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       lateinit var coroutineScope: CoroutineScope
       var columnCount by mutableIntStateOf(2)
       var windowInsets by mutableStateOf(WindowInsets(0))
       rule.setContent {
          coroutineScope = rememberCoroutineScope()
          MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
             deckState,
             columnCount = columnCount,
             windowInsets = windowInsets

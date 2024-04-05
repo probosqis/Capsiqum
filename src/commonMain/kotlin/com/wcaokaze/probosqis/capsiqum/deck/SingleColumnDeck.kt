@@ -20,19 +20,17 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.constrainHeight
@@ -45,10 +43,7 @@ object SingleColumnDeckDefaults {
 }
 
 @Stable
-class SingleColumnDeckState<T>(
-   initialDeck: Deck<T>,
-   key: (T) -> Any
-) : DeckState<T>(initialDeck) {
+class SingleColumnDeckState<T>(key: (T) -> Any) : DeckState<T>() {
    override var firstVisibleCardIndex by mutableIntStateOf(0)
       internal set
    override var lastVisibleCardIndex by mutableIntStateOf(0)
@@ -57,22 +52,23 @@ class SingleColumnDeckState<T>(
    override val firstContentCardIndex get() = firstVisibleCardIndex
    override val lastContentCardIndex  get() = lastVisibleCardIndex
 
-   override val layoutLogic = SingleColumnLayoutLogic(initialDeck, key)
+   override val layoutLogic = SingleColumnLayoutLogic(key)
 
    internal fun layout(
+      deck: Deck<T>,
       animCoroutineScope: CoroutineScope,
       deckWidth: Int,
       cardPadding: Int
    ) {
-      layoutLogic.layout(animCoroutineScope, deckWidth, cardPadding, scrollState)
+      layoutLogic.layout(
+         deck, animCoroutineScope, deckWidth, cardPadding, scrollState)
    }
 }
 
 @Stable
 internal class SingleColumnLayoutLogic<T>(
-   initialDeck: Deck<T>,
    contentKeyChooser: (T) -> Any
-) : DeckLayoutLogic<T>(initialDeck, contentKeyChooser) {
+) : DeckLayoutLogic<T>(contentKeyChooser) {
    private var deckWidth by mutableStateOf(0)
 
    override val width: Int get() = deckWidth
@@ -108,6 +104,7 @@ internal class SingleColumnLayoutLogic<T>(
     *   CoroutineScope
     */
    fun layout(
+      deck: Deck<T>,
       animCoroutineScope: CoroutineScope,
       deckWidth: Int,
       cardPadding: Int,
@@ -115,35 +112,39 @@ internal class SingleColumnLayoutLogic<T>(
    ) {
       val cardWidth = deckWidth
 
-      var x = -cardPadding
+      layout(deck, deckWidth, cardPadding) { list, _ ->
+         var x = -cardPadding
 
-      for (layoutState in list) {
-         x += cardPadding
-         layoutState.update(
-            position = IntOffset(x, 0),
-            width = cardWidth,
-            animCoroutineScope,
-            cardPositionAnimSpec()
-         )
-         x += cardWidth + cardPadding
+         for (layoutState in list) {
+            x += cardPadding
+            layoutState.update(
+               position = IntOffset(x, 0),
+               width = cardWidth,
+               animCoroutineScope,
+               cardPositionAnimSpec()
+            )
+            x += cardWidth + cardPadding
+         }
+
+         x -= cardPadding
+
+         this.deckWidth = deckWidth
+
+         val maxScrollOffset = (x - deckWidth).toFloat().coerceAtLeast(0.0f)
+         updateMaxScrollOffset(scrollState, maxScrollOffset, animCoroutineScope)
       }
-
-      x -= cardPadding
-
-      this.deckWidth = deckWidth
-
-      val maxScrollOffset = (x - deckWidth).toFloat().coerceAtLeast(0.0f)
-      updateMaxScrollOffset(scrollState, maxScrollOffset, animCoroutineScope)
    }
 }
 
 @Composable
 fun <T> SingleColumnDeck(
+   deck: Deck<T>,
    state: SingleColumnDeckState<T>,
    modifier: Modifier = Modifier,
    cardPadding: Dp = SingleColumnDeckDefaults.CardPadding,
    card: @Composable (index: Int, T) -> Unit
 ) {
+   val updatedDeck by rememberUpdatedState(deck)
    val coroutineScope = rememberCoroutineScope()
 
    SubcomposeLayout(
@@ -169,7 +170,7 @@ fun <T> SingleColumnDeck(
          val deckWidth = constraints.maxWidth
          val cardPaddingPx = cardPadding.roundToPx()
 
-         state.layout(coroutineScope, deckWidth, cardPaddingPx)
+         state.layout(updatedDeck, coroutineScope, deckWidth, cardPaddingPx)
 
          val scrollOffset = state.scrollState.scrollOffset.toInt()
          val visibleLeft = scrollOffset

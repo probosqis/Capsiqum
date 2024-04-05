@@ -21,16 +21,15 @@ import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
@@ -48,10 +47,7 @@ object MultiColumnDeckDefaults {
 }
 
 @Stable
-class MultiColumnDeckState<T>(
-   initialDeck: Deck<T>,
-   key: (T) -> Any
-) : DeckState<T>(initialDeck) {
+class MultiColumnDeckState<T>(key: (T) -> Any) : DeckState<T>() {
    override var firstVisibleCardIndex by mutableIntStateOf(0)
       internal set
    override var lastVisibleCardIndex by mutableIntStateOf(0)
@@ -61,9 +57,10 @@ class MultiColumnDeckState<T>(
    override var lastContentCardIndex by mutableIntStateOf(0)
       internal set
 
-   override val layoutLogic = MultiColumnLayoutLogic(initialDeck, key)
+   override val layoutLogic = MultiColumnLayoutLogic(key)
 
    internal fun layout(
+      deck: Deck<T>,
       density: Density,
       animCoroutineScope: CoroutineScope,
       deckWidth: Int,
@@ -72,16 +69,15 @@ class MultiColumnDeckState<T>(
       windowInsets: WindowInsets,
       layoutDirection: LayoutDirection
    ) {
-      layoutLogic.layout(density, animCoroutineScope, deckWidth, columnCount,
-         cardPadding, windowInsets, layoutDirection, scrollState)
+      layoutLogic.layout(deck, density, animCoroutineScope, deckWidth,
+         columnCount, cardPadding, windowInsets, layoutDirection, scrollState)
    }
 }
 
 @Stable
 internal class MultiColumnLayoutLogic<T>(
-   initialDeck: Deck<T>,
    contentKeyChooser: (T) -> Any
-) : DeckLayoutLogic<T>(initialDeck, contentKeyChooser) {
+) : DeckLayoutLogic<T>(contentKeyChooser) {
    private var deckWidth        by mutableStateOf(0)
    private var cardPadding      by mutableStateOf(0)
    private var leftWindowInset  by mutableStateOf(0)
@@ -139,6 +135,7 @@ internal class MultiColumnLayoutLogic<T>(
     *   CoroutineScope
     */
    fun layout(
+      deck: Deck<T>,
       density: Density,
       animCoroutineScope: CoroutineScope,
       deckWidth: Int,
@@ -158,33 +155,36 @@ internal class MultiColumnLayoutLogic<T>(
          - cardPadding * 2
       ).toInt()
 
-      var x = leftWindowInset + cardPadding
+      layout(deck, leftWindowInset, rightWindowInset, cardPadding, cardWidth) { list, _ ->
+         var x = leftWindowInset + cardPadding
 
-      for (layoutState in list) {
-         x += cardPadding
-         layoutState.update(
-            position = IntOffset(x, 0),
-            width = cardWidth,
-            animCoroutineScope,
-            cardPositionAnimSpec()
-         )
-         x += cardWidth + cardPadding
+         for (layoutState in list) {
+            x += cardPadding
+            layoutState.update(
+               position = IntOffset(x, 0),
+               width = cardWidth,
+               animCoroutineScope,
+               cardPositionAnimSpec()
+            )
+            x += cardWidth + cardPadding
+         }
+
+         x += cardPadding + rightWindowInset
+
+         this.deckWidth        = deckWidth
+         this.cardPadding      = cardPadding
+         this.leftWindowInset  = leftWindowInset
+         this.rightWindowInset = rightWindowInset
+
+         val maxScrollOffset = (x - deckWidth).toFloat().coerceAtLeast(0.0f)
+         updateMaxScrollOffset(scrollState, maxScrollOffset, animCoroutineScope)
       }
-
-      x += cardPadding + rightWindowInset
-
-      this.deckWidth        = deckWidth
-      this.cardPadding      = cardPadding
-      this.leftWindowInset  = leftWindowInset
-      this.rightWindowInset = rightWindowInset
-
-      val maxScrollOffset = (x - deckWidth).toFloat().coerceAtLeast(0.0f)
-      updateMaxScrollOffset(scrollState, maxScrollOffset, animCoroutineScope)
    }
 }
 
 @Composable
 fun <T> MultiColumnDeck(
+   deck: Deck<T>,
    state: MultiColumnDeckState<T>,
    columnCount: Int,
    modifier: Modifier = Modifier,
@@ -192,6 +192,7 @@ fun <T> MultiColumnDeck(
    cardPadding: Dp = MultiColumnDeckDefaults.CardPadding,
    card: @Composable (index: Int, T) -> Unit
 ) {
+   val updatedDeck by rememberUpdatedState(deck)
    val coroutineScope = rememberCoroutineScope()
 
    SubcomposeLayout(
@@ -223,8 +224,8 @@ fun <T> MultiColumnDeck(
          val deckHeight = constraints.maxHeight
          val cardPaddingPx = cardPadding.roundToPx()
 
-         state.layout(density = this, coroutineScope, deckWidth, columnCount,
-            cardPaddingPx, windowInsets, layoutDirection)
+         state.layout(updatedDeck, density = this, coroutineScope, deckWidth,
+            columnCount, cardPaddingPx, windowInsets, layoutDirection)
 
          val scrollOffset = state.scrollState.scrollOffset.toInt()
          val visibleLeft = scrollOffset
