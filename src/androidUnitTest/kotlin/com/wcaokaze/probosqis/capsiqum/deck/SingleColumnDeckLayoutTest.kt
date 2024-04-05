@@ -30,6 +30,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
 import androidx.compose.ui.test.assertWidthIsEqualTo
@@ -334,6 +335,59 @@ class SingleColumnDeckLayoutTest : SingleColumnDeckTestBase() {
          assertCardNumbers(listOf(0, 1), deck)
          assertLayoutStatesExist(deck, deckState.layoutLogic)
          assertEquals(expectedScrollOffset(1), deckState.scrollOffset)
+      }
+   }
+
+   @Test
+   fun recompose_cardReplaced() {
+      data class CardContent(val key: Int, val content: Int) {
+         override fun toString() = "key = $key, content = $content"
+      }
+
+      fun assertCardNumbers(expectedCardContents: List<Int>, deck: Deck<CardContent>) {
+         val cardCount = deck.cardCount
+         assertEquals(expectedCardContents.size, cardCount)
+
+         for (i in 0 until cardCount) {
+            val cardContent = deck[i].content
+            assertEquals(expectedCardContents[i], cardContent.content)
+         }
+      }
+
+      fun SemanticsNodeInteractionsProvider.assertComposedText(expectedCardText: String) {
+         onNodeWithText(expectedCardText).assertExists()
+      }
+
+      var deck by mutableStateOf(
+         Deck(
+            Deck.Card(CardContent(key = 0, content = 0))
+         )
+      )
+
+      rule.setContent {
+         SingleColumnDeck(
+            deck,
+            state = remember {
+               SingleColumnDeckState(key = { it.key })
+            }
+         )
+      }
+
+      rule.runOnIdle {
+         assertCardNumbers(listOf(0), deck)
+         rule.assertComposedText("key = 0, content = 0")
+      }
+
+      deck = Deck(
+         rootRow = deck.rootRow.replaced(
+            0,
+            Deck.Card(CardContent(key = 0, content = 1))
+         )
+      )
+
+      rule.runOnIdle {
+         assertCardNumbers(listOf(1), deck)
+         rule.assertComposedText("key = 0, content = 1")
       }
    }
 

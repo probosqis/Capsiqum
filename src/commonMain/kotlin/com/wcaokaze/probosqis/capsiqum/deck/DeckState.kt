@@ -148,10 +148,12 @@ interface DeckLayoutInfo<out T> {
 }
 
 @Stable
-internal class DeckCardLayoutState<out T>(
-   override val card: Deck.Card<T>,
+internal class DeckCardLayoutState<T>(
+   initialCard: Deck.Card<T>,
    override val key: Any
 ) : DeckLayoutInfo.CardInfo<T> {
+   override var card: Deck.Card<T> by mutableStateOf(initialCard)
+
    private val isInitialized: Boolean get() = ::positionAnimatable.isInitialized
 
    private lateinit var positionAnimatable: Animatable<IntOffset, *>
@@ -285,6 +287,10 @@ internal abstract class DeckLayoutLogic<T>(
             }
          } else {
             oldLayoutMap[key]
+         }
+
+         if (layoutState != null) {
+            layoutState.card = card
          }
 
          if (i < 0) {
