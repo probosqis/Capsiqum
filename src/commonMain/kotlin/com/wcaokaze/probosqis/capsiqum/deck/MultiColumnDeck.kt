@@ -16,6 +16,8 @@
 
 package com.wcaokaze.probosqis.capsiqum.deck
 
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
@@ -44,10 +46,18 @@ import kotlin.math.roundToInt
 
 object MultiColumnDeckDefaults {
    val CardPadding = 8.dp
+   val cardPositionAnimSpec: AnimationSpec<IntOffset> = spring()
+   val cardWidthAnimSpec:    AnimationSpec<Int>       = spring()
 }
 
 @Stable
-class MultiColumnDeckState<T>(key: (T) -> Any) : DeckState<T>() {
+class MultiColumnDeckState<T>(
+   key: (T) -> Any,
+   private val cardPositionAnimSpec: AnimationSpec<IntOffset>
+         = MultiColumnDeckDefaults.cardPositionAnimSpec,
+   private val cardWidthAnimSpec: AnimationSpec<Int>
+         = MultiColumnDeckDefaults.cardWidthAnimSpec
+) : DeckState<T>() {
    override var firstVisibleCardIndex by mutableIntStateOf(0)
       internal set
    override var lastVisibleCardIndex by mutableIntStateOf(0)
@@ -69,8 +79,9 @@ class MultiColumnDeckState<T>(key: (T) -> Any) : DeckState<T>() {
       windowInsets: WindowInsets,
       layoutDirection: LayoutDirection
    ) {
-      layoutLogic.layout(deck, density, animCoroutineScope, deckWidth,
-         columnCount, cardPadding, windowInsets, layoutDirection, scrollState)
+      layoutLogic.layout(deck, density, deckWidth, columnCount, cardPadding,
+         windowInsets, layoutDirection, scrollState, animCoroutineScope,
+         cardPositionAnimSpec, cardWidthAnimSpec)
    }
 }
 
@@ -137,13 +148,15 @@ internal class MultiColumnLayoutLogic<T>(
    fun layout(
       deck: Deck<T>,
       density: Density,
-      animCoroutineScope: CoroutineScope,
       deckWidth: Int,
       columnCount: Int,
       cardPadding: Int,
       windowInsets: WindowInsets,
       layoutDirection: LayoutDirection,
-      scrollState: DeckScrollState
+      scrollState: DeckScrollState,
+      animCoroutineScope: CoroutineScope,
+      cardPositionAnimSpec: AnimationSpec<IntOffset>,
+      cardWidthAnimSpec:    AnimationSpec<Int>,
    ) {
       val leftWindowInset  = windowInsets.getLeft (density, layoutDirection)
       val rightWindowInset = windowInsets.getRight(density, layoutDirection)
@@ -164,7 +177,8 @@ internal class MultiColumnLayoutLogic<T>(
                position = IntOffset(x, 0),
                width = cardWidth,
                animCoroutineScope,
-               cardPositionAnimSpec()
+               cardPositionAnimSpec,
+               cardWidthAnimSpec
             )
             x += cardWidth + cardPadding
          }
@@ -177,7 +191,8 @@ internal class MultiColumnLayoutLogic<T>(
          this.rightWindowInset = rightWindowInset
 
          val maxScrollOffset = (x - deckWidth).toFloat().coerceAtLeast(0.0f)
-         updateMaxScrollOffset(scrollState, maxScrollOffset, animCoroutineScope)
+         updateMaxScrollOffset(
+            scrollState, maxScrollOffset, animCoroutineScope, cardPositionAnimSpec)
       }
    }
 }

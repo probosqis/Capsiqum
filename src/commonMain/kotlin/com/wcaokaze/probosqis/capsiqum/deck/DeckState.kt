@@ -26,7 +26,9 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.toOffset
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
@@ -166,7 +168,8 @@ internal class DeckCardLayoutState<T>(
       position: IntOffset,
       width: Int,
       animCoroutineScope: CoroutineScope,
-      positionAnimationSpec: AnimationSpec<IntOffset>
+      positionAnimationSpec: AnimationSpec<IntOffset>,
+      widthAnimationSpec:    AnimationSpec<Int>
    ) {
       if (!isInitialized) {
          // 初回コンポジション。アニメーション不要
@@ -177,15 +180,14 @@ internal class DeckCardLayoutState<T>(
          val targetPosition = positionAnimatable.targetValue
          if (targetPosition != position) {
             animCoroutineScope.launch {
-               positionAnimatable
-                  .animateTo(position, positionAnimationSpec)
+               positionAnimatable.animateTo(position, positionAnimationSpec)
             }
          }
 
          val targetWidth = widthAnimatable.targetValue
          if (targetWidth != width) {
             animCoroutineScope.launch {
-               widthAnimatable.animateTo(width)
+               widthAnimatable.animateTo(width, widthAnimationSpec)
             }
          }
       }
@@ -232,8 +234,6 @@ internal abstract class DeckLayoutLogic<T>(
 
    /** 指定したスクロール位置において、Deck内で左端に表示されるCardのindex */
    internal abstract fun indexOfScrollOffset(scrollOffset: Float): Int
-
-   internal fun <U> cardPositionAnimSpec() = spring<U>()
 
    protected inline fun layout(
       deck: Deck<T>,
@@ -327,7 +327,8 @@ internal abstract class DeckLayoutLogic<T>(
    protected fun updateMaxScrollOffset(
       scrollState: DeckScrollState,
       maxScrollOffset: Float,
-      animCoroutineScope: CoroutineScope
+      animCoroutineScope: CoroutineScope,
+      positionAnimationSpec: AnimationSpec<IntOffset>
    ) {
       if (maxScrollOffsetAnimJob.isActive
          && maxScrollOffsetAnimTarget == maxScrollOffset) { return }
@@ -342,13 +343,16 @@ internal abstract class DeckLayoutLogic<T>(
             scrollState.scroll(enableOverscroll = true) {
                scrollState.setMaxScrollOffset(maxScrollOffset)
 
-               var prevValue = scrollState.scrollOffset
+               val initialValue = IntOffset(scrollState.scrollOffset.toInt(), 0)
+               var prevValue = initialValue.toOffset()
                animate(
-                  initialValue = prevValue,
-                  targetValue = maxScrollOffset,
-                  animationSpec = cardPositionAnimSpec()
+                  IntOffset.VectorConverter,
+                  initialValue,
+                  targetValue = IntOffset(maxScrollOffset.toInt(), 0),
+                  animationSpec = positionAnimationSpec
                ) { value, _ ->
-                  prevValue += scrollBy(value - prevValue)
+                  val consumed = scrollBy(value.x - prevValue.x)
+                  prevValue += Offset(consumed, 0.0f)
                }
             }
          }

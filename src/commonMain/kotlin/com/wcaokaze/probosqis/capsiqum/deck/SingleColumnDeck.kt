@@ -16,6 +16,8 @@
 
 package com.wcaokaze.probosqis.capsiqum.deck
 
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
@@ -40,10 +42,18 @@ import org.jetbrains.annotations.TestOnly
 
 object SingleColumnDeckDefaults {
    val CardPadding = 8.dp
+   val cardPositionAnimSpec: AnimationSpec<IntOffset> = spring()
+   val cardWidthAnimSpec:    AnimationSpec<Int>       = spring()
 }
 
 @Stable
-class SingleColumnDeckState<T>(key: (T) -> Any) : DeckState<T>() {
+class SingleColumnDeckState<T>(
+   key: (T) -> Any,
+   private val cardPositionAnimSpec: AnimationSpec<IntOffset>
+         = SingleColumnDeckDefaults.cardPositionAnimSpec,
+   private val cardWidthAnimSpec: AnimationSpec<Int>
+         = SingleColumnDeckDefaults.cardWidthAnimSpec
+) : DeckState<T>() {
    override var firstVisibleCardIndex by mutableIntStateOf(0)
       internal set
    override var lastVisibleCardIndex by mutableIntStateOf(0)
@@ -60,8 +70,8 @@ class SingleColumnDeckState<T>(key: (T) -> Any) : DeckState<T>() {
       deckWidth: Int,
       cardPadding: Int
    ) {
-      layoutLogic.layout(
-         deck, animCoroutineScope, deckWidth, cardPadding, scrollState)
+      layoutLogic.layout(deck, deckWidth, cardPadding, scrollState,
+         animCoroutineScope, cardPositionAnimSpec, cardWidthAnimSpec)
    }
 }
 
@@ -105,10 +115,12 @@ internal class SingleColumnLayoutLogic<T>(
     */
    fun layout(
       deck: Deck<T>,
-      animCoroutineScope: CoroutineScope,
       deckWidth: Int,
       cardPadding: Int,
-      scrollState: DeckScrollState
+      scrollState: DeckScrollState,
+      animCoroutineScope: CoroutineScope,
+      cardPositionAnimSpec: AnimationSpec<IntOffset>,
+      cardWidthAnimSpec:    AnimationSpec<Int>,
    ) {
       val cardWidth = deckWidth
 
@@ -121,7 +133,8 @@ internal class SingleColumnLayoutLogic<T>(
                position = IntOffset(x, 0),
                width = cardWidth,
                animCoroutineScope,
-               cardPositionAnimSpec()
+               cardPositionAnimSpec,
+               cardWidthAnimSpec
             )
             x += cardWidth + cardPadding
          }
@@ -131,7 +144,8 @@ internal class SingleColumnLayoutLogic<T>(
          this.deckWidth = deckWidth
 
          val maxScrollOffset = (x - deckWidth).toFloat().coerceAtLeast(0.0f)
-         updateMaxScrollOffset(scrollState, maxScrollOffset, animCoroutineScope)
+         updateMaxScrollOffset(
+            scrollState, maxScrollOffset, animCoroutineScope, cardPositionAnimSpec)
       }
    }
 }
