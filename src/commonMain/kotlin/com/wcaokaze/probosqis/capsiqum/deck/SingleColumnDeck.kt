@@ -43,16 +43,13 @@ import org.jetbrains.annotations.TestOnly
 object SingleColumnDeckDefaults {
    val CardPadding = 8.dp
    val cardPositionAnimSpec: AnimationSpec<IntOffset> = spring()
-   val cardWidthAnimSpec:    AnimationSpec<Int>       = spring()
 }
 
 @Stable
 class SingleColumnDeckState<T>(
    key: (T) -> Any,
    private val cardPositionAnimSpec: AnimationSpec<IntOffset>
-         = SingleColumnDeckDefaults.cardPositionAnimSpec,
-   private val cardWidthAnimSpec: AnimationSpec<Int>
-         = SingleColumnDeckDefaults.cardWidthAnimSpec
+         = SingleColumnDeckDefaults.cardPositionAnimSpec
 ) : DeckState<T>() {
    override var firstVisibleCardIndex by mutableIntStateOf(0)
       internal set
@@ -71,7 +68,7 @@ class SingleColumnDeckState<T>(
       cardPadding: Int
    ) {
       layoutLogic.layout(deck, deckWidth, cardPadding, scrollState,
-         animCoroutineScope, cardPositionAnimSpec, cardWidthAnimSpec)
+         animCoroutineScope, cardPositionAnimSpec)
    }
 }
 
@@ -119,8 +116,7 @@ internal class SingleColumnLayoutLogic<T>(
       cardPadding: Int,
       scrollState: DeckScrollState,
       animCoroutineScope: CoroutineScope,
-      cardPositionAnimSpec: AnimationSpec<IntOffset>,
-      cardWidthAnimSpec:    AnimationSpec<Int>,
+      cardPositionAnimSpec: AnimationSpec<IntOffset>
    ) {
       val cardWidth = deckWidth
 
@@ -133,8 +129,7 @@ internal class SingleColumnLayoutLogic<T>(
                position = IntOffset(x, 0),
                width = cardWidth,
                animCoroutineScope,
-               cardPositionAnimSpec,
-               cardWidthAnimSpec
+               cardPositionAnimSpec
             )
             x += cardWidth + cardPadding
          }

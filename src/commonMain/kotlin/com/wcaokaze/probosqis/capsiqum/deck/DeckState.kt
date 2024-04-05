@@ -24,6 +24,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
@@ -156,26 +157,23 @@ internal class DeckCardLayoutState<T>(
 ) : DeckLayoutInfo.CardInfo<T> {
    override var card: Deck.Card<T> by mutableStateOf(initialCard)
 
-   private val isInitialized: Boolean get() = ::positionAnimatable.isInitialized
-
    private lateinit var positionAnimatable: Animatable<IntOffset, *>
    override val position: IntOffset get() = positionAnimatable.value
 
-   private lateinit var widthAnimatable: Animatable<Int, *>
-   override val width: Int get() = widthAnimatable.value
+   override var width by mutableIntStateOf(0)
+      private set
 
    internal fun update(
       position: IntOffset,
       width: Int,
       animCoroutineScope: CoroutineScope,
-      positionAnimationSpec: AnimationSpec<IntOffset>,
-      widthAnimationSpec:    AnimationSpec<Int>
+      positionAnimationSpec: AnimationSpec<IntOffset>
    ) {
-      if (!isInitialized) {
+      if (::positionAnimatable.isInitialized.not()) {
          // 初回コンポジション。アニメーション不要
-         initialize(position, width)
+         positionAnimatable = Animatable(position, IntOffset.VectorConverter)
       } else {
-         // リコンポジション。位置か幅が変化してる場合アニメーションする
+         // リコンポジション。位置が変化してる場合アニメーションする
 
          val targetPosition = positionAnimatable.targetValue
          if (targetPosition != position) {
@@ -183,19 +181,9 @@ internal class DeckCardLayoutState<T>(
                positionAnimatable.animateTo(position, positionAnimationSpec)
             }
          }
-
-         val targetWidth = widthAnimatable.targetValue
-         if (targetWidth != width) {
-            animCoroutineScope.launch {
-               widthAnimatable.animateTo(width, widthAnimationSpec)
-            }
-         }
       }
-   }
 
-   private fun initialize(position: IntOffset, width: Int) {
-      positionAnimatable = Animatable(position, IntOffset.VectorConverter)
-      widthAnimatable = Animatable(width, Int.VectorConverter)
+      this.width = width
    }
 }
 

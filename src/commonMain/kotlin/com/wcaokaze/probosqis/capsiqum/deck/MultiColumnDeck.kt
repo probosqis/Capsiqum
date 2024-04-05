@@ -47,16 +47,13 @@ import kotlin.math.roundToInt
 object MultiColumnDeckDefaults {
    val CardPadding = 8.dp
    val cardPositionAnimSpec: AnimationSpec<IntOffset> = spring()
-   val cardWidthAnimSpec:    AnimationSpec<Int>       = spring()
 }
 
 @Stable
 class MultiColumnDeckState<T>(
    key: (T) -> Any,
    private val cardPositionAnimSpec: AnimationSpec<IntOffset>
-         = MultiColumnDeckDefaults.cardPositionAnimSpec,
-   private val cardWidthAnimSpec: AnimationSpec<Int>
-         = MultiColumnDeckDefaults.cardWidthAnimSpec
+         = MultiColumnDeckDefaults.cardPositionAnimSpec
 ) : DeckState<T>() {
    override var firstVisibleCardIndex by mutableIntStateOf(0)
       internal set
@@ -81,7 +78,7 @@ class MultiColumnDeckState<T>(
    ) {
       layoutLogic.layout(deck, density, deckWidth, columnCount, cardPadding,
          windowInsets, layoutDirection, scrollState, animCoroutineScope,
-         cardPositionAnimSpec, cardWidthAnimSpec)
+         cardPositionAnimSpec)
    }
 }
 
@@ -155,8 +152,7 @@ internal class MultiColumnLayoutLogic<T>(
       layoutDirection: LayoutDirection,
       scrollState: DeckScrollState,
       animCoroutineScope: CoroutineScope,
-      cardPositionAnimSpec: AnimationSpec<IntOffset>,
-      cardWidthAnimSpec:    AnimationSpec<Int>,
+      cardPositionAnimSpec: AnimationSpec<IntOffset>
    ) {
       val leftWindowInset  = windowInsets.getLeft (density, layoutDirection)
       val rightWindowInset = windowInsets.getRight(density, layoutDirection)
@@ -177,8 +173,7 @@ internal class MultiColumnLayoutLogic<T>(
                position = IntOffset(x, 0),
                width = cardWidth,
                animCoroutineScope,
-               cardPositionAnimSpec,
-               cardWidthAnimSpec
+               cardPositionAnimSpec
             )
             x += cardWidth + cardPadding
          }
