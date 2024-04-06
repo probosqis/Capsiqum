@@ -227,20 +227,3 @@ fun <T> Deck<T>.removed(index: Int): Deck<T> {
 
    return Deck(rootRow.removedSubtree(index))
 }
-
-fun <T> Deck<T>.sequence(): Sequence<Deck.Card<T>> {
-   suspend fun SequenceScope<Deck.Card<T>>
-         .yieldChildren(parent: Deck.LayoutParent<T>)
-   {
-      for (node in parent) {
-         when (node) {
-            is Deck.Card         -> yield(node)
-            is Deck.LayoutParent -> yieldChildren(node)
-         }
-      }
-   }
-
-   return sequence {
-      yieldChildren(rootRow)
-   }
-}

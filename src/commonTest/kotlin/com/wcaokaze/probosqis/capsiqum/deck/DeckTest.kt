@@ -681,7 +681,15 @@ class DeckTest {
    }
 
    @Test
-   fun sequence() {
+   fun sequenceIndexed() {
+      fun card  (i: Int) = DeckNodeIndex(null, i, DeckNodeIndex.NodeType.CARD)
+      fun column(i: Int) = DeckNodeIndex(null, i, DeckNodeIndex.NodeType.COLUMN)
+      fun row   (i: Int) = DeckNodeIndex(null, i, DeckNodeIndex.NodeType.ROW)
+      operator fun DeckNodeIndex.minus(child: DeckNodeIndex)
+            = DeckNodeIndex(this, child.indexInLayout, child.nodeType)
+      infix fun DeckNodeIndex.to(cardContent: Int)
+            = IndexedCard(this, Deck.Card(cardContent))
+
       val deck = Deck(
          Deck.Card(0),
          Deck.Column(
@@ -709,8 +717,21 @@ class DeckTest {
          ),
       )
 
-      val expected = listOf(0, 2, 3, 5, 6, 8, 11, 12, 14, 17, 18, 20)
-      val actual = deck.sequence().map { it.content } .toList()
+      val expected = listOf(
+         card(0)                      to  0,
+         column(1)-card(0)            to  2,
+         column(1)-column(1)-card(0)  to  3,
+         column(1)-column(1)-card(1)  to  5,
+         column(1)-card(2)            to  6,
+         column(1)-row(3)-card(0)     to  8,
+         card(2)                      to 11,
+         row(3)-card(0)               to 12,
+         row(3)-column(1)-card(0)     to 14,
+         row(3)-card(2)               to 17,
+         row(3)-row(3)-card(0)        to 18,
+         row(3)-row(3)-card(1)        to 20,
+      )
+      val actual = deck.sequenceIndexed().toList()
 
       assertContentEquals(expected, actual)
    }
