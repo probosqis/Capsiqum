@@ -120,12 +120,13 @@ internal class SingleColumnLayoutLogic<T>(
    ) {
       val cardWidth = deckWidth
 
-      layout(deck, deckWidth, cardPadding) { list, _ ->
+      layout(deck, deckWidth, cardPadding) { seq ->
          var x = -cardPadding
 
-         for (layoutState in list) {
+         for ((layoutState, index) in seq) {
             x += cardPadding
             layoutState.update(
+               index,
                position = IntOffset(x, 0),
                width = cardWidth,
                animCoroutineScope,

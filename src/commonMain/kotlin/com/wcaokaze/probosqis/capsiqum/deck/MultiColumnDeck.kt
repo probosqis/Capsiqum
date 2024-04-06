@@ -164,12 +164,13 @@ internal class MultiColumnLayoutLogic<T>(
          - cardPadding * 2
       ).toInt()
 
-      layout(deck, leftWindowInset, rightWindowInset, cardPadding, cardWidth) { list, _ ->
+      layout(deck, leftWindowInset, rightWindowInset, cardPadding, cardWidth) { seq ->
          var x = leftWindowInset + cardPadding
 
-         for (layoutState in list) {
+         for ((layoutState, index) in seq) {
             x += cardPadding
             layoutState.update(
+               index,
                position = IntOffset(x, 0),
                width = cardWidth,
                animCoroutineScope,

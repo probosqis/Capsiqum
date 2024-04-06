@@ -50,6 +50,9 @@ class IndexedCard<out T>(
    val index: DeckNodeIndex,
    val card: Deck.Card<T>
 ) {
+   operator fun component1() = index
+   operator fun component2() = card
+
    override fun hashCode() = index.hashCode()
 
    override fun equals(other: Any?): Boolean {

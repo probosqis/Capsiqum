@@ -153,9 +153,11 @@ interface DeckLayoutInfo<out T> {
 @Stable
 internal class DeckCardLayoutState<T>(
    initialCard: Deck.Card<T>,
+   initialCardIndex: DeckNodeIndex,
    override val key: Any
 ) : DeckLayoutInfo.CardInfo<T> {
    override var card: Deck.Card<T> by mutableStateOf(initialCard)
+   private var cardIndex by mutableStateOf(initialCardIndex)
 
    private lateinit var positionAnimatable: Animatable<IntOffset, *>
    override val position: IntOffset get() = positionAnimatable.value
@@ -164,6 +166,7 @@ internal class DeckCardLayoutState<T>(
       private set
 
    internal fun update(
+      cardIndex: DeckNodeIndex,
       position: IntOffset,
       width: Int,
       animCoroutineScope: CoroutineScope,
@@ -175,14 +178,21 @@ internal class DeckCardLayoutState<T>(
       } else {
          // リコンポジション。位置が変化してる場合アニメーションする
 
-         val targetPosition = positionAnimatable.targetValue
-         if (targetPosition != position) {
+         val currentTargetPosition = positionAnimatable.targetValue
+         val currentIndex = this.cardIndex
+
+         if (position != currentTargetPosition) {
             animCoroutineScope.launch {
-               positionAnimatable.animateTo(position, positionAnimationSpec)
+               if (cardIndex != currentIndex || positionAnimatable.isRunning) {
+                  positionAnimatable.animateTo(position, positionAnimationSpec)
+               } else {
+                  positionAnimatable.snapTo(position)
+               }
             }
          }
       }
 
+      this.cardIndex = cardIndex
       this.width = width
    }
 }
@@ -226,10 +236,7 @@ internal abstract class DeckLayoutLogic<T>(
    protected inline fun layout(
       deck: Deck<T>,
       vararg keys: Any,
-      layoutLogic: (
-         ImmutableList<DeckCardLayoutState<T>>,
-         ImmutableMap<Any, DeckCardLayoutState<T>>
-      ) -> Unit
+      layoutLogic: (Sequence<Pair<DeckCardLayoutState<T>, DeckNodeIndex>>) -> Unit
    ) {
       val keyEqualsPreviousLayout = keys contentEquals layoutKeys
 
@@ -238,7 +245,12 @@ internal abstract class DeckLayoutLogic<T>(
       val shouldLayout = recreateLayoutState(deck)
       if (!shouldLayout && keyEqualsPreviousLayout) { return }
 
-      layoutLogic(list, map)
+      layoutLogic(
+         list.asSequence().zip(deck.sequenceIndexed()) { layoutState, (index, _) ->
+            Pair(layoutState, index)
+         }
+      )
+
       layoutDeck = deck
       layoutKeys = keys
    }
@@ -257,7 +269,7 @@ internal abstract class DeckLayoutLogic<T>(
       lateinit var resultMap: MutableMap<Any, DeckCardLayoutState<T>>
       var i = 0
 
-      for (card in deck.sequence()) {
+      for ((index, card) in deck.sequenceIndexed()) {
          val key = contentKeyChooser(card.content)
 
          var layoutState = if (i >= 0) {
@@ -283,7 +295,7 @@ internal abstract class DeckLayoutLogic<T>(
 
          if (i < 0) {
             if (layoutState == null) {
-               layoutState = DeckCardLayoutState(card, key)
+               layoutState = DeckCardLayoutState(card, index, key)
             }
 
             resultList += layoutState
