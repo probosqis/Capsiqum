@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.capsiqum.page
 
+import com.wcaokaze.probosqis.capsiqum.deck.Deck
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -33,7 +34,7 @@ fun PageStack(
  *
  * 必ず1つ以上の[Page]を持つ（空のPageStackという概念はない）。
  *
- * UI上はカラムと呼ばれるが列ではない（列は[PageStackBoard.Column]）ので
+ * UI上はカラムと呼ばれるが列ではない（列は[Deck.Column]）ので
  * 型としての名称はPageStack
  */
 @Serializable
