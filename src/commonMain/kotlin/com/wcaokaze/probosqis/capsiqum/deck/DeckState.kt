@@ -159,8 +159,12 @@ internal class DeckCardLayoutState<T>(
    override var card: Deck.Card<T> by mutableStateOf(initialCard)
    private var cardIndex by mutableStateOf(initialCardIndex)
 
-   private lateinit var positionAnimatable: Animatable<IntOffset, *>
-   override val position: IntOffset get() = positionAnimatable.value
+   private val cancellerMutex = CancellerMutex()
+
+   private var currentPosition by mutableStateOf(IntOffset.Zero)
+   private var currentPositionVelocity by mutableStateOf(IntOffset.Zero)
+   private var targetPosition by mutableStateOf(currentPosition)
+   override val position: IntOffset get() = currentPosition
 
    override var width by mutableIntStateOf(0)
       private set
@@ -172,27 +176,36 @@ internal class DeckCardLayoutState<T>(
       animCoroutineScope: CoroutineScope,
       positionAnimationSpec: AnimationSpec<IntOffset>
    ) {
-      if (::positionAnimatable.isInitialized.not()) {
-         // 初回コンポジション。アニメーション不要
-         positionAnimatable = Animatable(position, IntOffset.VectorConverter)
-      } else {
-         // リコンポジション。位置が変化してる場合アニメーションする
-
-         val currentTargetPosition = positionAnimatable.targetValue
-         val currentIndex = this.cardIndex
-
-         if (position != currentTargetPosition) {
+      if (position != targetPosition) {
+         if (cardIndex != this.cardIndex
+            || currentPositionVelocity != IntOffset.Zero)
+         {
             animCoroutineScope.launch {
-               if (cardIndex != currentIndex || positionAnimatable.isRunning) {
-                  positionAnimatable.animateTo(position, positionAnimationSpec)
-               } else {
-                  positionAnimatable.snapTo(position)
+               cancellerMutex.runCancelling {
+                  animate(
+                     IntOffset.VectorConverter,
+                     initialValue = currentPosition,
+                     targetValue = position,
+                     currentPositionVelocity,
+                     positionAnimationSpec
+                  ) { value, velocity ->
+                     currentPosition = value
+                     currentPositionVelocity = velocity
+                  }
+
+                  currentPositionVelocity = IntOffset.Zero
                }
             }
+
+            this.cardIndex = cardIndex
+         } else {
+            cancellerMutex.cancel()
+            currentPosition = position
          }
+
+         targetPosition = position
       }
 
-      this.cardIndex = cardIndex
       this.width = width
    }
 }
