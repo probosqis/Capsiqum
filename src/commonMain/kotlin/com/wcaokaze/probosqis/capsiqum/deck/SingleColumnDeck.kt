@@ -16,23 +16,23 @@
 
 package com.wcaokaze.probosqis.capsiqum.deck
 
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.constrainHeight
@@ -42,13 +42,15 @@ import org.jetbrains.annotations.TestOnly
 
 object SingleColumnDeckDefaults {
    val CardPadding = 8.dp
+   val cardPositionAnimSpec: AnimationSpec<IntOffset> = spring()
 }
 
 @Stable
 class SingleColumnDeckState<T>(
-   initialDeck: Deck<T>,
-   key: (T) -> Any
-) : DeckState<T>(initialDeck) {
+   key: (T) -> Any,
+   private val cardPositionAnimSpec: AnimationSpec<IntOffset>
+         = SingleColumnDeckDefaults.cardPositionAnimSpec
+) : DeckState<T>() {
    override var firstVisibleCardIndex by mutableIntStateOf(0)
       internal set
    override var lastVisibleCardIndex by mutableIntStateOf(0)
@@ -57,25 +59,23 @@ class SingleColumnDeckState<T>(
    override val firstContentCardIndex get() = firstVisibleCardIndex
    override val lastContentCardIndex  get() = lastVisibleCardIndex
 
-   override val layoutLogic = SingleColumnLayoutLogic(initialDeck, key)
+   override val layoutLogic = SingleColumnLayoutLogic(key)
 
    internal fun layout(
-      density: Density,
+      deck: Deck<T>,
       animCoroutineScope: CoroutineScope,
       deckWidth: Int,
       cardPadding: Int
    ) {
-      super.layout(density)
-
-      layoutLogic.layout(animCoroutineScope, deckWidth, cardPadding, scrollState)
+      layoutLogic.layout(deck, deckWidth, cardPadding, scrollState,
+         animCoroutineScope, cardPositionAnimSpec)
    }
 }
 
 @Stable
 internal class SingleColumnLayoutLogic<T>(
-   initialDeck: Deck<T>,
    contentKeyChooser: (T) -> Any
-) : DeckLayoutLogic<T>(initialDeck, contentKeyChooser) {
+) : DeckLayoutLogic<T>(contentKeyChooser) {
    private var deckWidth by mutableStateOf(0)
 
    override val width: Int get() = deckWidth
@@ -111,47 +111,51 @@ internal class SingleColumnLayoutLogic<T>(
     *   CoroutineScope
     */
    fun layout(
-      animCoroutineScope: CoroutineScope,
+      deck: Deck<T>,
       deckWidth: Int,
       cardPadding: Int,
-      scrollState: DeckScrollState
+      scrollState: DeckScrollState,
+      animCoroutineScope: CoroutineScope,
+      cardPositionAnimSpec: AnimationSpec<IntOffset>
    ) {
       val cardWidth = deckWidth
 
-      var x = -cardPadding
+      layout(deck, deckWidth, cardPadding) { seq ->
+         var x = -cardPadding
 
-      for (layoutState in list) {
-         x += cardPadding
-         layoutState.update(
-            position = IntOffset(x, 0),
-            width = cardWidth,
-            animCoroutineScope,
-            cardPositionAnimSpec()
-         )
-         x += cardWidth + cardPadding
+         for ((layoutState, index) in seq) {
+            x += cardPadding
+            layoutState.update(
+               index,
+               position = IntOffset(x, 0),
+               width = cardWidth,
+               animCoroutineScope,
+               cardPositionAnimSpec
+            )
+            x += cardWidth + cardPadding
+         }
+
+         x -= cardPadding
+
+         this.deckWidth = deckWidth
+
+         val maxScrollOffset = (x - deckWidth).toFloat().coerceAtLeast(0.0f)
+         updateMaxScrollOffset(
+            scrollState, maxScrollOffset, animCoroutineScope, cardPositionAnimSpec)
       }
-
-      x -= cardPadding
-
-      this.deckWidth = deckWidth
-
-      val maxScrollOffset = (x - deckWidth).toFloat().coerceAtLeast(0.0f)
-      updateMaxScrollOffset(scrollState, maxScrollOffset, animCoroutineScope)
    }
 }
 
 @Composable
 fun <T> SingleColumnDeck(
+   deck: Deck<T>,
    state: SingleColumnDeckState<T>,
    modifier: Modifier = Modifier,
    cardPadding: Dp = SingleColumnDeckDefaults.CardPadding,
    card: @Composable (index: Int, T) -> Unit
 ) {
+   val updatedDeck by rememberUpdatedState(deck)
    val coroutineScope = rememberCoroutineScope()
-
-   LaunchedEffect(coroutineScope) {
-      state.setCoroutineScope(coroutineScope)
-   }
 
    SubcomposeLayout(
       modifier = modifier
@@ -176,7 +180,7 @@ fun <T> SingleColumnDeck(
          val deckWidth = constraints.maxWidth
          val cardPaddingPx = cardPadding.roundToPx()
 
-         state.layout(density = this, coroutineScope, deckWidth, cardPaddingPx)
+         state.layout(updatedDeck, coroutineScope, deckWidth, cardPaddingPx)
 
          val scrollOffset = state.scrollState.scrollOffset.toInt()
          val visibleLeft = scrollOffset
@@ -208,7 +212,7 @@ fun <T> SingleColumnDeck(
             }
 
             val measurable = subcompose(layoutState.key) {
-               Box(Modifier.alpha(layoutState.alpha)) {
+               Box {
                   card(index, layoutState.card.content)
                }
             } .single()

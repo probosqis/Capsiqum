@@ -19,6 +19,7 @@ package com.wcaokaze.probosqis.capsiqum.deck
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
@@ -91,9 +92,12 @@ class MultiColumnDeckScrollTest : MultiColumnDeckTestBase() {
 
    @Test
    fun scroll() {
-      val deckState = createDeckState(cardCount = 3)
+      val deckState = createDefaultDeckState<Int>()
       rule.setContent {
-         MultiColumnDeck(deckState)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 3) },
+            deckState
+         )
       }
 
       rule.onNodeWithText("0")
@@ -128,9 +132,12 @@ class MultiColumnDeckScrollTest : MultiColumnDeckTestBase() {
 
    @Test
    fun edge() {
-      val deckState = createDeckState(cardCount = 3)
+      val deckState = createDefaultDeckState<Int>()
       rule.setContent {
-         MultiColumnDeck(deckState)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 3) },
+            deckState
+         )
       }
 
       rule.onNodeWithText("0")
@@ -174,11 +181,14 @@ class MultiColumnDeckScrollTest : MultiColumnDeckTestBase() {
    fun edge_afterSizeChanged() {
       var deckWidth by mutableStateOf(600.dp)
 
-      val deckState = createDeckState(cardCount = 3)
+      val deckState = createDefaultDeckState<Int>()
       lateinit var coroutineScope: CoroutineScope
       rule.setContent {
          coroutineScope = rememberCoroutineScope()
-         MultiColumnDeck(deckState, deckWidth)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 3) },
+            deckState, deckWidth
+         )
       }
 
       coroutineScope.launch {
@@ -222,9 +232,12 @@ class MultiColumnDeckScrollTest : MultiColumnDeckTestBase() {
 
    @Test
    fun snap() {
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       rule.setContent {
-         MultiColumnDeck(deckState)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState
+         )
       }
 
       rule.runOnIdle {
@@ -256,9 +269,12 @@ class MultiColumnDeckScrollTest : MultiColumnDeckTestBase() {
    fun snap_windowInsets() {
       val windowInsets = WindowInsets(left = 32.dp, right = 32.dp)
 
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       rule.setContent {
-         MultiColumnDeck(deckState, windowInsets = windowInsets)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState, windowInsets = windowInsets
+         )
       }
 
       rule.runOnIdle {
@@ -303,9 +319,12 @@ class MultiColumnDeckScrollTest : MultiColumnDeckTestBase() {
 
    @Test
    fun snap_tooFast() {
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       rule.setContent {
-         MultiColumnDeck(deckState)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState
+         )
       }
 
       rule.runOnIdle {
@@ -330,9 +349,12 @@ class MultiColumnDeckScrollTest : MultiColumnDeckTestBase() {
 
    @Test
    fun snap_edges() {
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       rule.setContent {
-         MultiColumnDeck(deckState)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState
+         )
       }
 
       rule.runOnIdle {
@@ -359,9 +381,12 @@ class MultiColumnDeckScrollTest : MultiColumnDeckTestBase() {
 
    @Test
    fun snap_afterImmobility() {
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       rule.setContent {
-         MultiColumnDeck(deckState)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState
+         )
       }
 
       rule.onNodeWithTag(deckTestTag).swipeLeft(40.dp)
@@ -398,9 +423,12 @@ class MultiColumnDeckScrollTest : MultiColumnDeckTestBase() {
 
    @Test
    fun swipe_overMultiplePageStacks() {
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       rule.setContent {
-         MultiColumnDeck(deckState)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState
+         )
       }
 
       rule.runOnIdle {
@@ -422,11 +450,14 @@ class MultiColumnDeckScrollTest : MultiColumnDeckTestBase() {
 
    @Test
    fun overscroll() {
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       lateinit var coroutineScope: CoroutineScope
       rule.setContent {
          coroutineScope = rememberCoroutineScope()
-         MultiColumnDeck(deckState)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState
+         )
       }
 
       val scrollDistance = with (rule.density) { 32.dp.toPx() }

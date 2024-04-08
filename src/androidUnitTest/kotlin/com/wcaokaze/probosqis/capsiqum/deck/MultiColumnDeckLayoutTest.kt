@@ -31,6 +31,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
 import androidx.compose.ui.test.assertWidthIsEqualTo
@@ -50,8 +51,6 @@ import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
@@ -64,8 +63,9 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
    @Test
    fun basicLayout() {
       rule.setContent {
-         val deckState = remember { createDeckState(cardCount = 2) }
-         MultiColumnDeck(deckState)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 2) }
+         )
       }
 
       rule.onNodeWithText("0")
@@ -81,8 +81,10 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
       val windowInsets = WindowInsets(left = 32.dp, right = 32.dp)
 
       rule.setContent {
-         val deckState = remember { createDeckState(cardCount = 2) }
-         MultiColumnDeck(deckState, windowInsets = windowInsets)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 2) },
+            windowInsets = windowInsets
+         )
       }
 
       rule.onNodeWithText("0")
@@ -105,8 +107,9 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
    @Test
    fun notEnoughCards() {
       rule.setContent {
-         val deckState = remember { createDeckState(cardCount = 1) }
-         MultiColumnDeck(deckState)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 1) }
+         )
       }
 
       rule.onNodeWithText("0")
@@ -119,8 +122,10 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
       val windowInsets = WindowInsets(left = 32.dp, right = 32.dp)
 
       rule.setContent {
-         val deckState = remember { createDeckState(cardCount = 1) }
-         MultiColumnDeck(deckState, windowInsets = windowInsets)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 1) },
+            windowInsets = windowInsets
+         )
       }
 
       rule.onNodeWithText("0")
@@ -136,13 +141,13 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
    fun width_sizeModifier() {
       var width by mutableStateOf(50.dp)
       var columnCount by mutableIntStateOf(1)
-      val deckState = createDeckState(cardCount = 1)
+      var deck by mutableStateOf(createDeck(cardCount = 1))
 
       rule.setContent {
          MultiColumnDeck(
-            deckState,
+            deck,
             sizeModifier = { Modifier.width(width).fillMaxHeight() },
-            columnCount
+            columnCount = columnCount
          )
       }
 
@@ -159,9 +164,9 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
       width = 100.dp
       rule.onNodeWithTag(deckTestTag).assertWidthIsEqualTo(100.dp)
 
-      deckState.addColumn(0, 1)
+      deck = createDeck(cardCount = 2)
       rule.onNodeWithTag(deckTestTag).assertWidthIsEqualTo(100.dp)
-      deckState.addColumn(0, 2)
+      deck = createDeck(cardCount = 3)
       rule.onNodeWithTag(deckTestTag).assertWidthIsEqualTo(100.dp)
    }
 
@@ -170,7 +175,7 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
       assertFails {
          rule.setContent {
             MultiColumnDeck(
-               remember { createDeckState(cardCount = 1) },
+               deck = remember { createDeck(cardCount = 1) },
                sizeModifier = { Modifier.wrapContentWidth().fillMaxHeight() }
             )
          }
@@ -181,13 +186,13 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
    fun height_sizeModifier() {
       var height by mutableStateOf(50.dp)
       var columnCount by mutableIntStateOf(1)
-      val deckState = createDeckState(cardCount = 1)
+      var deck by mutableStateOf(createDeck(cardCount = 1))
 
       rule.setContent {
          MultiColumnDeck(
-            deckState,
+            deck,
             sizeModifier = { Modifier.fillMaxWidth().height(height) },
-            columnCount
+            columnCount = columnCount
          )
       }
 
@@ -204,9 +209,9 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
       height = 100.dp
       rule.onNodeWithTag(deckTestTag).assertHeightIsEqualTo(100.dp)
 
-      deckState.addColumn(0, 1)
+      deck = createDeck(cardCount = 2)
       rule.onNodeWithTag(deckTestTag).assertHeightIsEqualTo(100.dp)
-      deckState.addColumn(0, 2)
+      deck = createDeck(cardCount = 3)
       rule.onNodeWithTag(deckTestTag).assertHeightIsEqualTo(100.dp)
    }
 
@@ -215,7 +220,7 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
       assertFails {
          rule.setContent {
             MultiColumnDeck(
-               remember { createDeckState(cardCount = 1) },
+               deck = remember { createDeck(cardCount = 1) },
                sizeModifier = { Modifier.fillMaxWidth().wrapContentHeight() }
             )
          }
@@ -224,36 +229,27 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
 
    @Test
    fun duplicatedKeys() {
-      rule.setContent {
-         assertFails {
-            MultiColumnDeckState(
-               Deck(List(2) { Deck.Card(0) }),
-               key = { it }
+      assertFails {
+         rule.setContent {
+            MultiColumnDeck(
+               deck = remember {
+                  Deck(List(2) { Deck.Card(0) })
+               }
             )
-         }
-
-         val deckState = MultiColumnDeckState(
-            Deck(listOf(Deck.Card(0))),
-            key = { it }
-         )
-
-         assertFails {
-            deckState.deck = Deck(List(2) { Deck.Card(0) })
-         }
-
-         assertFails {
-            deckState.addColumn(1, 0)
          }
       }
    }
 
    @Test
    fun omitComposingInvisibles() {
-      val deckState = createDeckState(cardCount = 5)
+      val deckState = createDefaultDeckState<Int>()
       lateinit var coroutineScope: CoroutineScope
       rule.setContent {
          coroutineScope = rememberCoroutineScope()
-         MultiColumnDeck(deckState)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 5) },
+            deckState
+         )
       }
 
       rule.onNodeWithText("0").assertExists()
@@ -320,113 +316,187 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
          }
       }
 
-      val deckState = createDeckState(cardCount = 2)
+      var deck by mutableStateOf(createDeck(cardCount = 2))
+      val deckState = createDefaultDeckState<Int>()
+      lateinit var coroutineScope: CoroutineScope
       rule.setContent {
-         MultiColumnDeck(deckState)
+         coroutineScope = rememberCoroutineScope()
+         MultiColumnDeck(deck, deckState)
       }
 
       rule.runOnIdle {
-         assertCardNumbers(listOf(0, 1), deckState.deck)
-         assertLayoutStatesExist(deckState.deck, deckState.layoutLogic)
+         assertCardNumbers(listOf(0, 1), deck)
+         assertLayoutStatesExist(deck, deckState.layoutLogic)
       }
 
       // ---- insert first ----
 
-      deckState.deck = Deck(
-         rootRow = deckState.deck.rootRow.inserted(0, Deck.Card(2))
+      deck = Deck(
+         rootRow = deck.rootRow.inserted(0, Deck.Card(2))
       )
 
-      assertFalse(deckState.layoutLogic.layoutState(0).isInitialized)
-
       rule.runOnIdle {
-         assertCardNumbers(listOf(2, 0, 1), deckState.deck)
-         assertLayoutStatesExist(deckState.deck, deckState.layoutLogic)
-         assertTrue(deckState.layoutLogic.layoutState(0).isInitialized)
+         assertCardNumbers(listOf(2, 0, 1), deck)
+         assertLayoutStatesExist(deck, deckState.layoutLogic)
+         assertEquals(expectedScrollOffset(0), deckState.scrollOffset)
       }
 
       // ---- insert last ----
 
-      deckState.deck = Deck(
-         rootRow = deckState.deck.rootRow.inserted(3, Deck.Card(3))
+      coroutineScope.launch {
+         deckState.animateScroll(2)
+      }
+
+      deck = Deck(
+         rootRow = deck.rootRow.inserted(3, Deck.Card(3))
       )
 
-      assertFalse(deckState.layoutLogic.layoutState(3).isInitialized)
-
       rule.runOnIdle {
-         assertCardNumbers(listOf(2, 0, 1, 3), deckState.deck)
-         assertLayoutStatesExist(deckState.deck, deckState.layoutLogic)
-         assertTrue(deckState.layoutLogic.layoutState(3).isInitialized)
+         assertCardNumbers(listOf(2, 0, 1, 3), deck)
+         assertLayoutStatesExist(deck, deckState.layoutLogic)
+         assertEquals(expectedScrollOffset(1), deckState.scrollOffset)
       }
 
       // ---- insert middle ----
 
-      deckState.deck = Deck(
-         rootRow = deckState.deck.rootRow.inserted(2, Deck.Card(4))
+      deck = Deck(
+         rootRow = deck.rootRow.inserted(2, Deck.Card(4))
       )
 
-      assertFalse(deckState.layoutLogic.layoutState(2).isInitialized)
-
       rule.runOnIdle {
-         assertCardNumbers(listOf(2, 0, 4, 1, 3), deckState.deck)
-         assertLayoutStatesExist(deckState.deck, deckState.layoutLogic)
-         assertTrue(deckState.layoutLogic.layoutState(2).isInitialized)
+         assertCardNumbers(listOf(2, 0, 4, 1, 3), deck)
+         assertLayoutStatesExist(deck, deckState.layoutLogic)
+         assertEquals(expectedScrollOffset(1), deckState.scrollOffset)
       }
 
       // ---- replace ----
 
-      deckState.deck = Deck(
-         rootRow = deckState.deck.rootRow.replaced(2, Deck.Card(5))
+      deck = Deck(
+         rootRow = deck.rootRow.replaced(2, Deck.Card(5))
       )
 
-      assertFalse(deckState.layoutLogic.layoutState(2).isInitialized)
-
       rule.runOnIdle {
-         assertCardNumbers(listOf(2, 0, 5, 1, 3), deckState.deck)
-         assertLayoutStatesExist(deckState.deck, deckState.layoutLogic)
-         assertTrue(deckState.layoutLogic.layoutState(2).isInitialized)
+         assertCardNumbers(listOf(2, 0, 5, 1, 3), deck)
+         assertLayoutStatesExist(deck, deckState.layoutLogic)
+         assertEquals(expectedScrollOffset(1), deckState.scrollOffset)
       }
 
       // ---- remove first ----
 
-      deckState.deck = Deck(
-         rootRow = deckState.deck.rootRow.removed(0)
+      coroutineScope.launch {
+         deckState.animateScroll(0)
+      }
+
+      deck = Deck(
+         rootRow = deck.rootRow.removed(0)
       )
 
       rule.runOnIdle {
-         assertCardNumbers(listOf(0, 5, 1, 3), deckState.deck)
-         assertLayoutStatesExist(deckState.deck, deckState.layoutLogic)
+         assertCardNumbers(listOf(0, 5, 1, 3), deck)
+         assertLayoutStatesExist(deck, deckState.layoutLogic)
+         assertEquals(expectedScrollOffset(0), deckState.scrollOffset)
       }
 
       // ---- remove last ----
 
-      deckState.deck = Deck(
-         rootRow = deckState.deck.rootRow.removed(3)
+      coroutineScope.launch {
+         deckState.animateScroll(3)
+      }
+
+      deck = Deck(
+         rootRow = deck.rootRow.removed(3)
       )
 
       rule.runOnIdle {
-         assertCardNumbers(listOf(0, 5, 1), deckState.deck)
-         assertLayoutStatesExist(deckState.deck, deckState.layoutLogic)
+         assertCardNumbers(listOf(0, 5, 1), deck)
+         assertLayoutStatesExist(deck, deckState.layoutLogic)
+         assertEquals(expectedScrollOffset(1), deckState.scrollOffset)
       }
 
       // ---- remove middle ----
 
-      deckState.deck = Deck(
-         rootRow = deckState.deck.rootRow.removed(1)
+      deck = Deck(
+         rootRow = deck.rootRow.removed(1)
       )
 
       rule.runOnIdle {
-         assertCardNumbers(listOf(0, 1), deckState.deck)
-         assertLayoutStatesExist(deckState.deck, deckState.layoutLogic)
+         assertCardNumbers(listOf(0, 1), deck)
+         assertLayoutStatesExist(deck, deckState.layoutLogic)
+         assertEquals(expectedScrollOffset(0), deckState.scrollOffset)
+      }
+   }
+
+   @Test
+   fun recompose_cardReplaced() {
+      data class CardContent(val key: Int, val content: Int) {
+         override fun toString() = "key = $key, content = $content"
+      }
+
+      fun assertCardNumbers(expectedCardContents: List<Int>, deck: Deck<CardContent>) {
+         val cardCount = deck.cardCount
+         assertEquals(expectedCardContents.size, cardCount)
+
+         for (i in 0 until cardCount) {
+            val cardContent = deck[i].content
+            assertEquals(expectedCardContents[i], cardContent.content)
+         }
+      }
+
+      fun SemanticsNodeInteractionsProvider.assertComposedTexts(expectedCardTexts: List<String>) {
+         for (t in expectedCardTexts) {
+            onNodeWithText(t).assertExists()
+         }
+      }
+
+      var deck by mutableStateOf(
+         Deck(
+            List(2) { Deck.Card(CardContent(key = it, content = it)) }
+         )
+      )
+
+      rule.setContent {
+         MultiColumnDeck(
+            deck,
+            state = remember {
+               MultiColumnDeckState(key = { it.key })
+            }
+         )
+      }
+
+      rule.runOnIdle {
+         assertCardNumbers(listOf(0, 1), deck)
+         rule.assertComposedTexts(listOf(
+            "key = 0, content = 0",
+            "key = 1, content = 1",
+         ))
+      }
+
+      deck = Deck(
+         rootRow = deck.rootRow.replaced(
+            0,
+            Deck.Card(CardContent(key = 0, content = 1))
+         )
+      )
+
+      rule.runOnIdle {
+         assertCardNumbers(listOf(1, 1), deck)
+         rule.assertComposedTexts(listOf(
+            "key = 0, content = 1",
+            "key = 1, content = 1",
+         ))
       }
    }
 
    @Test
    fun firstVisibleIndex() {
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       lateinit var coroutineScope: CoroutineScope
       rule.setContent {
          coroutineScope = rememberCoroutineScope()
-         MultiColumnDeck(deckState)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState
+         )
       }
 
       rule.runOnIdle {
@@ -494,11 +564,14 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
 
    @Test
    fun lastVisibleIndex() {
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       lateinit var coroutineScope: CoroutineScope
       rule.setContent {
          coroutineScope = rememberCoroutineScope()
-         MultiColumnDeck(deckState)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState
+         )
       }
 
       rule.runOnIdle {
@@ -587,9 +660,13 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
    @Test
    fun firstVisibleIndex_windowInsets() {
       val windowInsets = WindowInsets(left = 32.dp, right = 32.dp)
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       rule.setContent {
-         MultiColumnDeck(deckState, windowInsets = windowInsets)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState,
+            windowInsets = windowInsets
+         )
       }
 
       rule.runOnIdle {
@@ -640,9 +717,13 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
    @Test
    fun lastVisibleIndex_windowInsets() {
       val windowInsets = WindowInsets(left = 32.dp, right = 32.dp)
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       rule.setContent {
-         MultiColumnDeck(deckState, windowInsets = windowInsets)
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState,
+            windowInsets = windowInsets
+         )
       }
 
       rule.runOnIdle {

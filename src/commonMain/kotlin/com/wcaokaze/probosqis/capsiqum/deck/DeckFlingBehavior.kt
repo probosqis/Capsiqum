@@ -87,12 +87,12 @@ internal object DeckFlingBehavior {
             }
 
             estimatedIdx > currentIdx ->
-               (currentIdx + 1).coerceAtMost(state.deck.cardCount - 1)
+               (currentIdx + 1).coerceAtMost(state.layoutInfo.cardsInfo.size - 1)
 
             estimatedIdx < currentIdx ->
                currentIdx
 
-            currentIdx >= state.deck.cardCount - 1 ->
+            currentIdx >= state.layoutInfo.cardsInfo.size - 1 ->
                currentIdx
 
             else -> {
@@ -106,7 +106,7 @@ internal object DeckFlingBehavior {
                ) {
                   currentIdx
                } else {
-                  (currentIdx + 1).coerceAtMost(state.deck.cardCount - 1)
+                  (currentIdx + 1).coerceAtMost(state.layoutInfo.cardsInfo.size - 1)
                }
             }
          }

@@ -16,13 +16,11 @@
 
 package com.wcaokaze.probosqis.capsiqum.deck
 
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.test.assertLeftPositionInRootIsEqualTo
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.Density
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -30,10 +28,8 @@ import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.Test
-import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
-import kotlin.test.assertNotEquals
 
 @RunWith(RobolectricTestRunner::class)
 class SingleColumnDeckOperationTest : SingleColumnDeckTestBase() {
@@ -45,11 +41,14 @@ class SingleColumnDeckOperationTest : SingleColumnDeckTestBase() {
 
    @Test
    fun animateScroll() {
-      val deckState = createDeckState(cardCount = 4)
+      val deckState = createDefaultDeckState<Int>()
       lateinit var coroutineScope: CoroutineScope
       rule.setContent {
          coroutineScope = rememberCoroutineScope()
-         SingleColumnDeck(deckState)
+         SingleColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState
+         )
       }
 
       class ScrollParameterType
@@ -265,112 +264,6 @@ class SingleColumnDeckOperationTest : SingleColumnDeckTestBase() {
                animateScroll(-1, PositionInDeck.NearestVisible, parameterType)
             }
          }
-      }
-   }
-
-   @Test
-   fun addCard_viaDeckState() {
-      val deckState = createDeckState(cardCount = 2)
-      rule.setContent {
-         SingleColumnDeck(deckState) { _, i ->
-            Button(
-               onClick = {
-                  val idx = deckState.deck.sequence().indexOfFirst { it.content == i }
-                  deckState.addColumn(idx + 1, i + 100)
-               }
-            ) {
-               Text("Add Card $i")
-            }
-         }
-      }
-
-      fun assertCardNumbers(expected: List<Int>, actual: Deck<Int>) {
-         val contents = actual.sequence().map { it.content } .toList()
-         assertContentEquals(expected, contents)
-      }
-
-      rule.runOnIdle {
-         assertCardNumbers(listOf(0, 1), deckState.deck)
-         assertEquals(expectedScrollOffset(0), deckState.scrollState.scrollOffset)
-      }
-
-      rule.mainClock.autoAdvance = false
-      rule.onNodeWithText("Add Card 0").performClick()
-      rule.runOnIdle {
-         assertCardNumbers(listOf(0, 100, 1), deckState.deck)
-
-         // ボタン押下直後、まだDeckは動いていない
-         assertEquals(expectedScrollOffset(0), deckState.scrollState.scrollOffset)
-
-         // 挿入されるCardは透明
-         assertEquals(0.0f, deckState.layoutLogic.layoutState(1).alpha)
-      }
-      // Cardひとつ分スクロールされるまで進める
-      rule.mainClock.advanceTimeUntil {
-         deckState.scrollState.scrollOffset == expectedScrollOffset(1)
-      }
-      rule.runOnIdle {
-         // Card挿入アニメーションが開始されているがまだ終わっていない
-         assertNotEquals(1.0f, deckState.layoutLogic.layoutState(1).alpha)
-      }
-      // アニメーション終了まで進める
-      rule.mainClock.autoAdvance = true
-      rule.runOnIdle {
-         // 挿入アニメーション終了後不透明度は100%
-         assertEquals(1.0f, deckState.layoutLogic.layoutState(1).alpha)
-      }
-   }
-
-   @Test
-   fun removeCard_viaDeckState() {
-      val deckState = createDeckState(cardCount = 6)
-      lateinit var coroutineScope: CoroutineScope
-      rule.setContent {
-         coroutineScope = rememberCoroutineScope()
-
-         SingleColumnDeck(deckState) { _, i ->
-            Button(
-               onClick = { deckState.removeCardByKey(i) }
-            ) {
-               Text("Remove Card $i")
-            }
-         }
-      }
-
-      fun assertCardNumbers(expected: List<Int>, actual: Deck<Int>) {
-         val contents = actual.sequence().map { it.content } .toList()
-         assertContentEquals(expected, contents)
-      }
-
-      rule.runOnIdle {
-         assertCardNumbers(listOf(0, 1, 2, 3, 4, 5), deckState.deck)
-         assertEquals(expectedScrollOffset(0), deckState.scrollState.scrollOffset)
-      }
-
-      rule.onNodeWithText("Remove Card 0").performClick()
-      rule.runOnIdle {
-         assertCardNumbers(listOf(1, 2, 3, 4, 5), deckState.deck)
-         assertEquals(expectedScrollOffset(0), deckState.scrollState.scrollOffset)
-      }
-
-      coroutineScope.launch {
-         deckState.animateScroll(1, PositionInDeck.FirstVisible)
-      }
-
-      rule.onNodeWithText("Remove Card 2").performClick()
-      rule.runOnIdle {
-         assertCardNumbers(listOf(1, 3, 4, 5), deckState.deck)
-         assertEquals(expectedScrollOffset(1), deckState.scrollState.scrollOffset)
-      }
-
-      coroutineScope.launch {
-         deckState.animateScroll(3, PositionInDeck.FirstVisible)
-      }
-
-      rule.onNodeWithText("Remove Card 5").performClick()
-      rule.runOnIdle {
-         assertCardNumbers(listOf(1, 3, 4), deckState.deck)
-         assertEquals(expectedScrollOffset(2), deckState.scrollState.scrollOffset)
       }
    }
 }

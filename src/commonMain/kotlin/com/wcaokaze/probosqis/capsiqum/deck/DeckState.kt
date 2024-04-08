@@ -18,21 +18,18 @@ package com.wcaokaze.probosqis.capsiqum.deck
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationSpec
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.unit.Density
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toOffset
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
@@ -41,12 +38,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Deck内の位置
@@ -67,20 +59,7 @@ enum class PositionInDeck {
 }
 
 @Stable
-sealed class DeckState<T>(initialDeck: Deck<T>) {
-   private var coroutineScope: CoroutineScope? = null
-   internal fun setCoroutineScope(coroutineScope: CoroutineScope) {
-      this.coroutineScope = coroutineScope
-   }
-
-   private val _deck = mutableStateOf(initialDeck)
-   var deck: Deck<T>
-      get() = _deck.value
-      set(value) {
-         _deck.value = value
-         layoutLogic.recreateLayoutState(value)
-      }
-
+sealed class DeckState<T> {
    internal val scrollState = DeckScrollState()
 
    internal abstract val layoutLogic: DeckLayoutLogic<T>
@@ -120,15 +99,12 @@ sealed class DeckState<T>(initialDeck: Deck<T>) {
     */
    abstract val lastContentCardIndex: Int
 
-   private var cardInsertionAnimOffset by mutableFloatStateOf(0.0f)
-
    suspend fun animateScroll(
       targetIndex: Int,
       targetPositionInDeck: PositionInDeck = PositionInDeck.NearestVisible,
       animationSpec: AnimationSpec<Float> = spring()
    ) {
       val layoutState = layoutLogic.layoutState(targetIndex)
-      layoutState.awaitInitialized()
       val targetScrollOffset = layoutLogic.getScrollOffset(
          layoutState, targetPositionInDeck, scrollState.scrollOffset)
 
@@ -144,7 +120,6 @@ sealed class DeckState<T>(initialDeck: Deck<T>) {
       val layoutState = layoutLogic.layoutState(targetCardKey)
          ?: throw IllegalArgumentException("Card key not found: $targetCardKey")
 
-      layoutState.awaitInitialized()
       val targetScrollOffset = layoutLogic.getScrollOffset(
          layoutState, targetPositionInDeck, scrollState.scrollOffset)
 
@@ -160,67 +135,6 @@ sealed class DeckState<T>(initialDeck: Deck<T>) {
       targetPositionInDeck,
       scrollState.scrollOffset
    )
-
-   fun addColumn(index: Int, content: T): Job {
-      val coroutineScope = coroutineScope
-      if (coroutineScope != null) {
-         return coroutineScope.launch {
-            deck = Deck(
-               rootRow = deck.rootRow.inserted(index, content)
-            )
-
-            val layoutState = layoutLogic.layoutState(index)
-
-            launch {
-               layoutState.awaitInitialized()
-
-               val currentScrollOffset = scrollState.scrollOffset
-               val targetScrollOffset = layoutLogic.getScrollOffset(
-                  layoutState, PositionInDeck.NearestVisible, currentScrollOffset)
-
-               scrollState.animateScrollBy(targetScrollOffset - currentScrollOffset)
-            }
-            launch {
-               layoutState.animateInsertion(cardInsertionAnimOffset)
-            }
-         }
-      } else {
-         deck = Deck(
-            rootRow = deck.rootRow.inserted(index, content)
-         )
-         return Job().apply { complete() }
-      }
-   }
-
-   fun removeCard(index: Int): Job {
-      val coroutineScope= coroutineScope
-
-      return if (coroutineScope != null) {
-         coroutineScope.launch {
-            layoutLogic.layoutState(index).animateRemoving(cardInsertionAnimOffset)
-            deck = deck.removed(index)
-         }
-      } else {
-         deck = deck.removed(index)
-         Job().apply { complete() }
-      }
-   }
-
-   fun removeCardByKey(key: Any): Job {
-      val index = layoutLogic.cardsInfo.indexOfFirst { it.key == key }
-
-      if (index < 0) {
-         throw IllegalArgumentException("Card key not found: $key")
-      }
-
-      return removeCard(index)
-   }
-
-   protected fun layout(density: Density) {
-      with (density) {
-         cardInsertionAnimOffset = 64.dp.toPx()
-      }
-   }
 }
 
 interface DeckLayoutInfo<out T> {
@@ -237,123 +151,81 @@ interface DeckLayoutInfo<out T> {
 }
 
 @Stable
-internal class DeckCardLayoutState<out T>(
-   override val card: Deck.Card<T>,
+internal class DeckCardLayoutState<T>(
+   initialCard: Deck.Card<T>,
+   initialCardIndex: DeckNodeIndex,
    override val key: Any
 ) : DeckLayoutInfo.CardInfo<T> {
-   /**
-    * [DeckState.deck]が更新されて生成された直後のインスタンスの場合 `false`。
-    * [DeckState.layout]が呼ばれて位置とサイズが決まったあと `true` になる
-    */
-   var isInitialized by mutableStateOf(false)
-      internal set
+   override var card: Deck.Card<T> by mutableStateOf(initialCard)
+   private var cardIndex by mutableStateOf(initialCardIndex)
 
-   private val yOffsetAnimatable = Animatable(0.0f)
-   internal suspend fun animateInsertion(yOffset: Float) {
-      coroutineScope {
-         alphaAnimatable.snapTo(0.0f)
-         yOffsetAnimatable.snapTo(yOffset)
+   private val cancellerMutex = CancellerMutex()
 
-         delay(200.milliseconds)
+   private var currentPosition by mutableStateOf(IntOffset.Zero)
+   private var currentPositionVelocity by mutableStateOf(IntOffset.Zero)
+   private var targetPosition by mutableStateOf(currentPosition)
+   override val position: IntOffset get() = currentPosition
 
-         launch {
-            alphaAnimatable.animateTo(1.0f, tween(durationMillis = 200))
-         }
-         launch {
-            yOffsetAnimatable.animateTo(0.0f, tween(durationMillis = 200))
-         }
-      }
-   }
-   internal suspend fun animateRemoving(yOffset: Float) {
-      coroutineScope {
-         launch {
-            alphaAnimatable.animateTo(
-               0.0f, tween(durationMillis = 200, easing = LinearEasing))
-         }
-         launch {
-            yOffsetAnimatable.animateTo(
-               yOffset, tween(durationMillis = 200, easing = LinearEasing))
-         }
-      }
-   }
-
-   private lateinit var positionAnimatable: Animatable<IntOffset, *>
-   override val position: IntOffset get() {
-      require(isInitialized)
-      val (x, y) = positionAnimatable.value
-      return IntOffset(x, y + yOffsetAnimatable.value.toInt())
-   }
-
-   private lateinit var widthAnimatable: Animatable<Int, *>
-   override val width: Int get() {
-      require(isInitialized)
-      return widthAnimatable.value
-   }
-
-   private val alphaAnimatable = Animatable(1.0f)
-   val alpha: Float get() = alphaAnimatable.value
+   override var width by mutableIntStateOf(0)
+      private set
 
    internal fun update(
+      cardIndex: DeckNodeIndex,
       position: IntOffset,
       width: Int,
       animCoroutineScope: CoroutineScope,
       positionAnimationSpec: AnimationSpec<IntOffset>
    ) {
-      if (!isInitialized) {
-         // 初回コンポジション。アニメーション不要
-         initialize(position, width)
-      } else {
-         // リコンポジション。位置か幅が変化してる場合アニメーションする
-
-         val targetPosition = positionAnimatable.targetValue
-         if (targetPosition != position) {
+      if (position != targetPosition) {
+         if (cardIndex != this.cardIndex
+            || currentPositionVelocity != IntOffset.Zero)
+         {
             animCoroutineScope.launch {
-               positionAnimatable
-                  .animateTo(position, positionAnimationSpec)
+               cancellerMutex.runCancelling {
+                  animate(
+                     IntOffset.VectorConverter,
+                     initialValue = currentPosition,
+                     targetValue = position,
+                     currentPositionVelocity,
+                     positionAnimationSpec
+                  ) { value, velocity ->
+                     currentPosition = value
+                     currentPositionVelocity = velocity
+                  }
+
+                  currentPositionVelocity = IntOffset.Zero
+               }
             }
+
+            this.cardIndex = cardIndex
+         } else {
+            cancellerMutex.cancel()
+            currentPosition = position
          }
 
-         val targetWidth = widthAnimatable.targetValue
-         if (targetWidth != width) {
-            animCoroutineScope.launch {
-               widthAnimatable.animateTo(width)
-            }
-         }
+         targetPosition = position
       }
-   }
 
-   internal suspend fun awaitInitialized() {
-      snapshotFlow { isInitialized }
-         .filter { it }
-         .first()
-   }
-
-   private fun initialize(position: IntOffset, width: Int) {
-      assert(!isInitialized)
-      positionAnimatable = Animatable(position, IntOffset.VectorConverter)
-      widthAnimatable = Animatable(width, Int.VectorConverter)
-      isInitialized = true
+      this.width = width
    }
 }
 
 internal abstract class DeckLayoutLogic<T>(
-   initialDeck: Deck<T>,
    private val contentKeyChooser: (T) -> Any
 ) : DeckLayoutInfo<T> {
-   /** [DeckState.deck]と同じ順 */
+   /** 最後に実行された[layout]の結果。[layout]の引数のDeckと同じ順 */
    protected var list: ImmutableList<DeckCardLayoutState<T>>
          by mutableStateOf(persistentListOf())
 
    protected var map: ImmutableMap<Any, DeckCardLayoutState<T>>
          by mutableStateOf(persistentMapOf())
 
+   private var layoutDeck by mutableStateOf(Deck<T>())
+   private var layoutKeys: Array<out Any> by mutableStateOf(emptyArray())
+
    private var maxScrollOffsetAnimTarget by mutableStateOf(0.0f)
    private var maxScrollOffsetAnimJob: Job
          by mutableStateOf(Job().apply { complete() })
-
-   init {
-      recreateLayoutState(initialDeck)
-   }
 
    override val cardsInfo: List<DeckLayoutInfo.CardInfo<T>> get() = list
 
@@ -374,9 +246,34 @@ internal abstract class DeckLayoutLogic<T>(
    /** 指定したスクロール位置において、Deck内で左端に表示されるCardのindex */
    internal abstract fun indexOfScrollOffset(scrollOffset: Float): Int
 
-   internal fun <U> cardPositionAnimSpec() = spring<U>()
+   protected inline fun layout(
+      deck: Deck<T>,
+      vararg keys: Any,
+      layoutLogic: (Sequence<Pair<DeckCardLayoutState<T>, DeckNodeIndex>>) -> Unit
+   ) {
+      val keyEqualsPreviousLayout = keys contentEquals layoutKeys
 
-   internal fun recreateLayoutState(deck: Deck<T>) {
+      if (deck === layoutDeck && keyEqualsPreviousLayout) { return }
+
+      val shouldLayout = recreateLayoutState(deck)
+      if (!shouldLayout && keyEqualsPreviousLayout) { return }
+
+      layoutLogic(
+         list.asSequence().zip(deck.sequenceIndexed()) { layoutState, (index, _) ->
+            Pair(layoutState, index)
+         }
+      )
+
+      layoutDeck = deck
+      layoutKeys = keys
+   }
+
+   /**
+    * @return
+    * [list], [map]に変更があった場合true。この場合レイアウトを再実行する
+    * 必要がある
+    */
+   private fun recreateLayoutState(deck: Deck<T>): Boolean {
       val oldLayoutList = list
       val oldLayoutMap = map
 
@@ -385,7 +282,7 @@ internal abstract class DeckLayoutLogic<T>(
       lateinit var resultMap: MutableMap<Any, DeckCardLayoutState<T>>
       var i = 0
 
-      for (card in deck.sequence()) {
+      for ((index, card) in deck.sequenceIndexed()) {
          val key = contentKeyChooser(card.content)
 
          var layoutState = if (i >= 0) {
@@ -405,9 +302,13 @@ internal abstract class DeckLayoutLogic<T>(
             oldLayoutMap[key]
          }
 
+         if (layoutState != null) {
+            layoutState.card = card
+         }
+
          if (i < 0) {
             if (layoutState == null) {
-               layoutState = DeckCardLayoutState(card, key)
+               layoutState = DeckCardLayoutState(card, index, key)
             }
 
             resultList += layoutState
@@ -417,10 +318,11 @@ internal abstract class DeckLayoutLogic<T>(
          }
       }
 
-      when {
+      return when {
          i < 0 -> {
             list = resultList.toImmutableList()
             map = resultMap.toImmutableMap()
+            true
          }
          i < oldLayoutList.size -> {
             list = oldLayoutList.subList(0, i)
@@ -429,14 +331,17 @@ internal abstract class DeckLayoutLogic<T>(
                resultMap[s.key] = s
             }
             map = resultMap.toImmutableMap()
+            true
          }
+         else -> false
       }
    }
 
    protected fun updateMaxScrollOffset(
       scrollState: DeckScrollState,
       maxScrollOffset: Float,
-      animCoroutineScope: CoroutineScope
+      animCoroutineScope: CoroutineScope,
+      positionAnimationSpec: AnimationSpec<IntOffset>
    ) {
       if (maxScrollOffsetAnimJob.isActive
          && maxScrollOffsetAnimTarget == maxScrollOffset) { return }
@@ -451,13 +356,16 @@ internal abstract class DeckLayoutLogic<T>(
             scrollState.scroll(enableOverscroll = true) {
                scrollState.setMaxScrollOffset(maxScrollOffset)
 
-               var prevValue = scrollState.scrollOffset
+               val initialValue = IntOffset(scrollState.scrollOffset.toInt(), 0)
+               var prevValue = initialValue.toOffset()
                animate(
-                  initialValue = prevValue,
-                  targetValue = maxScrollOffset,
-                  animationSpec = cardPositionAnimSpec()
+                  IntOffset.VectorConverter,
+                  initialValue,
+                  targetValue = IntOffset(maxScrollOffset.toInt(), 0),
+                  animationSpec = positionAnimationSpec
                ) { value, _ ->
-                  prevValue += scrollBy(value - prevValue)
+                  val consumed = scrollBy(value.x - prevValue.x)
+                  prevValue += Offset(consumed, 0.0f)
                }
             }
          }
