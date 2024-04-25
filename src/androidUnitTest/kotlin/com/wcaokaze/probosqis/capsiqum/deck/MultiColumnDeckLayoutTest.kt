@@ -228,6 +228,18 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
    }
 
    @Test
+   fun illegalColumnCount() {
+      assertFails {
+         rule.setContent {
+            MultiColumnDeck(
+               deck = remember { createDeck(cardCount = 1) },
+               columnCount = 0
+            )
+         }
+      }
+   }
+
+   @Test
    fun duplicatedKeys() {
       assertFails {
          rule.setContent {

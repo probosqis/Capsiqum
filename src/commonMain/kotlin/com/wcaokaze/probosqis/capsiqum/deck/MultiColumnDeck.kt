@@ -203,6 +203,8 @@ fun <T> MultiColumnDeck(
    cardPadding: Dp = MultiColumnDeckDefaults.CardPadding,
    card: @Composable (index: Int, T) -> Unit
 ) {
+   check(columnCount > 0) { "columnCount must be > 0" }
+
    val updatedDeck by rememberUpdatedState(deck)
    val coroutineScope = rememberCoroutineScope()
 
