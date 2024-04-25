@@ -228,6 +228,19 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
    }
 
    @Test
+   fun tooNarrowWidth() {
+      rule.setContent {
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 1) },
+            sizeModifier = { Modifier.width(12.dp).fillMaxHeight() }
+         )
+      }
+
+      rule.onNodeWithTag(deckTestTag).assertExists()
+      rule.onNodeWithText("0").assertDoesNotExist()
+   }
+
+   @Test
    fun illegalColumnCount() {
       assertFails {
          rule.setContent {

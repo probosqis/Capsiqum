@@ -162,7 +162,7 @@ internal class MultiColumnLayoutLogic<T>(
                - leftWindowInset - rightWindowInset
                - cardPadding * 2) / columnCount.toDouble()
          - cardPadding * 2
-      ).toInt()
+      ).toInt().coerceAtLeast(0)
 
       layout(deck, leftWindowInset, rightWindowInset, cardPadding, cardWidth) { seq ->
          var x = leftWindowInset + cardPadding
@@ -277,8 +277,9 @@ fun <T> MultiColumnDeck(
 
             // TODO: Cardに影がつくかつかないか未定のためギリギリ範囲外の
             //       Cardもコンポーズしている。影の件が決まり次第変更する
-            if (cardPosition.x + cardWidth + cardPaddingPx < visibleLeft ||
-               cardPosition.x - cardPaddingPx > visibleRight)
+            if (cardWidth <= 0
+               || cardPosition.x + cardWidth + cardPaddingPx < visibleLeft
+               || cardPosition.x - cardPaddingPx > visibleRight)
             {
                return@mapIndexedNotNull null
             }
