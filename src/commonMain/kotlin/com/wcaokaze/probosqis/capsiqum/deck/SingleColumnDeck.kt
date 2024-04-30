@@ -170,7 +170,7 @@ fun <T> SingleColumnDeck(
                DeckFlingBehavior.Standard(state)
             }
          ),
-      measurePolicy = remember(state) {{ constraints ->
+      measurePolicy = remember(state, cardPadding) {{ constraints ->
          require(constraints.hasFixedWidth) {
             "Deck must has a fixed width (e.g. Modifier.size) since its cards' " +
             "width are determined from Deck's width. The intrinsic width of the " +
