@@ -788,4 +788,36 @@ class MultiColumnDeckLayoutTest : MultiColumnDeckTestBase() {
          up()
       }
    }
+
+   @Test
+   fun firstVisibleIndex_zeroWidthCard() {
+      val deckState = createDefaultDeckState<Int>()
+      var columnCount by mutableIntStateOf(1)
+
+      rule.setContent {
+         MultiColumnDeck(
+            deck = remember { createDeck(cardCount = 4) },
+            deckState,
+            width = 200.dp,
+            columnCount,
+            cardPadding = 100.dp
+         )
+      }
+
+      rule.runOnIdle {
+         assertEquals(0, deckState.firstVisibleCardIndex)
+         assertEquals(0, deckState.firstContentCardIndex)
+         assertEquals(0, deckState.lastVisibleCardIndex)
+         assertEquals(0, deckState.lastContentCardIndex)
+      }
+
+      columnCount = 2
+
+      rule.runOnIdle {
+         assertEquals(0, deckState.firstVisibleCardIndex)
+         assertEquals(0, deckState.firstContentCardIndex)
+         assertEquals(1, deckState.lastVisibleCardIndex)
+         assertEquals(1, deckState.lastContentCardIndex)
+      }
+   }
 }

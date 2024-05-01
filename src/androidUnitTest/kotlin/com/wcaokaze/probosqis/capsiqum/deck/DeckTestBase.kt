@@ -58,11 +58,12 @@ abstract class MultiColumnDeckTestBase : DeckTestBase() {
       width: Dp = defaultDeckWidth,
       columnCount: Int = defaultColumnCount,
       windowInsets: WindowInsets = defaultWindowInsets,
+      cardPadding: Dp = MultiColumnDeckDefaults.CardPadding,
       card: @Composable (index: Int, T) -> Unit = defaultCardComposable,
    ) {
       MultiColumnDeck(
          deck, state, sizeModifier = { Modifier.width(width).fillMaxHeight() },
-         columnCount, windowInsets, card
+         columnCount, windowInsets, cardPadding, card
       )
    }
 
@@ -73,6 +74,7 @@ abstract class MultiColumnDeckTestBase : DeckTestBase() {
       sizeModifier: () -> Modifier,
       columnCount: Int = defaultColumnCount,
       windowInsets: WindowInsets = defaultWindowInsets,
+      cardPadding: Dp = MultiColumnDeckDefaults.CardPadding,
       card: @Composable (index: Int, T) -> Unit = defaultCardComposable,
    ) {
       MultiColumnDeck(
@@ -80,6 +82,7 @@ abstract class MultiColumnDeckTestBase : DeckTestBase() {
          state,
          columnCount,
          windowInsets = windowInsets,
+         cardPadding = cardPadding,
          card = card,
          modifier = Modifier
             .then(sizeModifier())

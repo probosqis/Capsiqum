@@ -258,12 +258,14 @@ fun <T> MultiColumnDeck(
             if (firstVisibleIndex < 0) {
                if (cardPosition.x + cardWidth > visibleLeft) {
                   firstVisibleIndex = index
+                  lastVisibleIndex = index + columnCount - 1
                }
             }
 
             if (firstContentIndex < 0) {
                if (cardPosition.x + cardWidth > contentLeft) {
                   firstContentIndex = index
+                  lastContentIndex = index + columnCount - 1
                }
             }
 
