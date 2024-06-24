@@ -52,11 +52,11 @@ class PageSwitcherTest {
       val switcherState = PageSwitcherState(
          listOf(
             PageComposable<PageA, PageAState>(
-               stateFactory = { _, _ -> PageAState() },
+               stateFactory = { _, _, _ -> PageAState() },
                composable = { _, _ -> }
             ),
             PageComposable<PageB, PageBState>(
-               stateFactory = { _, _ -> PageBState() },
+               stateFactory = { _, _, _ -> PageBState() },
                composable = { _, _ -> }
             ),
          ),
@@ -84,7 +84,7 @@ class PageSwitcherTest {
    fun illegalArgument_noPageStateFactory() {
       val pageStateStore = PageStateStore(
          listOf(
-            PageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+            PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
          ),
          object : CoroutineScope {
             override val coroutineContext = EmptyCoroutineContext
@@ -106,7 +106,7 @@ class PageSwitcherTest {
    fun illegalArgument_pageStateTypeUnmatched() {
       val pageStateStore = PageStateStore(
          listOf(
-            PageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+            PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
          ),
          object : CoroutineScope {
             override val coroutineContext = EmptyCoroutineContext
@@ -125,8 +125,12 @@ class PageSwitcherTest {
 
    @Test
    fun pageComposable_argument() {
-      var pageAArgument: PageA? = null
-      var pageBArgument: PageB? = null
+      var pageStateAArgumentPage: PageA? = null
+      var pageStateBArgumentPage: PageB? = null
+      var pageStateAArgumentPageId: PageId? = null
+      var pageStateBArgumentPageId: PageId? = null
+      var pageAArgumentPage: PageA? = null
+      var pageBArgumentPage: PageB? = null
 
       lateinit var switcherState: PageSwitcherState
 
@@ -140,20 +144,28 @@ class PageSwitcherTest {
             PageSwitcherState(
                listOf(
                   PageComposable<PageA, PageAState>(
-                     stateFactory = { _, _ -> PageAState() },
+                     stateFactory = { page, pageId, _ ->
+                        pageStateAArgumentPage = page
+                        pageStateAArgumentPageId = pageId
+                        PageAState()
+                     },
                      composable = { page, _ ->
                         DisposableEffect(Unit) {
-                           pageAArgument = page
-                           onDispose { pageAArgument = null }
+                           pageAArgumentPage = page
+                           onDispose { pageAArgumentPage = null }
                         }
                      }
                   ),
                   PageComposable<PageB, PageBState>(
-                     stateFactory = { _, _ -> PageBState() },
+                     stateFactory = { page, pageId, _ ->
+                        pageStateBArgumentPage = page
+                        pageStateBArgumentPageId = pageId
+                        PageBState()
+                     },
                      composable = { page, _ ->
                         DisposableEffect(Unit) {
-                           pageBArgument = page
-                           onDispose { pageBArgument = null }
+                           pageBArgumentPage = page
+                           onDispose { pageBArgumentPage = null }
                         }
                      }
                   ),
@@ -166,15 +178,26 @@ class PageSwitcherTest {
       }
 
       rule.runOnIdle {
-         assertSame(savedPageState.page, assertNotNull(pageAArgument))
-         assertNull(pageBArgument)
+         assertSame(savedPageState.page, assertNotNull(pageStateAArgumentPage))
+         assertEquals(savedPageState.id, pageStateAArgumentPageId)
+         assertSame(savedPageState.page, assertNotNull(pageAArgumentPage))
+
+         assertNull(pageStateBArgumentPage)
+         assertNull(pageStateBArgumentPageId)
+         assertNull(pageBArgumentPage)
       }
 
       savedPageState = SavedPageState(PageId(1L), PageB())
 
       rule.runOnIdle {
-         assertNull(pageAArgument)
-         assertSame(savedPageState.page, assertNotNull(pageBArgument))
+         // PageStateFactoryではDisposableEffectを使用しないため以前の値が残っている
+         // assertNull(pageStateAArgumentPage)
+         // assertNull(pageStateAArgumentPageId)
+         assertNull(pageAArgumentPage)
+
+         assertSame(savedPageState.page, assertNotNull(pageStateBArgumentPage))
+         assertEquals(savedPageState.id, pageStateBArgumentPageId)
+         assertSame(savedPageState.page, assertNotNull(pageBArgumentPage))
       }
    }
 }

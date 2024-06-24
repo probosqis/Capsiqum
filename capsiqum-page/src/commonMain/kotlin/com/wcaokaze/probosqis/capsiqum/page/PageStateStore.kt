@@ -49,7 +49,7 @@ class PageStateStore(
             cache,
             pageStateCoroutineScope = appCoroutineScope // TODO
          )
-         factory.pageStateFactory(page, stateSaver)
+         factory.pageStateFactory(page, savedPageState.id, stateSaver)
       }
    }
 

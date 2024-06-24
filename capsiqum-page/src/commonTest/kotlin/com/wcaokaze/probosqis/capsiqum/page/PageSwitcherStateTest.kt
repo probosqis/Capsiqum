@@ -35,11 +35,11 @@ class PageSwitcherStateTest {
       val pageSwitcherState = PageSwitcherState(
          listOf(
             PageComposable<PageA, PageAState>(
-               stateFactory = { _, _ -> PageAState() },
+               stateFactory = { _, _, _ -> PageAState() },
                composable = { _, _ -> }
             ),
             PageComposable<PageB, PageBState>(
-               stateFactory = { _, _ -> PageBState() },
+               stateFactory = { _, _, _ -> PageBState() },
                composable = { _, _ -> }
             ),
          ),

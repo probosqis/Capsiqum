@@ -34,8 +34,8 @@ class PageStateStoreTest {
    fun instantiate() {
       val pageStateStore = PageStateStore(
          listOf(
-            PageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
-            PageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
+            PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
+            PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
          ),
          appCoroutineScope = mockk()
       )
@@ -69,8 +69,8 @@ class PageStateStoreTest {
    fun cache() {
       val pageStateStore = PageStateStore(
          listOf(
-            PageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
-            PageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
+            PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
+            PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
          ),
          appCoroutineScope = mockk()
       )

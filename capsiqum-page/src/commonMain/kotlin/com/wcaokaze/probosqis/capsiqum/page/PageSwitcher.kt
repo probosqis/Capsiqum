@@ -50,7 +50,7 @@ fun PageSwitcherState(
 
 @Suppress("FunctionName")
 inline fun <reified P : Page, reified S : PageState> PageComposable(
-   noinline stateFactory: (P, PageState.StateSaver) -> S,
+   noinline stateFactory: (P, PageId, PageState.StateSaver) -> S,
    noinline composable: @Composable (P, S) -> Unit
 ): PageComposableWithStateFactory<P, S> {
    return PageComposableWithStateFactory(P::class, S::class, composable, stateFactory)
@@ -61,7 +61,7 @@ class PageComposableWithStateFactory<P : Page, S : PageState> (
    pageClass: KClass<P>,
    pageStateClass: KClass<S>,
    composable: @Composable (P, S) -> Unit,
-   stateFactory: (P, PageState.StateSaver) -> S
+   stateFactory: (P, PageId, PageState.StateSaver) -> S
 ) {
    val pageComposable = PageComposable(pageClass, pageStateClass, composable)
    val stateFactory = PageStateFactory(pageClass, pageStateClass, stateFactory)
