@@ -47,6 +47,7 @@ class PageStateStore(
          )
          val stateSaver = PageState.StateSaver(
             cache,
+            wasCacheDeleted = true,
             pageStateCoroutineScope = appCoroutineScope // TODO
          )
          factory.pageStateFactory(page, savedPageState.id, stateSaver)

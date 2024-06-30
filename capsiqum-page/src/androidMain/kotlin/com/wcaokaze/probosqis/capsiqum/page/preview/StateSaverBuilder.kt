@@ -54,8 +54,11 @@ class StateSaverBuilder {
       )
    }
 
-   fun build(saverCoroutineScope: CoroutineScope) = PageState.StateSaver(
-      WritableCache(savedState), saverCoroutineScope
+   fun build(
+      wasCacheDeleted: Boolean,
+      saverCoroutineScope: CoroutineScope
+   ) = PageState.StateSaver(
+      WritableCache(savedState), wasCacheDeleted, saverCoroutineScope
    )
 }
 
@@ -65,7 +68,7 @@ fun buildPreviewStateSaver(
 ): PageState.StateSaver {
    val builder = StateSaverBuilder()
    builder.buildAction()
-   return builder.build(saverCoroutineScope)
+   return builder.build(wasCacheDeleted = false, saverCoroutineScope)
 }
 
 @Composable
@@ -77,6 +80,6 @@ fun rememberPreviewStateSaver(
    return remember {
       val builder = StateSaverBuilder()
       builder.buildAction()
-      builder.build(coroutineScope)
+      builder.build(wasCacheDeleted = false, coroutineScope)
    }
 }

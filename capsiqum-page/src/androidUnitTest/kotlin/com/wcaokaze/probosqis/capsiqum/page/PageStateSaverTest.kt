@@ -102,7 +102,7 @@ class PageStateSaverTest {
          put("key", JsonPrimitive(42))
       })
 
-      val saver = PageState.StateSaver(cache, coroutineScope)
+      val saver = PageState.StateSaver(cache, wasCacheDeleted = false, coroutineScope)
       val savedState = saver.save("key", Int.serializer()) { fail() }
 
       assertEquals(42, savedState.value)
@@ -125,7 +125,7 @@ class PageStateSaverTest {
 
       val cache = WritableCache(buildJsonObject {})
 
-      val saver = PageState.StateSaver(cache, coroutineScope)
+      val saver = PageState.StateSaver(cache, wasCacheDeleted = false, coroutineScope)
       val savedState = saver.save("key", Int.serializer()) { 42 }
 
       assertEquals(1, cache.value.size)
@@ -158,6 +158,32 @@ class PageStateSaverTest {
    }
 
    @Test
+   fun serializer_recover() {
+      lateinit var coroutineScope: CoroutineScope
+
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         Box(Modifier)
+      }
+
+      val cache = WritableCache(buildJsonObject {})
+
+      run {
+         val saver = PageState.StateSaver(cache, wasCacheDeleted = false, coroutineScope)
+         val savedState = saver.save("key", Int.serializer(), init = { 42 }, recover = { fail() })
+
+         assertEquals(42, savedState.value)
+      }
+
+      run {
+         val saver = PageState.StateSaver(cache, wasCacheDeleted = true, coroutineScope)
+         val savedState = saver.save("key", Int.serializer(), init = { fail() }, recover = { 42 })
+
+         assertEquals(42, savedState.value)
+      }
+   }
+
+   @Test
    fun serializer_setValue() {
       lateinit var coroutineScope: CoroutineScope
 
@@ -170,7 +196,7 @@ class PageStateSaverTest {
          put("key", JsonPrimitive(3))
       })
 
-      val saver = PageState.StateSaver(cache, coroutineScope)
+      val saver = PageState.StateSaver(cache, wasCacheDeleted = false, coroutineScope)
       val savedState = saver.save("key", Int.serializer()) { fail() }
 
       savedState.value = 42
@@ -193,7 +219,7 @@ class PageStateSaverTest {
       }
 
       val cache = WritableCache(buildJsonObject {})
-      val saver = PageState.StateSaver(cache, coroutineScope)
+      val saver = PageState.StateSaver(cache, wasCacheDeleted = false, coroutineScope)
 
       val savedState = saver.save("key", Int.serializer().nullable) { 42 }
       assertEquals(42, savedState.value)
@@ -582,7 +608,7 @@ class PageStateSaverTest {
          }
       })
 
-      val stateSaver = PageState.StateSaver(cache, coroutineScope)
+      val stateSaver = PageState.StateSaver(cache, wasCacheDeleted = false, coroutineScope)
 
       stateSaver.save("key", init = { fail() }, saver = object : Saver<Unit, Any> {
          override fun SaverScope.save(value: Unit) = null
@@ -731,7 +757,7 @@ class PageStateSaverTest {
       }
 
       val cache = WritableCache(buildJsonObject {})
-      val stateSaver = PageState.StateSaver(cache, coroutineScope)
+      val stateSaver = PageState.StateSaver(cache, wasCacheDeleted = false, coroutineScope)
 
       stateSaver.save(
          "key",
@@ -1175,7 +1201,7 @@ class PageStateSaverTest {
          }
       })
 
-      val saver = PageState.StateSaver(cache, coroutineScope)
+      val saver = PageState.StateSaver(cache, wasCacheDeleted = false, coroutineScope)
       val savedState = saver.save("key", autoSaver<Int>()) { fail() }
       assertEquals(42, savedState.value)
 
@@ -1208,7 +1234,7 @@ class PageStateSaverTest {
 
       val cache = WritableCache(buildJsonObject {})
 
-      val saver = PageState.StateSaver(cache, coroutineScope)
+      val saver = PageState.StateSaver(cache, wasCacheDeleted = false, coroutineScope)
       val savedState = saver.save("key", autoSaver()) { 42 }
 
       rule.waitForSnapshotFlow { cache.value.containsKey("key") }
@@ -1237,6 +1263,32 @@ class PageStateSaverTest {
    }
 
    @Test
+   fun saver_recover() {
+      lateinit var coroutineScope: CoroutineScope
+
+      rule.setContent {
+         coroutineScope = rememberCoroutineScope()
+         Box(Modifier)
+      }
+
+      val cache = WritableCache(buildJsonObject {})
+
+      run {
+         val saver = PageState.StateSaver(cache, wasCacheDeleted = false, coroutineScope)
+         val savedState = saver.save("key", autoSaver(), init = { 42 }, recover = { fail() })
+
+         assertEquals(42, savedState.value)
+      }
+
+      run {
+         val saver = PageState.StateSaver(cache, wasCacheDeleted = true, coroutineScope)
+         val savedState = saver.save("key", autoSaver(), init = { fail() }, recover = { 42 })
+
+         assertEquals(42, savedState.value)
+      }
+   }
+
+   @Test
    fun saver_setValue() {
       lateinit var coroutineScope: CoroutineScope
 
@@ -1252,7 +1304,7 @@ class PageStateSaverTest {
          }
       })
 
-      val saver = PageState.StateSaver(cache, coroutineScope)
+      val saver = PageState.StateSaver(cache, wasCacheDeleted = false, coroutineScope)
       val savedState = saver.save("key", autoSaver<Int>()) { fail() }
 
       savedState.value = 42
@@ -1273,7 +1325,7 @@ class PageStateSaverTest {
       }
 
       val cache = WritableCache(buildJsonObject {})
-      val saver = PageState.StateSaver(cache, coroutineScope)
+      val saver = PageState.StateSaver(cache, wasCacheDeleted = false, coroutineScope)
 
       val savedState = saver.save("key", autoSaver<Int?>()) { 42 }
       rule.waitForSnapshotFlow { cache.value.containsKey("key") }
@@ -1304,7 +1356,9 @@ class PageStateSaverTest {
 
       rule.setContent {
          val coroutineScope = rememberCoroutineScope()
-         val saver = remember { PageState.StateSaver(cache, coroutineScope) }
+         val saver = remember {
+            PageState.StateSaver(cache, wasCacheDeleted = false, coroutineScope)
+         }
 
          savedScrollState = remember {
             saver.save("scrollState", ScrollState.Saver) { ScrollState(0) }
@@ -1347,7 +1401,7 @@ class PageStateSaverTest {
 
       val cache = WritableCache(buildJsonObject {})
       val spyCache = spyk(cache)
-      val saver = PageState.StateSaver(spyCache, coroutineScope)
+      val saver = PageState.StateSaver(spyCache, wasCacheDeleted = false, coroutineScope)
 
       @Stable
       class State(initialI: Int) {

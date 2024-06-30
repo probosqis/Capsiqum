@@ -68,14 +68,43 @@ abstract class PageState {
    @Stable
    class StateSaver(
       private val cache: WritableCache<JsonObject>,
+      @PublishedApi
+      internal val wasCacheDeleted: Boolean,
       private val pageStateCoroutineScope: CoroutineScope
    ) {
+      /**
+       * @param init Pageが起動されるときの初期値
+       * @param recover
+       *   容量不足等の理由により保存されたデータが削除されたあと再初期化する際の値
+       */
+      inline fun <T> save(
+         key: String,
+         serializer: KSerializer<T>,
+         crossinline init: () -> T,
+         crossinline recover: () -> T
+      ): MutableState<T> {
+         return save(key, serializer) {
+            if (wasCacheDeleted) { recover() } else { init() }
+         }
+      }
+
       fun <T> save(
          key: String,
          serializer: KSerializer<T>,
          init: () -> T
       ): MutableState<T> {
          return ElementState(cache, key, serializer, init)
+      }
+
+      inline fun <T> save(
+         key: String,
+         saver: Saver<T, *>,
+         crossinline init: () -> T,
+         crossinline recover: () -> T
+      ): MutableState<T> {
+         return save(key, saver) {
+            if (wasCacheDeleted) { recover() } else { init() }
+         }
       }
 
       fun <T> save(
