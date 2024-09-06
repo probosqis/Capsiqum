@@ -38,7 +38,7 @@ dependencyResolutionManagement {
          version('compose-jb', '1.6.11')
          version('compose-androidx', '1.6.8')
          version('compose-compiler', '1.5.15')
-         version('roborazzi', '1.7.0-rc-1')
+         version('roborazzi', '1.26.0')
 
          plugin('kotlin-multiplatform', 'org.jetbrains.kotlin.multiplatform').versionRef('kotlin')
          plugin('kotlinx-serialization', 'org.jetbrains.kotlin.plugin.serialization').versionRef('kotlin')
