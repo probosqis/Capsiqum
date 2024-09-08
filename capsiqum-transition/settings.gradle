@@ -49,7 +49,7 @@ dependencyResolutionManagement {
          library('kotlinx-collections-immutable', 'org.jetbrains.kotlinx', 'kotlinx-collections-immutable').version('0.3.8')
          library('androidx-annotation', 'androidx.annotation', 'annotation').version('1.8.2')
 
-         library('android-desugaring-jdk', 'com.android.tools', 'desugar_jdk_libs').version('1.2.2')
+         library('android-desugaring-jdk', 'com.android.tools', 'desugar_jdk_libs').version('2.1.2')
 
          library('kotlin-test-junit', 'org.jetbrains.kotlin', 'kotlin-test-junit').versionRef('kotlin')
          library('mockk', 'io.mockk', 'mockk').version('1.13.8')
