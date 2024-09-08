@@ -53,7 +53,7 @@ dependencyResolutionManagement {
 
          library('kotlin-test-junit', 'org.jetbrains.kotlin', 'kotlin-test-junit').versionRef('kotlin')
          library('mockk', 'io.mockk', 'mockk').version('1.13.12')
-         library('robolectric', 'org.robolectric:robolectric:4.11.1')
+         library('robolectric', 'org.robolectric', 'robolectric').version('4.13')
          library('roborazzi-core', 'io.github.takahirom.roborazzi', 'roborazzi').versionRef('roborazzi')
          library('roborazzi-compose', 'io.github.takahirom.roborazzi', 'roborazzi-compose').versionRef('roborazzi')
          library('androidx-test-ext', 'androidx.test.ext:junit:1.1.5')
