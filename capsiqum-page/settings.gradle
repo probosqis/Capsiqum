@@ -47,7 +47,7 @@ dependencyResolutionManagement {
          plugin('compose-compiler', 'org.jetbrains.kotlin.plugin.compose').versionRef('kotlin')
          plugin('roborazzi', 'io.github.takahirom.roborazzi').versionRef('roborazzi')
 
-         library('kotlinx-collections-immutable', 'org.jetbrains.kotlinx', 'kotlinx-collections-immutable').version('0.3.7')
+         library('kotlinx-collections-immutable', 'org.jetbrains.kotlinx', 'kotlinx-collections-immutable').version('0.3.8')
          library('kotlinx-datetime', 'org.jetbrains.kotlinx', 'kotlinx-datetime').version('0.5.0')
 
          library('android-desugaring-jdk', 'com.android.tools', 'desugar_jdk_libs').version('1.2.2')
