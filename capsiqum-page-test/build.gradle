@@ -16,6 +16,7 @@
 
 plugins {
    alias libs.plugins.kotlin.multiplatform
+   alias libs.plugins.kotlinx.serialization
    alias libs.plugins.android.library
    alias libs.plugins.compose.jb
 }
@@ -34,8 +35,10 @@ kotlin {
 
    sourceSets {
       commonMain.dependencies {
+         implementation libs.kotlinx.serialization
          implementation libs.kotlinx.collections.immutable
          implementation compose.foundation
+         implementation project(':capsiqum-page')
       }
 
       commonTest.dependencies {

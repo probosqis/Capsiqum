@@ -19,48 +19,8 @@ package com.wcaokaze.probosqis.capsiqum.page.preview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.Saver
-import androidx.compose.runtime.saveable.SaverScope
-import com.wcaokaze.probosqis.capsiqum.page.JsonElementSaver
 import com.wcaokaze.probosqis.capsiqum.page.PageState
-import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
-
-class StateSaverBuilder {
-   private var savedState = JsonObject(emptyMap())
-
-   fun <T> save(key: String, value: T, serializer: KSerializer<T>) {
-      val savedValue = Json.encodeToJsonElement(serializer, value)
-      savedState = JsonObject(savedState + (key to savedValue))
-   }
-
-   fun <T> save(key: String, value: T, saver: Saver<T, *>) {
-      val jsonSaver = JsonElementSaver(saver)
-      val savedValue = with (jsonSaver) {
-         val scope = SaverScope { it is JsonElement }
-         scope.save(value)
-      }
-
-      savedState = JsonObject(
-         if (savedValue != null) {
-            savedState + (key to savedValue)
-         } else {
-            savedState - key
-         }
-      )
-   }
-
-   fun build(
-      wasCacheDeleted: Boolean,
-      saverCoroutineScope: CoroutineScope
-   ) = PageState.StateSaver(
-      WritableCache(savedState), wasCacheDeleted, saverCoroutineScope
-   )
-}
 
 fun buildPreviewStateSaver(
    buildAction: StateSaverBuilder.() -> Unit,

@@ -40,9 +40,11 @@ dependencyResolutionManagement {
          version('compose-compiler', '1.5.7')
 
          plugin('kotlin-multiplatform', 'org.jetbrains.kotlin.multiplatform').versionRef('kotlin')
+         plugin('kotlinx-serialization', 'org.jetbrains.kotlin.plugin.serialization').versionRef('kotlin')
          plugin('android-library', 'com.android.library').versionRef('android-plugin')
          plugin('compose-jb', 'org.jetbrains.compose').versionRef('compose-jb')
 
+         library('kotlinx-serialization', 'org.jetbrains.kotlinx', 'kotlinx-serialization-json').version('1.6.2')
          library('kotlinx-collections-immutable', 'org.jetbrains.kotlinx', 'kotlinx-collections-immutable').version('0.3.7')
 
          library('android-desugaring-jdk', 'com.android.tools', 'desugar_jdk_libs').version('1.2.2')
