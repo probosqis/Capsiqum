@@ -16,6 +16,7 @@
 
 package com.wcaokaze.probosqis.capsiqum.page
 
+import androidx.compose.runtime.Stable
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -71,3 +72,6 @@ class PageStack private constructor(
       id, savedPageStates + savedPageState
    )
 }
+
+@Stable
+class PageStackState
