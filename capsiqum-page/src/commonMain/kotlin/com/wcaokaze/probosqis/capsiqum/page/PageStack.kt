@@ -16,15 +16,7 @@
 
 package com.wcaokaze.probosqis.capsiqum.page
 
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import com.wcaokaze.probosqis.panoptiqon.WritableCache
-import com.wcaokaze.probosqis.panoptiqon.compose.asState
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -82,50 +74,4 @@ class PageStack private constructor(
 }
 
 @Stable
-abstract class PageStackState {
-   abstract val pageStack: PageStack
-}
-
-fun PageStackState(initialPageStack: PageStack) = object : PageStackState() {
-   override val pageStack: PageStack by mutableStateOf(initialPageStack)
-}
-
-fun PageStackState(cache: WritableCache<PageStack>) = object : PageStackState() {
-   override val pageStack: PageStack by cache.asState()
-}
-
-@Composable
-fun PageStack(
-   state: PageStackState,
-   pageComposables: ImmutableList<PageComposableWithStateFactory<*, *>>,
-   fallback: @Composable (Page, PageState) -> Unit = { _, _ -> }
-) {
-   val coroutineScope = rememberCoroutineScope()
-   val pageStateStore = remember {
-      PageStateStore(
-         pageComposables.map { it.stateFactory },
-         coroutineScope // TODO
-      )
-   }
-   val pageSwitcherState = remember(pageComposables) {
-      PageSwitcherState(pageComposables.map { it.pageComposable }, pageStateStore)
-   }
-
-   val savedPageState = state.pageStack.head
-   val page = savedPageState.page
-   val pageState = remember(savedPageState.id) {
-      pageSwitcherState.pageStateStore.get(savedPageState)
-   }
-   val composable = pageSwitcherState.getComposableFor(page)?.composable ?: fallback
-   Page(composable, page, pageState)
-}
-
-@Composable
-private inline fun <P : Page, S : PageState> Page(
-   composable: @Composable (P, S) -> Unit,
-   page: Page,
-   pageState: PageState
-) {
-   @Suppress("UNCHECKED_CAST")
-   composable(page as P, pageState as S)
-}
+class PageStackState

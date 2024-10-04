@@ -113,7 +113,7 @@ class PageSwitcherState
 }
 
 /**
- * [SavedPageState]から[PageState]を復元し、対応する[PageComposable]を
+ * [SavedPageState]から[PageState]を復元し、対応する[]PageComposable]を
  * コンポーズする。
  *
  * ```kotlin
