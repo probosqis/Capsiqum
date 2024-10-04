@@ -31,7 +31,6 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFails
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
@@ -79,49 +78,6 @@ class PageSwitcherTest {
       val pageC = PageC()
       val composableC = switcherState.getComposableFor(pageC)
       assertNull(composableC)
-   }
-
-   @Test
-   fun illegalArgument_noPageStateFactory() {
-      val pageStateStore = PageStateStore(
-         listOf(
-            PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
-         ),
-         object : CoroutineScope {
-            override val coroutineContext = EmptyCoroutineContext
-         }
-      )
-
-      assertFails { 
-         PageSwitcherState(
-            listOf(
-               PageComposable<PageA, PageAState> { _, _ -> },
-               PageComposable<PageB, PageBState> { _, _ -> },
-            ),
-            pageStateStore
-         )
-      }
-   }
-
-   @Test
-   fun illegalArgument_pageStateTypeUnmatched() {
-      val pageStateStore = PageStateStore(
-         listOf(
-            PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
-         ),
-         object : CoroutineScope {
-            override val coroutineContext = EmptyCoroutineContext
-         }
-      )
-
-      assertFails {
-         PageSwitcherState(
-            listOf(
-               PageComposable<PageA, PageBState> { _, _ -> },
-            ),
-            pageStateStore
-         )
-      }
    }
 
    @Test

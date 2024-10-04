@@ -46,7 +46,7 @@ fun PageSwitcherState(
       pageComposables.map { it.stateFactory },
       coroutineScope
    )
-   return PageSwitcherState(pageComposablesWithoutFactory, pageStateStore)
+   return PageSwitcherState(pageComposablesWithoutFactory)
 }
 
 @Suppress("FunctionName")
@@ -69,37 +69,9 @@ class PageComposableWithStateFactory<P : Page, S : PageState> (
 }
 
 @Stable
-class PageSwitcherState
-   /**
-    * @throws IllegalArgumentException
-    * 指定した[PageStateStore]が[pageComposables]のいずれかに必要な[PageState]を
-    * インスタンス化できないとき。もしくはインスタンス化できるが
-    * [pageComposables]が要求する型と一致しない場合。
-    */
-   constructor(
-      pageComposables: List<PageComposable<*, *>>,
-      val pageStateStore: PageStateStore
-   )
-{
-   init {
-      for (c in pageComposables) {
-         val pageStateFactory = pageStateStore.pageStateFactories[c.pageClass]
-
-         require(pageStateFactory != null) {
-            "The specified PageStateStore has no PageStateFactory " +
-                  "for ${c.pageClass.simpleName}"
-         }
-
-         require(c.pageStateClass == pageStateFactory.pageStateClass) {
-            "The specified PageStateStore has a PageStateFactory " +
-                  "for ${c.pageClass.simpleName}, but it will instantiate " +
-                  "${pageStateFactory.pageStateClass.simpleName}, " +
-                  "which the composable does not accept. " +
-                  "(The composable accepts ${c.pageStateClass.simpleName})"
-         }
-      }
-   }
-
+class PageSwitcherState(
+   pageComposables: List<PageComposable<*, *>>
+) {
    private val pageComposables = buildMap {
       for (c in pageComposables) {
          put(c.pageClass, c)
@@ -156,12 +128,12 @@ fun PageSwitcher(
    pageStateStore: PageStateStore,
    fallback: @Composable (Page, PageState) -> Unit = { _, _ -> }
 ) {
-   val state = remember(pageComposables, pageStateStore) {
-      PageSwitcherState(pageComposables, pageStateStore)
+   val state = remember(pageComposables) {
+      PageSwitcherState(pageComposables)
    }
    val page = savedPageState.page
    val pageState = remember(savedPageState.id) {
-      state.pageStateStore.get(savedPageState)
+      pageStateStore.get(savedPageState)
    }
    val composable = state.getComposableFor(page)?.composable ?: fallback
    Page(composable, page, pageState)
