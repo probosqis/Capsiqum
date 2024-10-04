@@ -24,11 +24,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.CoroutineScope
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -51,18 +49,9 @@ class PageSwitcherTest {
    fun state_getChild() {
       val switcherState = PageSwitcherState(
          listOf(
-            PageComposable<PageA, PageAState>(
-               stateFactory = { _, _, _ -> PageAState() },
-               composable = { _, _ -> }
-            ),
-            PageComposable<PageB, PageBState>(
-               stateFactory = { _, _, _ -> PageBState() },
-               composable = { _, _ -> }
-            ),
-         ),
-         object : CoroutineScope {
-            override val coroutineContext = EmptyCoroutineContext
-         }
+            PageComposable<PageA, PageAState> { _, _ -> },
+            PageComposable<PageB, PageBState> { _, _ -> },
+         )
       )
 
       val pageA = PageA()

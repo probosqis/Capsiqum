@@ -16,8 +16,6 @@
 
 package com.wcaokaze.probosqis.capsiqum.page
 
-import kotlinx.coroutines.CoroutineScope
-import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -34,18 +32,9 @@ class PageSwitcherStateTest {
    fun getPageComposable() {
       val pageSwitcherState = PageSwitcherState(
          listOf(
-            PageComposable<PageA, PageAState>(
-               stateFactory = { _, _, _ -> PageAState() },
-               composable = { _, _ -> }
-            ),
-            PageComposable<PageB, PageBState>(
-               stateFactory = { _, _, _ -> PageBState() },
-               composable = { _, _ -> }
-            ),
-         ),
-         object : CoroutineScope {
-            override val coroutineContext = EmptyCoroutineContext
-         }
+            PageComposable<PageA, PageAState> { _, _ -> },
+            PageComposable<PageB, PageBState> { _, _ -> },
+         )
       )
 
       val pageA = PageA()

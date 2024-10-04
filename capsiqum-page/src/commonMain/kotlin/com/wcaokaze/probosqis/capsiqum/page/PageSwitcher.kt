@@ -21,7 +21,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.coroutines.CoroutineScope
 import kotlin.reflect.KClass
 
 inline fun <reified P : Page, reified S : PageState> PageComposable(
@@ -36,37 +35,6 @@ class PageComposable<P : Page, S : PageState> (
    val pageStateClass: KClass<S>,
    val composable: @Composable (P, S) -> Unit
 )
-
-fun PageSwitcherState(
-   pageComposables: List<PageComposableWithStateFactory<*, *>>,
-   coroutineScope: CoroutineScope
-): PageSwitcherState {
-   val pageComposablesWithoutFactory = pageComposables.map { it.pageComposable }
-   val pageStateStore = PageStateStore(
-      pageComposables.map { it.stateFactory },
-      coroutineScope
-   )
-   return PageSwitcherState(pageComposablesWithoutFactory)
-}
-
-@Suppress("FunctionName")
-inline fun <reified P : Page, reified S : PageState> PageComposable(
-   noinline stateFactory: (P, PageId, PageState.StateSaver) -> S,
-   noinline composable: @Composable (P, S) -> Unit
-): PageComposableWithStateFactory<P, S> {
-   return PageComposableWithStateFactory(P::class, S::class, composable, stateFactory)
-}
-
-@Immutable
-class PageComposableWithStateFactory<P : Page, S : PageState> (
-   pageClass: KClass<P>,
-   pageStateClass: KClass<S>,
-   composable: @Composable (P, S) -> Unit,
-   stateFactory: (P, PageId, PageState.StateSaver) -> S
-) {
-   val pageComposable = PageComposable(pageClass, pageStateClass, composable)
-   val stateFactory = PageStateFactory(pageClass, pageStateClass, stateFactory)
-}
 
 @Stable
 class PageSwitcherState(
