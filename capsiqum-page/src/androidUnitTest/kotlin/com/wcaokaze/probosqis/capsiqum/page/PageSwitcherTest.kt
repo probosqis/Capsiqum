@@ -40,34 +40,8 @@ class PageSwitcherTest {
 
    private class PageA : Page()
    private class PageB : Page()
-   private class PageC : Page()
    private class PageAState : PageState()
    private class PageBState : PageState()
-// private class PageCState : PageState()
-
-   @Test
-   fun state_getChild() {
-      val switcherState = PageSwitcherState(
-         listOf(
-            PageComposable<PageA, PageAState> { _, _ -> },
-            PageComposable<PageB, PageBState> { _, _ -> },
-         )
-      )
-
-      val pageA = PageA()
-      val composableA = switcherState.getComposableFor(pageA)
-      assertNotNull(composableA)
-      assertEquals(composableA.pageClass, PageA::class)
-
-      val pageB = PageB()
-      val composableB = switcherState.getComposableFor(pageB)
-      assertNotNull(composableB)
-      assertEquals(composableB.pageClass, PageB::class)
-
-      val pageC = PageC()
-      val composableC = switcherState.getComposableFor(pageC)
-      assertNull(composableC)
-   }
 
    @Test
    fun pageComposable_argument() {

@@ -18,7 +18,6 @@ package com.wcaokaze.probosqis.capsiqum.page
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import kotlinx.collections.immutable.ImmutableList
 import kotlin.reflect.KClass
@@ -35,23 +34,6 @@ class PageComposable<P : Page, S : PageState> (
    val pageStateClass: KClass<S>,
    val composable: @Composable (P, S) -> Unit
 )
-
-@Stable
-class PageSwitcherState(
-   pageComposables: List<PageComposable<*, *>>
-) {
-   private val pageComposables = buildMap {
-      for (c in pageComposables) {
-         put(c.pageClass, c)
-      }
-   }
-
-   @Stable
-   internal fun <P : Page> getComposableFor(page: P): PageComposable<P, *>? {
-      @Suppress("UNCHECKED_CAST")
-      return pageComposables[page::class] as PageComposable<P, *>?
-   }
-}
 
 /**
  * [SavedPageState]から[PageState]を復元し、対応する[]PageComposable]を
@@ -96,14 +78,20 @@ fun PageSwitcher(
    pageStateStore: PageStateStore,
    fallback: @Composable (Page, PageState) -> Unit = { _, _ -> }
 ) {
-   val state = remember(pageComposables) {
-      PageSwitcherState(pageComposables)
+   val pageComposableMap = remember(pageComposables) {
+      buildMap {
+         for (c in pageComposables) {
+            put(c.pageClass, c)
+         }
+      }
    }
    val page = savedPageState.page
    val pageState = remember(savedPageState.id) {
       pageStateStore.get(savedPageState)
    }
-   val composable = state.getComposableFor(page)?.composable ?: fallback
+   val composable = remember(page) {
+      pageComposableMap[page::class]?.composable ?: fallback
+   }
    Page(composable, page, pageState)
 }
 
