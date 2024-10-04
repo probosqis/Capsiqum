@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import org.junit.Rule
 import org.junit.runner.RunWith
@@ -132,49 +133,45 @@ class PageSwitcherTest {
       var pageAArgumentPage: PageA? = null
       var pageBArgumentPage: PageB? = null
 
-      lateinit var switcherState: PageSwitcherState
-
       var savedPageState by mutableStateOf(
          SavedPageState(PageId(0L), PageA()))
+
+      val pageComposables = persistentListOf(
+         PageComposable<PageA, PageAState> { page, _ ->
+            DisposableEffect(Unit) {
+               pageAArgumentPage = page
+               onDispose { pageAArgumentPage = null }
+            }
+         },
+         PageComposable<PageB, PageBState> { page, _ ->
+            DisposableEffect(Unit) {
+               pageBArgumentPage = page
+               onDispose { pageBArgumentPage = null }
+            }
+         }
+      )
+
+      val pageStateFactories = listOf(
+         PageStateFactory<PageA, PageAState> { page, pageId, _ ->
+            pageStateAArgumentPage = page
+            pageStateAArgumentPageId = pageId
+            PageAState()
+         },
+         PageStateFactory<PageB, PageBState> { page, pageId, _ ->
+            pageStateBArgumentPage = page
+            pageStateBArgumentPageId = pageId
+            PageBState()
+         },
+      )
 
       rule.setContent {
          val coroutineScope = rememberCoroutineScope()
 
-         switcherState = remember {
-            PageSwitcherState(
-               listOf(
-                  PageComposable<PageA, PageAState>(
-                     stateFactory = { page, pageId, _ ->
-                        pageStateAArgumentPage = page
-                        pageStateAArgumentPageId = pageId
-                        PageAState()
-                     },
-                     composable = { page, _ ->
-                        DisposableEffect(Unit) {
-                           pageAArgumentPage = page
-                           onDispose { pageAArgumentPage = null }
-                        }
-                     }
-                  ),
-                  PageComposable<PageB, PageBState>(
-                     stateFactory = { page, pageId, _ ->
-                        pageStateBArgumentPage = page
-                        pageStateBArgumentPageId = pageId
-                        PageBState()
-                     },
-                     composable = { page, _ ->
-                        DisposableEffect(Unit) {
-                           pageBArgumentPage = page
-                           onDispose { pageBArgumentPage = null }
-                        }
-                     }
-                  ),
-               ),
-               coroutineScope
-            )
+         val pageStateStore = remember {
+            PageStateStore(pageStateFactories, coroutineScope)
          }
 
-         PageSwitcher(switcherState, savedPageState)
+         PageSwitcher(savedPageState, pageComposables, pageStateStore)
       }
 
       rule.runOnIdle {

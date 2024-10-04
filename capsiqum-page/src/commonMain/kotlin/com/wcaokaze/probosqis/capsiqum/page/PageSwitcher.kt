@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlin.reflect.KClass
 
@@ -150,10 +151,14 @@ class PageSwitcherState
  */
 @Composable
 fun PageSwitcher(
-   state: PageSwitcherState,
    savedPageState: SavedPageState,
+   pageComposables: ImmutableList<PageComposable<*, *>>,
+   pageStateStore: PageStateStore,
    fallback: @Composable (Page, PageState) -> Unit = { _, _ -> }
 ) {
+   val state = remember(pageComposables, pageStateStore) {
+      PageSwitcherState(pageComposables, pageStateStore)
+   }
    val page = savedPageState.page
    val pageState = remember(savedPageState.id) {
       state.pageStateStore.get(savedPageState)
