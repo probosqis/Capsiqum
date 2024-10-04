@@ -27,7 +27,7 @@ class PageStateStore(
    allPageStateFactories: List<PageStateFactory<*, *>>,
    private val appCoroutineScope: CoroutineScope
 ) {
-   internal val pageStateFactories: Map<KClass<out Page>, PageStateFactory<*, *>>
+   private val pageStateFactories: Map<KClass<out Page>, PageStateFactory<*, *>>
          = buildMap {
             for (f in allPageStateFactories) {
                put(f.pageClass, f)
