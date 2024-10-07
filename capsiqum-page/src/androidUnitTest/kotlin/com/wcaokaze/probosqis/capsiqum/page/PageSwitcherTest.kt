@@ -17,11 +17,8 @@
 package com.wcaokaze.probosqis.capsiqum.page
 
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.junit4.createComposeRule
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.Rule
@@ -52,8 +49,12 @@ class PageSwitcherTest {
       var pageAArgumentPage: PageA? = null
       var pageBArgumentPage: PageB? = null
 
-      var savedPageState by mutableStateOf(
-         SavedPageState(PageId(0L), PageA()))
+      val pageStack = PageStack(
+         PageStack.Id(0L),
+         SavedPageState(PageId(0L), PageA())
+      )
+
+      val pageStackState = PageStackState(pageStack)
 
       val pageComposables = persistentListOf(
          PageComposable<PageA, PageAState> { page, _ ->
@@ -90,20 +91,23 @@ class PageSwitcherTest {
             PageStateStore(pageStateFactories, coroutineScope)
          }
 
-         PageSwitcher(savedPageState, pageComposables, pageStateStore)
+         PageSwitcher(pageStackState, pageComposables, pageStateStore)
       }
 
       rule.runOnIdle {
-         assertSame(savedPageState.page, assertNotNull(pageStateAArgumentPage))
-         assertEquals(savedPageState.id, pageStateAArgumentPageId)
-         assertSame(savedPageState.page, assertNotNull(pageAArgumentPage))
+         val head = pageStackState.pageStack.head
+         assertSame(head.page, assertNotNull(pageStateAArgumentPage))
+         assertEquals(head.id, pageStateAArgumentPageId)
+         assertSame(head.page, assertNotNull(pageAArgumentPage))
 
          assertNull(pageStateBArgumentPage)
          assertNull(pageStateBArgumentPageId)
          assertNull(pageBArgumentPage)
       }
 
-      savedPageState = SavedPageState(PageId(1L), PageB())
+      pageStackState.pageStack = pageStackState.pageStack.added(
+         SavedPageState(PageId(1L), PageB())
+      )
 
       rule.runOnIdle {
          // PageStateFactoryではDisposableEffectを使用しないため以前の値が残っている
@@ -111,9 +115,10 @@ class PageSwitcherTest {
          // assertNull(pageStateAArgumentPageId)
          assertNull(pageAArgumentPage)
 
-         assertSame(savedPageState.page, assertNotNull(pageStateBArgumentPage))
-         assertEquals(savedPageState.id, pageStateBArgumentPageId)
-         assertSame(savedPageState.page, assertNotNull(pageBArgumentPage))
+         val head = pageStackState.pageStack.head
+         assertSame(head.page, assertNotNull(pageStateBArgumentPage))
+         assertEquals(head.id, pageStateBArgumentPageId)
+         assertSame(head.page, assertNotNull(pageBArgumentPage))
       }
    }
 }

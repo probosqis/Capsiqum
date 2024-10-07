@@ -73,9 +73,10 @@ class PageComposable<P : Page, S : PageState> (
  */
 @Composable
 fun PageSwitcher(
-   savedPageState: SavedPageState,
+   pageStackState: PageStackState,
    pageComposables: ImmutableList<PageComposable<*, *>>,
    pageStateStore: PageStateStore,
+   savedPageState: SavedPageState = pageStackState.pageStack.head,
    fallback: @Composable (Page, PageState) -> Unit = { _, _ -> }
 ) {
    val pageComposableMap = remember(pageComposables) {

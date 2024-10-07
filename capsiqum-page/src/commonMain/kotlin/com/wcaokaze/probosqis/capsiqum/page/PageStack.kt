@@ -17,6 +17,11 @@
 package com.wcaokaze.probosqis.capsiqum.page
 
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.wcaokaze.probosqis.panoptiqon.WritableCache
+import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -74,4 +79,14 @@ class PageStack private constructor(
 }
 
 @Stable
-class PageStackState
+abstract class PageStackState {
+   abstract var pageStack: PageStack
+}
+
+fun PageStackState(initialPageStack: PageStack) = object : PageStackState() {
+   override var pageStack: PageStack by mutableStateOf(initialPageStack)
+}
+
+fun PageStackState(cache: WritableCache<PageStack>) = object : PageStackState() {
+   override var pageStack: PageStack by cache.asMutableState()
+}
