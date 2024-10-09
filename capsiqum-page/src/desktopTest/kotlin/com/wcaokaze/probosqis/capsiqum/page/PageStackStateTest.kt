@@ -23,7 +23,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
 
-class PageStateStoreTest {
+class PageStackStateTest {
    private class PageA : Page()
    private class PageAState : PageState()
    private class PageB : Page()
@@ -31,8 +31,9 @@ class PageStateStoreTest {
    private class PageC : Page()
 
    @Test
-   fun instantiate() {
-      val pageStateStore = PageStateStore(
+   fun instantiatePageStack() {
+      val pageStackState = PageStackState(
+         initialPageStack = mockk(),
          listOf(
             PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
             PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
@@ -40,7 +41,7 @@ class PageStateStoreTest {
          appCoroutineScope = mockk()
       )
 
-      val pageAState = pageStateStore.get(
+      val pageAState = pageStackState.getPageState(
          SavedPageState(
             PageId(0L), PageA()
          )
@@ -48,7 +49,7 @@ class PageStateStoreTest {
 
       assertIs<PageAState>(pageAState)
 
-      val pageBState = pageStateStore.get(
+      val pageBState = pageStackState.getPageState(
          SavedPageState(
             PageId(1L), PageB()
          )
@@ -57,7 +58,7 @@ class PageStateStoreTest {
       assertIs<PageBState>(pageBState)
 
       assertFails {
-         pageStateStore.get(
+         pageStackState.getPageState(
             SavedPageState(
                PageId(2L), PageC()
             )
@@ -66,8 +67,9 @@ class PageStateStoreTest {
    }
 
    @Test
-   fun cache() {
-      val pageStateStore = PageStateStore(
+   fun cachePageStack() {
+      val pageStackState = PageStackState(
+         initialPageStack = mockk(),
          listOf(
             PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
             PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
@@ -77,13 +79,13 @@ class PageStateStoreTest {
 
       val pageA = PageA()
 
-      val pageState1 = pageStateStore.get(
+      val pageState1 = pageStackState.getPageState(
          SavedPageState(
             PageId(0L), pageA
          )
       )
 
-      val pageState2 = pageStateStore.get(
+      val pageState2 = pageStackState.getPageState(
          SavedPageState(
             PageId(0L), pageA
          )
@@ -91,7 +93,7 @@ class PageStateStoreTest {
 
       assertSame(pageState1, pageState2)
 
-      val pageState3 = pageStateStore.get(
+      val pageState3 = pageStackState.getPageState(
          SavedPageState(
             PageId(1L), pageA
          )

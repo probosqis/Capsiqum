@@ -22,9 +22,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
+import kotlin.reflect.KClass
 
 fun PageStack(
    savedPageState: SavedPageState,
@@ -79,14 +82,57 @@ class PageStack private constructor(
 }
 
 @Stable
-abstract class PageStackState {
+abstract class PageStackState(
+   allPageStateFactories: List<PageStateFactory<*, *>>,
+   private val appCoroutineScope: CoroutineScope
+) {
    abstract var pageStack: PageStack
+
+   private val pageStateFactories: Map<KClass<out Page>, PageStateFactory<*, *>>
+       = buildMap {
+         for (f in allPageStateFactories) {
+            put(f.pageClass, f)
+         }
+      }
+
+   private val pageState = mutableMapOf<PageId, PageState>()
+
+   @Stable
+   fun getPageState(savedPageState: SavedPageState): PageState {
+      return pageState.getOrPut(savedPageState.id) {
+         val page = savedPageState.page
+         val factory = getStateFactory(page) ?: throw IllegalArgumentException(
+            "cannot instantiate PageState for ${page::class}")
+         val cache = WritableCache(
+            JsonObject(emptyMap())
+         )
+         val stateSaver = PageState.StateSaver(
+            cache,
+            wasCacheDeleted = false,
+            pageStateCoroutineScope = appCoroutineScope // TODO
+         )
+         factory.pageStateFactory(page, savedPageState.id, stateSaver)
+      }
+   }
+
+   private fun <P : Page> getStateFactory(page: P): PageStateFactory<P, *>? {
+      @Suppress("UNCHECKED_CAST")
+      return pageStateFactories[page::class] as PageStateFactory<P, *>?
+   }
 }
 
-fun PageStackState(initialPageStack: PageStack) = object : PageStackState() {
+fun PageStackState(
+   initialPageStack: PageStack,
+   allPageStateFactories: List<PageStateFactory<*, *>>,
+   appCoroutineScope: CoroutineScope
+) = object : PageStackState(allPageStateFactories, appCoroutineScope) {
    override var pageStack: PageStack by mutableStateOf(initialPageStack)
 }
 
-fun PageStackState(cache: WritableCache<PageStack>) = object : PageStackState() {
+fun PageStackState(
+   cache: WritableCache<PageStack>,
+   allPageStateFactories: List<PageStateFactory<*, *>>,
+   appCoroutineScope: CoroutineScope
+) = object : PageStackState(allPageStateFactories, appCoroutineScope) {
    override var pageStack: PageStack by cache.asMutableState()
 }

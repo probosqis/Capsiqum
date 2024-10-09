@@ -54,8 +54,6 @@ class PageSwitcherTest {
          SavedPageState(PageId(0L), PageA())
       )
 
-      val pageStackState = PageStackState(pageStack)
-
       val pageComposables = persistentListOf(
          PageComposable<PageA, PageAState> { page, _ ->
             DisposableEffect(Unit) {
@@ -84,14 +82,16 @@ class PageSwitcherTest {
          },
       )
 
+      lateinit var pageStackState: PageStackState
+
       rule.setContent {
          val coroutineScope = rememberCoroutineScope()
 
-         val pageStateStore = remember {
-            PageStateStore(pageStateFactories, coroutineScope)
+         pageStackState = remember {
+            PageStackState(pageStack, pageStateFactories, coroutineScope)
          }
 
-         PageSwitcher(pageStackState, pageComposables, pageStateStore)
+         PageSwitcher(pageStackState, pageComposables)
       }
 
       rule.runOnIdle {
