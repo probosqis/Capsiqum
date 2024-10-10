@@ -82,11 +82,14 @@ class PageStack private constructor(
 }
 
 @Stable
-abstract class PageStackState(
-   allPageStateFactories: List<PageStateFactory<*, *>>,
-   private val appCoroutineScope: CoroutineScope
-) {
-   abstract var pageStack: PageStack
+abstract class PageStackState
+   internal constructor(
+      allPageStateFactories: List<PageStateFactory<*, *>>,
+      private val appCoroutineScope: CoroutineScope
+   )
+{
+   internal abstract var pageStackState: PageStack
+   var pageStack: PageStack by ::pageStackState
 
    private val pageStateFactories: Map<KClass<out Page>, PageStateFactory<*, *>>
        = buildMap {
@@ -126,7 +129,7 @@ fun PageStackState(
    allPageStateFactories: List<PageStateFactory<*, *>>,
    appCoroutineScope: CoroutineScope
 ) = object : PageStackState(allPageStateFactories, appCoroutineScope) {
-   override var pageStack: PageStack by mutableStateOf(initialPageStack)
+   override var pageStackState: PageStack by mutableStateOf(initialPageStack)
 }
 
 fun PageStackState(
@@ -134,5 +137,5 @@ fun PageStackState(
    allPageStateFactories: List<PageStateFactory<*, *>>,
    appCoroutineScope: CoroutineScope
 ) = object : PageStackState(allPageStateFactories, appCoroutineScope) {
-   override var pageStack: PageStack by cache.asMutableState()
+   override var pageStackState: PageStack by cache.asMutableState()
 }
