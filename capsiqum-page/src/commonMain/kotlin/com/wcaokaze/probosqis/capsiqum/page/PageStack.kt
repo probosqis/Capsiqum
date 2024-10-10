@@ -45,7 +45,7 @@ fun PageStack(
 @Serializable
 class PageStack private constructor(
    val id: Id, // TODO: キャッシュシステムの完成後Cache自体が識別子となるため削除する
-   private val savedPageStates: List<SavedPageState>
+   internal val savedPageStates: List<SavedPageState>
 ) {
    @Serializable
    @JvmInline
@@ -91,8 +91,21 @@ abstract class PageStackState
       private val appCoroutineScope: CoroutineScope
    )
 {
-   internal abstract var pageStackState: PageStack
-   var pageStack: PageStack by ::pageStackState
+   protected abstract var pageStackState: PageStack
+
+   var pageStack: PageStack
+      get() = pageStackState
+      set(value) {
+         pageStackState = value
+
+         val ids = pageState.keys.toHashSet()
+         for (p in value.savedPageStates) {
+            ids -= p.id
+         }
+         for (id in ids) {
+            pageState.remove(id)
+         }
+      }
 
    private val pageStateFactories: Map<KClass<out Page>, PageStateFactory<*, *>>
        = buildMap {
