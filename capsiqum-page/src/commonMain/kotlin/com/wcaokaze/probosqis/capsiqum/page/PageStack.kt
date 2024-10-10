@@ -16,9 +16,12 @@
 
 package com.wcaokaze.probosqis.capsiqum.page
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
@@ -152,10 +155,32 @@ fun PageStackState(
    override var pageStackState: PageStack by mutableStateOf(initialPageStack)
 }
 
+@Composable
+fun rememberPageStackState(
+   initialPageStack: PageStack,
+   allPageStateFactories: List<PageStateFactory<*, *>>
+): PageStackState {
+   val coroutineScope = rememberCoroutineScope()
+   return remember {
+      PageStackState(initialPageStack, allPageStateFactories, coroutineScope)
+   }
+}
+
 fun PageStackState(
    cache: WritableCache<PageStack>,
    allPageStateFactories: List<PageStateFactory<*, *>>,
    coroutineScope: CoroutineScope
 ) = object : PageStackState(allPageStateFactories, coroutineScope) {
    override var pageStackState: PageStack by cache.asMutableState()
+}
+
+@Composable
+fun rememberPageStackState(
+   cache: WritableCache<PageStack>,
+   allPageStateFactories: List<PageStateFactory<*, *>>
+): PageStackState {
+   val coroutineScope = rememberCoroutineScope()
+   return remember {
+      PageStackState(cache, allPageStateFactories, coroutineScope)
+   }
 }
