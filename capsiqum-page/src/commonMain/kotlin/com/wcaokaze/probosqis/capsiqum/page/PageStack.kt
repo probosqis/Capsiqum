@@ -88,7 +88,7 @@ class PageStack private constructor(
 abstract class PageStackState
    internal constructor(
       allPageStateFactories: List<PageStateFactory<*, *>>,
-      private val appCoroutineScope: CoroutineScope
+      private val coroutineScope: CoroutineScope
    )
 {
    protected abstract var pageStackState: PageStack
@@ -132,7 +132,7 @@ abstract class PageStackState
          val stateSaver = PageState.StateSaver(
             cache,
             wasCacheDeleted = false,
-            pageStateCoroutineScope = appCoroutineScope // TODO
+            pageStateCoroutineScope = coroutineScope // TODO
          )
          factory.pageStateFactory(page, savedPageState.id, stateSaver)
       }
@@ -147,15 +147,15 @@ abstract class PageStackState
 fun PageStackState(
    initialPageStack: PageStack,
    allPageStateFactories: List<PageStateFactory<*, *>>,
-   appCoroutineScope: CoroutineScope
-) = object : PageStackState(allPageStateFactories, appCoroutineScope) {
+   coroutineScope: CoroutineScope
+) = object : PageStackState(allPageStateFactories, coroutineScope) {
    override var pageStackState: PageStack by mutableStateOf(initialPageStack)
 }
 
 fun PageStackState(
    cache: WritableCache<PageStack>,
    allPageStateFactories: List<PageStateFactory<*, *>>,
-   appCoroutineScope: CoroutineScope
-) = object : PageStackState(allPageStateFactories, appCoroutineScope) {
+   coroutineScope: CoroutineScope
+) = object : PageStackState(allPageStateFactories, coroutineScope) {
    override var pageStackState: PageStack by cache.asMutableState()
 }

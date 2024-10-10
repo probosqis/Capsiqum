@@ -43,7 +43,7 @@ class PageStackStateTest {
             PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
             PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
          ),
-         appCoroutineScope = mockk()
+         coroutineScope = mockk()
       )
 
       val pageAState = pageStackState.getPageState(pageA)
@@ -61,7 +61,7 @@ class PageStackStateTest {
       val pageStackState = PageStackState(
          initialPageStack = pageStack,
          allPageStateFactories = emptyList(),
-         appCoroutineScope = mockk()
+         coroutineScope = mockk()
       )
 
       assertFails {
@@ -82,7 +82,7 @@ class PageStackStateTest {
             PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
             PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
          ),
-         appCoroutineScope = mockk()
+         coroutineScope = mockk()
       )
 
       val pageState1 = pageStackState.getPageState(page1)
@@ -106,7 +106,7 @@ class PageStackStateTest {
             PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
             PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
          ),
-         appCoroutineScope = mockk()
+         coroutineScope = mockk()
       )
 
       assertFails {
