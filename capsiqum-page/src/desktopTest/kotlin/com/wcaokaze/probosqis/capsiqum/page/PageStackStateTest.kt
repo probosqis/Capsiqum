@@ -32,8 +32,13 @@ class PageStackStateTest {
 
    @Test
    fun instantiatePageStack() {
+      val pageA = SavedPageState(PageId(0L), PageA())
+      val pageB = SavedPageState(PageId(1L), PageB())
+
+      val pageStack = PageStack(PageStack.Id(0L), pageA).added(pageB)
+
       val pageStackState = PageStackState(
-         initialPageStack = mockk(),
+         pageStack,
          listOf(
             PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
             PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
@@ -41,35 +46,38 @@ class PageStackStateTest {
          appCoroutineScope = mockk()
       )
 
-      val pageAState = pageStackState.getPageState(
-         SavedPageState(
-            PageId(0L), PageA()
-         )
-      )
-
+      val pageAState = pageStackState.getPageState(pageA)
       assertIs<PageAState>(pageAState)
 
-      val pageBState = pageStackState.getPageState(
-         SavedPageState(
-            PageId(1L), PageB()
-         )
+      val pageBState = pageStackState.getPageState(pageB)
+      assertIs<PageBState>(pageBState)
+   }
+
+   @Test
+   fun instantiatePageStack_noFactory() {
+      val pageA = SavedPageState(PageId(0L), PageA())
+      val pageStack = PageStack(PageStack.Id(0L), pageA)
+
+      val pageStackState = PageStackState(
+         initialPageStack = pageStack,
+         allPageStateFactories = emptyList(),
+         appCoroutineScope = mockk()
       )
 
-      assertIs<PageBState>(pageBState)
-
       assertFails {
-         pageStackState.getPageState(
-            SavedPageState(
-               PageId(2L), PageC()
-            )
-         )
+         pageStackState.getPageState(pageA)
       }
    }
 
    @Test
    fun cachePageStack() {
+      val page1 = SavedPageState(PageId(0L), PageA())
+      val page2 = SavedPageState(PageId(1L), PageA())
+
+      val pageStack = PageStack(PageStack.Id(0L), page1).added(page2)
+
       val pageStackState = PageStackState(
-         initialPageStack = mockk(),
+         pageStack,
          listOf(
             PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
             PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
@@ -77,28 +85,32 @@ class PageStackStateTest {
          appCoroutineScope = mockk()
       )
 
-      val pageA = PageA()
-
-      val pageState1 = pageStackState.getPageState(
-         SavedPageState(
-            PageId(0L), pageA
-         )
-      )
-
-      val pageState2 = pageStackState.getPageState(
-         SavedPageState(
-            PageId(0L), pageA
-         )
-      )
-
+      val pageState1 = pageStackState.getPageState(page1)
+      val pageState2 = pageStackState.getPageState(page1)
       assertSame(pageState1, pageState2)
 
-      val pageState3 = pageStackState.getPageState(
-         SavedPageState(
-            PageId(1L), pageA
-         )
+      val pageState3 = pageStackState.getPageState(page2)
+      assertNotSame(pageState1, pageState3)
+   }
+
+   @Test
+   fun getPageState_whichIsNotInPageStack() {
+      val page1 = SavedPageState(PageId(0L), PageA())
+      val page2 = SavedPageState(PageId(1L), PageB())
+
+      val pageStack = PageStack(PageStack.Id(0L), page1)
+
+      val pageStackState = PageStackState(
+         pageStack,
+         listOf(
+            PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
+            PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
+         ),
+         appCoroutineScope = mockk()
       )
 
-      assertNotSame(pageState1, pageState3)
+      assertFails {
+         pageStackState.getPageState(page2)
+      }
    }
 }

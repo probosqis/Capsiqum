@@ -79,6 +79,9 @@ class PageStack private constructor(
    fun added(savedPageState: SavedPageState) = PageStack(
       id, savedPageStates + savedPageState
    )
+
+   internal fun findPage(id: PageId): SavedPageState?
+       = savedPageStates.findLast { it.id == id }
 }
 
 @Stable
@@ -102,6 +105,10 @@ abstract class PageStackState
 
    @Stable
    fun getPageState(savedPageState: SavedPageState): PageState {
+      check(pageStack.findPage(savedPageState.id) != null) {
+         "The specified page (id = ${savedPageState.id.value}) is not in pageStack."
+      }
+
       return pageState.getOrPut(savedPageState.id) {
          val page = savedPageState.page
          val factory = getStateFactory(page) ?: throw IllegalArgumentException(
