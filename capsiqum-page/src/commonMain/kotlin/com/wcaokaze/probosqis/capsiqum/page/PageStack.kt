@@ -103,7 +103,7 @@ abstract class PageStackState
             ids -= p.id
          }
          for (id in ids) {
-            pageState.remove(id)
+            pageState -= id
          }
       }
 
