@@ -70,7 +70,7 @@ abstract class PageState {
       private val cache: WritableCache<JsonObject>,
       @PublishedApi
       internal val wasCacheDeleted: Boolean,
-      private val pageStateCoroutineScope: CoroutineScope
+      private val pageStateScope: CoroutineScope
    ) {
       /**
        * @param init Pageが起動されるときの初期値
@@ -112,8 +112,7 @@ abstract class PageState {
          saver: Saver<T, *>,
          init: () -> T
       ): MutableState<T> {
-         return AutoSaveableElementState(
-            cache, key, saver, init, pageStateCoroutineScope)
+         return AutoSaveableElementState(cache, key, saver, init, pageStateScope)
       }
 
       private class ElementState<T>(

@@ -135,7 +135,7 @@ abstract class PageStackState
          val stateSaver = PageState.StateSaver(
             cache,
             wasCacheDeleted = false,
-            pageStateCoroutineScope = coroutineScope // TODO
+            pageStateScope = coroutineScope // TODO
          )
          factory.pageStateFactory(page, savedPageState.id, stateSaver)
       }
