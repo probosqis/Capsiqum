@@ -26,6 +26,7 @@ import androidx.compose.runtime.setValue
 import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -126,19 +127,32 @@ abstract class PageStackState
       }
 
       return pageState.getOrPut(savedPageState.id) {
-         val page = savedPageState.page
-         val factory = getStateFactory(page) ?: throw IllegalArgumentException(
-            "cannot instantiate PageState for ${page::class}")
-         val cache = WritableCache(
-            JsonObject(emptyMap())
-         )
-         val stateSaver = PageState.StateSaver(
-            cache,
-            wasCacheDeleted = false,
-            pageStateScope = coroutineScope // TODO
-         )
-         factory.pageStateFactory(page, savedPageState.id, stateSaver)
+         instantiatePageState(savedPageState)
       }
+   }
+
+   private fun instantiatePageState(savedPageState: SavedPageState): PageState {
+      val page = savedPageState.page
+
+      val factory = getStateFactory(page) ?: throw IllegalArgumentException(
+         "cannot instantiate PageState for ${page::class}"
+      )
+
+      val pageStateScope = CoroutineScope(
+         coroutineScope.coroutineContext + SupervisorJob()
+      )
+
+      val cache = WritableCache(
+         JsonObject(emptyMap())
+      )
+
+      val stateSaver = PageState.StateSaver(
+         cache,
+         wasCacheDeleted = false,
+         pageStateScope
+      )
+
+      return factory.pageStateFactory(page, savedPageState.id, stateSaver)
    }
 
    private fun <P : Page> getStateFactory(page: P): PageStateFactory<P, *>? {

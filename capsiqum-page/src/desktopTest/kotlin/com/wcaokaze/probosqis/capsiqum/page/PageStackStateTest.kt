@@ -16,7 +16,8 @@
 
 package com.wcaokaze.probosqis.capsiqum.page
 
-import io.mockk.mockk
+import kotlinx.coroutines.CoroutineScope
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.Test
 import kotlin.test.assertFails
 import kotlin.test.assertIs
@@ -43,7 +44,7 @@ class PageStackStateTest {
             PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
             PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
          ),
-         coroutineScope = mockk()
+         CoroutineScope(EmptyCoroutineContext)
       )
 
       val pageAState = pageStackState.getPageState(pageA)
@@ -59,9 +60,9 @@ class PageStackStateTest {
       val pageStack = PageStack(PageStack.Id(0L), pageA)
 
       val pageStackState = PageStackState(
-         initialPageStack = pageStack,
+         pageStack,
          allPageStateFactories = emptyList(),
-         coroutineScope = mockk()
+         CoroutineScope(EmptyCoroutineContext)
       )
 
       assertFails {
@@ -82,7 +83,7 @@ class PageStackStateTest {
             PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
             PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
          ),
-         coroutineScope = mockk()
+         CoroutineScope(EmptyCoroutineContext)
       )
 
       val pageState1 = pageStackState.getPageState(page1)
@@ -106,7 +107,7 @@ class PageStackStateTest {
             PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
             PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
          ),
-         coroutineScope = mockk()
+         CoroutineScope(EmptyCoroutineContext)
       )
 
       assertFails {
