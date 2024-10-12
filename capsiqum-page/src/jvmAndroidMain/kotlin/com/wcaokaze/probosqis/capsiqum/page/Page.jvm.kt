@@ -23,7 +23,8 @@ internal actual object PageStateHiddenArguments {
       override fun initialValue(): PageState.Arguments {
          throw IllegalStateException(
             "cannot instantiate PageState. " +
-            "Maybe you attempt to instantiate PageState without PageStateFactory?"
+            "Maybe you attempt to instantiate PageState without PageStateFactory?" +
+            "FYI: In tests, you should use `pageStateFactory.rememberTestPageState()`"
          )
       }
    }
