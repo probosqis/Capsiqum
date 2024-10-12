@@ -152,7 +152,12 @@ abstract class PageStackState
          pageStateScope
       )
 
-      return factory.pageStateFactory(page, savedPageState.id, stateSaver)
+      return factory.createPageState(
+         page,
+         savedPageState.id,
+         pageStateScope,
+         stateSaver,
+      )
    }
 
    private fun <P : Page> getStateFactory(page: P): PageStateFactory<P, *>? {

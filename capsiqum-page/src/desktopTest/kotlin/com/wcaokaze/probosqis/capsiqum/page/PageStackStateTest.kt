@@ -17,7 +17,11 @@
 package com.wcaokaze.probosqis.capsiqum.page
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertFails
 import kotlin.test.assertIs
@@ -30,6 +34,11 @@ class PageStackStateTest {
    private class PageB : Page()
    private class PageBState : PageState()
    private class PageC : Page()
+
+   @BeforeTest
+   fun beforeTest() {
+      PageStateHiddenArguments.clear()
+   }
 
    @Test
    fun instantiatePageStack() {
@@ -67,6 +76,37 @@ class PageStackStateTest {
 
       assertFails {
          pageStackState.getPageState(pageA)
+      }
+   }
+
+   @Test
+   fun instantiatePageStack_anotherThread() {
+      val pageA = SavedPageState(PageId(0L), PageA())
+      val pageStack = PageStack(PageStack.Id(0L), pageA)
+
+      val pageStackState = PageStackState(
+         pageStack,
+         allPageStateFactories = listOf(
+            PageStateFactory<PageA, PageAState> { _, _, _ ->
+               runBlocking {
+                  CoroutineScope(Dispatchers.Default)
+                     .async { PageAState() }
+                     .await()
+               }
+            },
+         ),
+         CoroutineScope(EmptyCoroutineContext)
+      )
+
+      assertFails {
+         pageStackState.getPageState(pageA)
+      }
+   }
+
+   @Test
+   fun instantiatePageStack_withoutFactory() {
+      assertFails {
+         PageAState()
       }
    }
 
