@@ -19,14 +19,18 @@ package com.wcaokaze.probosqis.capsiqum.page
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.runBlocking
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertFails
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class PageStackStateTest {
    private class PageA : Page()
@@ -153,5 +157,83 @@ class PageStackStateTest {
       assertFails {
          pageStackState.getPageState(page2)
       }
+   }
+
+   @Test
+   fun pageStateScope_inactiveAfterPageRemoved() {
+      val pageA = SavedPageState(PageId(0L), PageA())
+      val pageB = SavedPageState(PageId(1L), PageB())
+
+      val pageStack = PageStack(PageStack.Id(0L), pageA).added(pageB)
+
+      val pageStackState = PageStackState(
+         pageStack,
+         listOf(
+            PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
+            PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
+         ),
+         CoroutineScope(EmptyCoroutineContext)
+      )
+
+      val pageBState = pageStackState.getPageState(pageB)
+      assertTrue(pageBState.pageStateScope.isActive)
+
+      pageStackState.pageStack = assertNotNull(pageStackState.pageStack.tailOrNull())
+
+      assertFalse(pageBState.pageStateScope.isActive)
+   }
+
+   @Test
+   fun pageStateScope_activeAfterPageAdded() {
+      val pageA = SavedPageState(PageId(0L), PageA())
+
+      val pageStack = PageStack(PageStack.Id(0L), pageA)
+
+      val pageStackState = PageStackState(
+         pageStack,
+         listOf(
+            PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
+            PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
+         ),
+         CoroutineScope(EmptyCoroutineContext)
+      )
+
+      val pageAState = pageStackState.getPageState(pageA)
+      assertTrue(pageAState.pageStateScope.isActive)
+
+      val pageB = SavedPageState(PageId(1L), PageB())
+      pageStackState.pageStack = pageStackState.pageStack.added(pageB)
+
+      assertTrue(pageAState.pageStateScope.isActive)
+
+      pageStackState.pageStack = assertNotNull(pageStackState.pageStack.tailOrNull())
+      assertTrue(pageAState.pageStateScope.isActive)
+   }
+
+   @Test
+   fun pageStateScope_parentScopeIsActiveAfterChildCancelled() {
+      val pageA = SavedPageState(PageId(0L), PageA())
+      val pageB = SavedPageState(PageId(1L), PageB())
+
+      val pageStack = PageStack(PageStack.Id(0L), pageA).added(pageB)
+
+      val parentScope = CoroutineScope(EmptyCoroutineContext)
+
+      val pageStackState = PageStackState(
+         pageStack,
+         listOf(
+            PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
+            PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
+         ),
+         parentScope
+      )
+
+      assertTrue(parentScope.isActive)
+
+      val pageBState = pageStackState.getPageState(pageB)
+      pageStackState.pageStack = assertNotNull(pageStackState.pageStack.tailOrNull())
+      assertFalse(pageBState.pageStateScope.isActive)
+
+      assertTrue(parentScope.isActive)
    }
 }

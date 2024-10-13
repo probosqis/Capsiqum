@@ -27,6 +27,7 @@ import com.wcaokaze.probosqis.panoptiqon.WritableCache
 import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -107,7 +108,8 @@ abstract class PageStackState
             ids -= p.id
          }
          for (id in ids) {
-            pageState -= id
+            val pageState = pageState.remove(id) ?: continue
+            pageState.pageStateScope.cancel()
          }
       }
 
