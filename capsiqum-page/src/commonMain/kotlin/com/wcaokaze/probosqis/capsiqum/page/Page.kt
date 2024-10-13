@@ -63,14 +63,30 @@ value class PageId(val value: Long)
 
 internal expect class JsonElementSaver<T>(saver: Saver<T, *>) : Saver<T, JsonElement>
 
+internal expect object PageStateHiddenArguments {
+   fun get(): PageState.Arguments
+   fun set(args: PageState.Arguments)
+}
+
 @Stable
 abstract class PageState {
+   val pageStateScope: CoroutineScope
+
+   init {
+      val args = PageStateHiddenArguments.get()
+      pageStateScope = args.coroutineScope
+   }
+
+   internal class Arguments(
+      val coroutineScope: CoroutineScope,
+   )
+
    @Stable
    class StateSaver(
       private val cache: WritableCache<JsonObject>,
       @PublishedApi
       internal val wasCacheDeleted: Boolean,
-      private val pageStateCoroutineScope: CoroutineScope
+      private val pageStateScope: CoroutineScope
    ) {
       /**
        * @param init Pageが起動されるときの初期値
@@ -112,8 +128,7 @@ abstract class PageState {
          saver: Saver<T, *>,
          init: () -> T
       ): MutableState<T> {
-         return AutoSaveableElementState(
-            cache, key, saver, init, pageStateCoroutineScope)
+         return AutoSaveableElementState(cache, key, saver, init, pageStateScope)
       }
 
       private class ElementState<T>(

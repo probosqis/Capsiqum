@@ -17,6 +17,7 @@
 package com.wcaokaze.probosqis.capsiqum.page
 
 import androidx.compose.runtime.Stable
+import kotlinx.coroutines.CoroutineScope
 import kotlin.reflect.KClass
 
 @Stable
@@ -24,7 +25,21 @@ data class PageStateFactory<P : Page, S : PageState>(
    val pageClass: KClass<P>,
    val pageStateClass: KClass<S>,
    val pageStateFactory: (P, PageId, PageState.StateSaver) -> S
-)
+) {
+   fun createPageState(
+      page: P,
+      pageId: PageId,
+      pageStateScope: CoroutineScope,
+      stateSaver: PageState.StateSaver,
+   ): S {
+      val args = PageState.Arguments(
+         pageStateScope,
+      )
+      PageStateHiddenArguments.set(args)
+
+      return pageStateFactory(page, pageId, stateSaver)
+   }
+}
 
 inline fun <reified P : Page, reified S : PageState> PageStateFactory(
    noinline factory: (P, PageId, PageState.StateSaver) -> S

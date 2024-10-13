@@ -16,9 +16,23 @@
 
 package com.wcaokaze.probosqis.capsiqum.page
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import com.wcaokaze.probosqis.panoptiqon.WritableCache
+import com.wcaokaze.probosqis.panoptiqon.compose.asMutableState
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
+import kotlin.reflect.KClass
 
 fun PageStack(
    savedPageState: SavedPageState,
@@ -36,7 +50,7 @@ fun PageStack(
 @Serializable
 class PageStack private constructor(
    val id: Id, // TODO: キャッシュシステムの完成後Cache自体が識別子となるため削除する
-   private val savedPageStates: List<SavedPageState>
+   internal val savedPageStates: List<SavedPageState>
 ) {
    @Serializable
    @JvmInline
@@ -70,4 +84,124 @@ class PageStack private constructor(
    fun added(savedPageState: SavedPageState) = PageStack(
       id, savedPageStates + savedPageState
    )
+
+   internal fun findPage(id: PageId): SavedPageState?
+       = savedPageStates.findLast { it.id == id }
+}
+
+@Stable
+abstract class PageStackState
+   internal constructor(
+      allPageStateFactories: List<PageStateFactory<*, *>>,
+      private val coroutineScope: CoroutineScope
+   )
+{
+   protected abstract var pageStackState: PageStack
+
+   var pageStack: PageStack
+      get() = pageStackState
+      set(value) {
+         pageStackState = value
+
+         val ids = pageState.keys.toHashSet()
+         for (p in value.savedPageStates) {
+            ids -= p.id
+         }
+         for (id in ids) {
+            val pageState = pageState.remove(id) ?: continue
+            pageState.pageStateScope.cancel()
+         }
+      }
+
+   private val pageStateFactories: Map<KClass<out Page>, PageStateFactory<*, *>>
+       = buildMap {
+         for (f in allPageStateFactories) {
+            put(f.pageClass, f)
+         }
+      }
+
+   private val pageState = mutableMapOf<PageId, PageState>()
+
+   @Stable
+   fun getPageState(savedPageState: SavedPageState): PageState {
+      check(pageStack.findPage(savedPageState.id) != null) {
+         "The specified page (id = ${savedPageState.id.value}) is not in pageStack."
+      }
+
+      return pageState.getOrPut(savedPageState.id) {
+         instantiatePageState(savedPageState)
+      }
+   }
+
+   private fun instantiatePageState(savedPageState: SavedPageState): PageState {
+      val page = savedPageState.page
+
+      val factory = getStateFactory(page) ?: throw IllegalArgumentException(
+         "cannot instantiate PageState for ${page::class}"
+      )
+
+      val pageStateScope = CoroutineScope(
+         coroutineScope.coroutineContext + SupervisorJob()
+      )
+
+      val cache = WritableCache(
+         JsonObject(emptyMap())
+      )
+
+      val stateSaver = PageState.StateSaver(
+         cache,
+         wasCacheDeleted = false,
+         pageStateScope
+      )
+
+      return factory.createPageState(
+         page,
+         savedPageState.id,
+         pageStateScope,
+         stateSaver,
+      )
+   }
+
+   private fun <P : Page> getStateFactory(page: P): PageStateFactory<P, *>? {
+      @Suppress("UNCHECKED_CAST")
+      return pageStateFactories[page::class] as PageStateFactory<P, *>?
+   }
+}
+
+fun PageStackState(
+   initialPageStack: PageStack,
+   allPageStateFactories: List<PageStateFactory<*, *>>,
+   coroutineScope: CoroutineScope
+) = object : PageStackState(allPageStateFactories, coroutineScope) {
+   override var pageStackState: PageStack by mutableStateOf(initialPageStack)
+}
+
+@Composable
+fun rememberPageStackState(
+   initialPageStack: PageStack,
+   allPageStateFactories: List<PageStateFactory<*, *>>
+): PageStackState {
+   val coroutineScope = rememberCoroutineScope()
+   return remember {
+      PageStackState(initialPageStack, allPageStateFactories, coroutineScope)
+   }
+}
+
+fun PageStackState(
+   cache: WritableCache<PageStack>,
+   allPageStateFactories: List<PageStateFactory<*, *>>,
+   coroutineScope: CoroutineScope
+) = object : PageStackState(allPageStateFactories, coroutineScope) {
+   override var pageStackState: PageStack by cache.asMutableState()
+}
+
+@Composable
+fun rememberPageStackState(
+   cache: WritableCache<PageStack>,
+   allPageStateFactories: List<PageStateFactory<*, *>>
+): PageStackState {
+   val coroutineScope = rememberCoroutineScope()
+   return remember {
+      PageStackState(cache, allPageStateFactories, coroutineScope)
+   }
 }
