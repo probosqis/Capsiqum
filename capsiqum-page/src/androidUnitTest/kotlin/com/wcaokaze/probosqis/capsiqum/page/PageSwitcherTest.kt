@@ -37,8 +37,8 @@ class PageSwitcherTest {
 
    private class PageA : Page()
    private class PageB : Page()
-   private class PageAState : PageState()
-   private class PageBState : PageState()
+   private class PageAState : PageState<PageA>()
+   private class PageBState : PageState<PageB>()
 
    @Test
    fun pageComposable_argument() {

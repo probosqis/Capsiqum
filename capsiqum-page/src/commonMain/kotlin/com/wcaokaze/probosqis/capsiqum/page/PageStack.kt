@@ -120,10 +120,10 @@ abstract class PageStackState
          }
       }
 
-   private val pageState = mutableMapOf<PageId, PageState>()
+   private val pageState = mutableMapOf<PageId, PageState<*>>()
 
    @Stable
-   fun getPageState(savedPageState: SavedPageState): PageState {
+   fun getPageState(savedPageState: SavedPageState): PageState<*> {
       check(pageStack.findPage(savedPageState.id) != null) {
          "The specified page (id = ${savedPageState.id.value}) is not in pageStack."
       }
@@ -133,7 +133,7 @@ abstract class PageStackState
       }
    }
 
-   private fun instantiatePageState(savedPageState: SavedPageState): PageState {
+   private fun instantiatePageState(savedPageState: SavedPageState): PageState<*> {
       val page = savedPageState.page
 
       val factory = getStateFactory(page) ?: throw IllegalArgumentException(

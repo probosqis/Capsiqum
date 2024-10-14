@@ -21,7 +21,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlin.reflect.KClass
 
 @Stable
-data class PageStateFactory<P : Page, S : PageState>(
+data class PageStateFactory<P : Page, S : PageState<P>>(
    val pageClass: KClass<P>,
    val pageStateClass: KClass<S>,
    val pageStateFactory: (P, PageId, PageState.StateSaver) -> S
@@ -33,6 +33,8 @@ data class PageStateFactory<P : Page, S : PageState>(
       stateSaver: PageState.StateSaver,
    ): S {
       val args = PageState.Arguments(
+         page,
+         pageId,
          pageStateScope,
       )
       PageStateHiddenArguments.set(args)
@@ -41,7 +43,7 @@ data class PageStateFactory<P : Page, S : PageState>(
    }
 }
 
-inline fun <reified P : Page, reified S : PageState> PageStateFactory(
+inline fun <reified P : Page, reified S : PageState<P>> PageStateFactory(
    noinline factory: (P, PageId, PageState.StateSaver) -> S
 ): PageStateFactory<P, S> {
    return PageStateFactory(P::class, S::class, factory)

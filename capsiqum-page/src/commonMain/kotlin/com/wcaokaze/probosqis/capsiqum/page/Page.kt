@@ -69,15 +69,22 @@ internal expect object PageStateHiddenArguments {
 }
 
 @Stable
-abstract class PageState {
+abstract class PageState<out P : Page> {
+   val page: P
+   val pageId: PageId
    val pageStateScope: CoroutineScope
 
    init {
       val args = PageStateHiddenArguments.get()
       pageStateScope = args.coroutineScope
+      @Suppress("UNCHECKED_CAST")
+      page = args.page as P
+      pageId = args.pageId
    }
 
    internal class Arguments(
+      val page: Page,
+      val pageId: PageId,
       val coroutineScope: CoroutineScope,
    )
 

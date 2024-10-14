@@ -26,7 +26,7 @@ import com.wcaokaze.probosqis.capsiqum.page.PageStateFactory
 import kotlinx.coroutines.CoroutineScope
 
 @Composable
-fun <P : Page, S : PageState> PageStateFactory<P, S>.rememberTestPageState(
+fun <P : Page, S : PageState<P>> PageStateFactory<P, S>.rememberTestPageState(
    page: P,
    pageId: PageId = PageId(0L),
    pageStateScope: CoroutineScope = rememberCoroutineScope(),
