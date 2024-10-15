@@ -37,8 +37,8 @@ class PageSwitcherTest {
 
    private class PageA : Page()
    private class PageB : Page()
-   private class PageAState : PageState()
-   private class PageBState : PageState()
+   private class PageAState : PageState<PageA>()
+   private class PageBState : PageState<PageB>()
 
    @Test
    fun pageComposable_argument() {
@@ -70,12 +70,12 @@ class PageSwitcherTest {
       )
 
       val pageStateFactories = listOf(
-         PageStateFactory<PageA, PageAState> { page, pageId, _ ->
+         PageStateFactory<PageA, PageAState> { page, pageId ->
             pageStateAArgumentPage = page
             pageStateAArgumentPageId = pageId
             PageAState()
          },
-         PageStateFactory<PageB, PageBState> { page, pageId, _ ->
+         PageStateFactory<PageB, PageBState> { page, pageId ->
             pageStateBArgumentPage = page
             pageStateBArgumentPageId = pageId
             PageBState()

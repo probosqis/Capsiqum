@@ -22,14 +22,14 @@ import androidx.compose.runtime.remember
 import kotlinx.collections.immutable.ImmutableList
 import kotlin.reflect.KClass
 
-inline fun <reified P : Page, reified S : PageState> PageComposable(
+inline fun <reified P : Page, reified S : PageState<P>> PageComposable(
    noinline composable: @Composable (P, S) -> Unit
 ): PageComposable<P, S> {
    return PageComposable(P::class, S::class, composable)
 }
 
 @Immutable
-class PageComposable<P : Page, S : PageState> (
+class PageComposable<P : Page, S : PageState<P>> (
    val pageClass: KClass<P>,
    val pageStateClass: KClass<S>,
    val composable: @Composable (P, S) -> Unit
@@ -76,7 +76,7 @@ fun PageSwitcher(
    pageStackState: PageStackState,
    pageComposables: ImmutableList<PageComposable<*, *>>,
    savedPageState: SavedPageState = pageStackState.pageStack.head,
-   fallback: @Composable (Page, PageState) -> Unit = { _, _ -> }
+   fallback: @Composable (Page, PageState<*>) -> Unit = { _, _ -> }
 ) {
    val pageComposableMap = remember(pageComposables) {
       buildMap {
@@ -96,10 +96,10 @@ fun PageSwitcher(
 }
 
 @Composable
-private inline fun <P : Page, S : PageState> Page(
+private inline fun <P : Page, S : PageState<P>> Page(
    composable: @Composable (P, S) -> Unit,
    page: Page,
-   pageState: PageState
+   pageState: PageState<*>
 ) {
    @Suppress("UNCHECKED_CAST")
    composable(page as P, pageState as S)

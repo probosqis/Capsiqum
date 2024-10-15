@@ -69,16 +69,52 @@ internal expect object PageStateHiddenArguments {
 }
 
 @Stable
-abstract class PageState {
+abstract class PageState<out P : Page> {
+   val page: P
+   val pageId: PageId
    val pageStateScope: CoroutineScope
+   val stateSaver: StateSaver
 
    init {
       val args = PageStateHiddenArguments.get()
       pageStateScope = args.coroutineScope
+      @Suppress("UNCHECKED_CAST")
+      page = args.page as P
+      pageId = args.pageId
+      stateSaver = args.stateSaver
    }
 
+   protected inline fun <T> save(
+      key: String,
+      serializer: KSerializer<T>,
+      crossinline init: () -> T,
+      crossinline recover: () -> T
+   ): MutableState<T> = stateSaver.save(key, serializer, init, recover)
+
+   protected fun <T> save(
+      key: String,
+      serializer: KSerializer<T>,
+      init: () -> T
+   ): MutableState<T> = stateSaver.save(key, serializer, init)
+
+   protected inline fun <T> save(
+      key: String,
+      saver: Saver<T, *>,
+      crossinline init: () -> T,
+      crossinline recover: () -> T
+   ): MutableState<T> = stateSaver.save(key, saver, init, recover)
+
+   protected fun <T> save(
+      key: String,
+      saver: Saver<T, *>,
+      init: () -> T
+   ): MutableState<T> = stateSaver.save(key, saver, init)
+
    internal class Arguments(
+      val page: Page,
+      val pageId: PageId,
       val coroutineScope: CoroutineScope,
+      val stateSaver: StateSaver,
    )
 
    @Stable
