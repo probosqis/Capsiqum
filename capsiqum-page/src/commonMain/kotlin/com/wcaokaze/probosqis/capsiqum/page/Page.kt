@@ -73,6 +73,7 @@ abstract class PageState<out P : Page> {
    val page: P
    val pageId: PageId
    val pageStateScope: CoroutineScope
+   val stateSaver: StateSaver
 
    init {
       val args = PageStateHiddenArguments.get()
@@ -80,12 +81,14 @@ abstract class PageState<out P : Page> {
       @Suppress("UNCHECKED_CAST")
       page = args.page as P
       pageId = args.pageId
+      stateSaver = args.stateSaver
    }
 
    internal class Arguments(
       val page: Page,
       val pageId: PageId,
       val coroutineScope: CoroutineScope,
+      val stateSaver: StateSaver,
    )
 
    @Stable

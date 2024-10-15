@@ -70,12 +70,12 @@ class PageSwitcherTest {
       )
 
       val pageStateFactories = listOf(
-         PageStateFactory<PageA, PageAState> { page, pageId, _ ->
+         PageStateFactory<PageA, PageAState> { page, pageId ->
             pageStateAArgumentPage = page
             pageStateAArgumentPageId = pageId
             PageAState()
          },
-         PageStateFactory<PageB, PageBState> { page, pageId, _ ->
+         PageStateFactory<PageB, PageBState> { page, pageId ->
             pageStateBArgumentPage = page
             pageStateBArgumentPageId = pageId
             PageBState()

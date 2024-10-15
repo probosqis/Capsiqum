@@ -55,8 +55,8 @@ class PageStackStateTest {
       val pageStackState = PageStackState(
          pageStack,
          listOf(
-            PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
-            PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
+            PageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+            PageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
          ),
          CoroutineScope(EmptyCoroutineContext)
       )
@@ -92,7 +92,7 @@ class PageStackStateTest {
       val pageStackState = PageStackState(
          pageStack,
          allPageStateFactories = listOf(
-            PageStateFactory<PageA, PageAState> { _, _, _ ->
+            PageStateFactory<PageA, PageAState> { _, _ ->
                runBlocking {
                   CoroutineScope(Dispatchers.Default)
                      .async { PageAState() }
@@ -125,8 +125,8 @@ class PageStackStateTest {
       val pageStackState = PageStackState(
          pageStack,
          listOf(
-            PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
-            PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
+            PageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+            PageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
          ),
          CoroutineScope(EmptyCoroutineContext)
       )
@@ -149,8 +149,8 @@ class PageStackStateTest {
       val pageStackState = PageStackState(
          pageStack,
          listOf(
-            PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
-            PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
+            PageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+            PageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
          ),
          CoroutineScope(EmptyCoroutineContext)
       )
@@ -170,8 +170,8 @@ class PageStackStateTest {
       val pageStackState = PageStackState(
          pageStack,
          listOf(
-            PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
-            PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
+            PageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+            PageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
          ),
          CoroutineScope(EmptyCoroutineContext)
       )
@@ -193,8 +193,8 @@ class PageStackStateTest {
       val pageStackState = PageStackState(
          pageStack,
          listOf(
-            PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
-            PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
+            PageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+            PageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
          ),
          CoroutineScope(EmptyCoroutineContext)
       )
@@ -223,8 +223,8 @@ class PageStackStateTest {
       val pageStackState = PageStackState(
          pageStack,
          listOf(
-            PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
-            PageStateFactory<PageB, PageBState> { _, _, _ -> PageBState() },
+            PageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
+            PageStateFactory<PageB, PageBState> { _, _ -> PageBState() },
          ),
          parentScope
       )
@@ -247,7 +247,7 @@ class PageStackStateTest {
       val pageStackState = PageStackState(
          pageStack,
          listOf(
-            PageStateFactory<PageA, PageAState> { _, _, _ -> PageAState() },
+            PageStateFactory<PageA, PageAState> { _, _ -> PageAState() },
          ),
          CoroutineScope(EmptyCoroutineContext)
       )

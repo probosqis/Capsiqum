@@ -24,7 +24,7 @@ import kotlin.reflect.KClass
 data class PageStateFactory<P : Page, S : PageState<P>>(
    val pageClass: KClass<P>,
    val pageStateClass: KClass<S>,
-   val pageStateFactory: (P, PageId, PageState.StateSaver) -> S
+   val pageStateFactory: (P, PageId) -> S
 ) {
    fun createPageState(
       page: P,
@@ -36,15 +36,16 @@ data class PageStateFactory<P : Page, S : PageState<P>>(
          page,
          pageId,
          pageStateScope,
+         stateSaver,
       )
       PageStateHiddenArguments.set(args)
 
-      return pageStateFactory(page, pageId, stateSaver)
+      return pageStateFactory(page, pageId)
    }
 }
 
 inline fun <reified P : Page, reified S : PageState<P>> PageStateFactory(
-   noinline factory: (P, PageId, PageState.StateSaver) -> S
+   noinline factory: (P, PageId) -> S
 ): PageStateFactory<P, S> {
    return PageStateFactory(P::class, S::class, factory)
 }
