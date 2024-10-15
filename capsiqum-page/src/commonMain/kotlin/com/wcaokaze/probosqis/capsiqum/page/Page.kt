@@ -84,6 +84,32 @@ abstract class PageState<out P : Page> {
       stateSaver = args.stateSaver
    }
 
+   protected inline fun <T> save(
+      key: String,
+      serializer: KSerializer<T>,
+      crossinline init: () -> T,
+      crossinline recover: () -> T
+   ): MutableState<T> = stateSaver.save(key, serializer, init, recover)
+
+   protected fun <T> save(
+      key: String,
+      serializer: KSerializer<T>,
+      init: () -> T
+   ): MutableState<T> = stateSaver.save(key, serializer, init)
+
+   protected inline fun <T> save(
+      key: String,
+      saver: Saver<T, *>,
+      crossinline init: () -> T,
+      crossinline recover: () -> T
+   ): MutableState<T> = stateSaver.save(key, saver, init, recover)
+
+   protected fun <T> save(
+      key: String,
+      saver: Saver<T, *>,
+      init: () -> T
+   ): MutableState<T> = stateSaver.save(key, saver, init)
+
    internal class Arguments(
       val page: Page,
       val pageId: PageId,
