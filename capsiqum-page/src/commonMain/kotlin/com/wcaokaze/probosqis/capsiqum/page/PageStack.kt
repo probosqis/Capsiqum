@@ -133,6 +133,13 @@ abstract class PageStackState
       }
    }
 
+   @Stable
+   fun getPageStateIfAlreadyInstantiated(
+      savedPageState: SavedPageState
+   ): PageState<*>? {
+      return pageState[savedPageState.id]
+   }
+
    private fun instantiatePageState(savedPageState: SavedPageState): PageState<*> {
       val page = savedPageState.page
 
