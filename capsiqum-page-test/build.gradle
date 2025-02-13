@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 wcaokaze
+ * Copyright 2024-2025 wcaokaze
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,11 +97,11 @@ kotlin {
 android {
    namespace 'com.wcaokaze.probosqis.capsiqum.page.test'
 
-   compileSdk 34
+   compileSdk 35
 
    defaultConfig {
       minSdk 21
-      targetSdk 34
+      targetSdk 35
    }
 
    buildFeatures {
